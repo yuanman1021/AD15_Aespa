@@ -882,3 +882,46 @@ td button + button {
     display: none;
   }
 }
+
+.suggested-question-box {
+  margin: 14px 0 16px;
+}
+
+.suggested-question-box p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.quick-question-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-question-row button {
+  background: var(--johor-blue-light);
+  color: var(--johor-blue);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quick-question-row button:hover {
+  background: var(--johor-blue);
+  color: var(--white);
+}
+
+.chat-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.chat-input-row input {
+  margin: 0;
+}

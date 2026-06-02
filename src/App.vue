@@ -23,7 +23,6 @@
           @click="screen = item.id"
         >
           <span>{{ item.label }}</span>
-          <em>{{ item.subsystem }}</em>
         </button>
       </nav>
 
@@ -35,8 +34,8 @@
     <main class="main-panel">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Complete Prototype</p>
-          <h2>Johor HR Knowledge Hub</h2>
+          <p class="eyebrow">Johor HR Knowledge Hub</p>
+          <h2>{{ currentPageTitle }}</h2>
         </div>
 
         <div class="top-actions">
@@ -51,14 +50,13 @@
         <button @click="toast = ''">×</button>
       </div>
 
-      <!-- SUBSYSTEM 1: PUBLIC PORTAL -->
+      <!-- PUBLIC PORTAL -->
       <section v-if="screen === 'public'" class="grid-two">
         <div class="hero-card">
-          <p class="eyebrow">Subsystem 1 · Guest Access Module</p>
+          <p class="eyebrow">Guest Access</p>
           <h3>Search official HR documents without logging in.</h3>
           <p>
-            Guests can search and browse public policies, circulars and guidelines.
-            Restricted items ask users to register or log in.
+            Search and preview public HR policies, circulars and guidelines.
           </p>
 
           <div class="search-box">
@@ -168,14 +166,13 @@
         </div>
       </section>
 
-      <!-- SUBSYSTEM 1: LOGIN / REGISTER -->
+      <!-- LOGIN / REGISTER -->
       <section v-if="screen === 'auth'" class="auth-layout">
         <div class="auth-info">
-          <p class="eyebrow">Subsystem 1 · Registration and Login Module</p>
+          <p class="eyebrow">Registration and Login</p>
           <h3>Secure access using official Johor government email.</h3>
           <p>
-            This screen demonstrates registration, login, password reset,
-            account lock and MFA flows using Vue and mock data.
+            Users can register, log in, reset password and use MFA protection.
           </p>
 
           <div class="metric-row">
@@ -185,11 +182,11 @@
             </div>
             <div>
               <strong>MFA</strong>
-              <span>Extra login protection</span>
+              <span>Extra protection</span>
             </div>
             <div>
               <strong>Lock</strong>
-              <span>Failed attempt handling</span>
+              <span>Failed login handling</span>
             </div>
           </div>
         </div>
@@ -312,7 +309,7 @@
 
           <div v-if="authMode === 'admin'" class="form-panel">
             <h3>Administrator Login Account</h3>
-            <p>Dedicated admin login with shorter inactivity timeout.</p>
+            <p>Dedicated admin login for management functions.</p>
 
             <InputField
               v-model="adminLoginForm.email"
@@ -340,7 +337,7 @@
         </div>
       </section>
 
-      <!-- SUBSYSTEM 1: PROFILE -->
+      <!-- PROFILE -->
       <section v-if="screen === 'profile'" class="grid-two">
         <div class="profile-card">
           <div class="avatar">NA</div>
@@ -365,7 +362,7 @@
         </div>
 
         <div class="detail-card">
-          <p class="eyebrow">Subsystem 1 · Profile Management</p>
+          <p class="eyebrow">Profile Management</p>
           <h3>Manage User Profile</h3>
 
           <InputField
@@ -440,15 +437,12 @@
         </div>
       </section>
 
-      <!-- SUBSYSTEM 2: DOCUMENT MANAGEMENT -->
+      <!-- DOCUMENT MANAGEMENT -->
       <section v-if="screen === 'documents'" class="dashboard-grid">
         <div class="welcome-card">
-          <p class="eyebrow">Subsystem 2 · Knowledge and Document Management</p>
+          <p class="eyebrow">Document Management</p>
           <h3>Upload, classify, store, search and manage HR documents.</h3>
-          <p>
-            This area covers document upload, metadata, AI classification review,
-            repository, document versions and archive flow.
-          </p>
+          <p>Administrators can manage documents and review AI suggestions.</p>
         </div>
 
         <StatCard label="Documents" :value="String(documents.length)" note="Total repository records" />
@@ -458,7 +452,7 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Document Upload Module</p>
+              <p class="eyebrow">Document Upload</p>
               <h3>Upload HR Document</h3>
             </div>
 
@@ -523,8 +517,8 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Classification and Categorization Module</p>
-              <h3>AI Classification Review</h3>
+              <p class="eyebrow">AI Classification Review</p>
+              <h3>Suggested Document Categories</h3>
             </div>
 
             <button @click="refreshClassification">
@@ -565,8 +559,8 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Repository, Search and Version Management</p>
-              <h3>Document Repository</h3>
+              <p class="eyebrow">Document Repository</p>
+              <h3>Search and Manage Documents</h3>
             </div>
 
             <button @click="uploadNewVersion">
@@ -640,31 +634,29 @@
         </div>
       </section>
 
-      <!-- SUBSYSTEM 3: SMART SUPPORT -->
+      <!-- SMART SUPPORT -->
       <section v-if="screen === 'smart'" class="grid-two">
         <div class="hero-card">
-          <p class="eyebrow">Subsystem 3 · Smart Search Module</p>
-          <h3>Ask natural-language questions in Bahasa Malaysia or English.</h3>
-          <p>
-            The prototype ranks relevant documents, highlights matched meaning
-            and stores recent search history.
-          </p>
+          <p class="eyebrow">Smart Search</p>
+          <h3>Search HR policies using normal questions.</h3>
+          <p>Type a question and the system will suggest related documents.</p>
 
           <div class="search-box single">
             <input
               v-model="smartQuery"
               placeholder="Example: What leave policy applies for long medical leave?"
+              @keyup.enter="performSmartSearch"
             />
           </div>
 
           <button class="primary" @click="performSmartSearch">
-            Perform Semantic Search
+            Perform Smart Search
           </button>
         </div>
 
         <div class="detail-card chatbot-card">
-          <p class="eyebrow">FAQ and Knowledge Assistance Module</p>
-          <h3>AI Chatbot Assistance</h3>
+          <p class="eyebrow">HR Assistant</p>
+          <h3>Ask the HR Chatbot</h3>
 
           <div class="chat-window">
             <div
@@ -676,21 +668,35 @@
             </div>
           </div>
 
-          <InputField
-            v-model="chatInput"
-            label="Ask a question"
-            placeholder="Type your question here..."
-          />
+          <div class="suggested-question-box">
+            <p>Suggested questions</p>
+            <div class="quick-question-row">
+              <button
+                v-for="question in suggestedQuestions"
+                :key="question"
+                @click="askSuggestedQuestion(question)"
+              >
+                {{ question }}
+              </button>
+            </div>
+          </div>
 
-          <button class="primary full" @click="sendChatMessage">
-            Send Question
-          </button>
+          <div class="chat-input-row">
+            <input
+              v-model="chatInput"
+              placeholder="Ask about login, documents, leave, promotion, salary, upload..."
+              @keyup.enter="sendChatMessage"
+            />
+            <button class="primary" @click="sendChatMessage">
+              Send
+            </button>
+          </div>
         </div>
 
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Personalized Recommendation Module</p>
+              <p class="eyebrow">Recommendations</p>
               <h3>Recommended Documents</h3>
             </div>
 
@@ -724,7 +730,7 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">FAQ Assistance</p>
+              <p class="eyebrow">FAQ</p>
               <h3>Frequently Asked Questions</h3>
             </div>
 
@@ -742,14 +748,12 @@
         </div>
       </section>
 
-      <!-- SUBSYSTEM 3: PERSONAL STORAGE AND NOTIFICATION -->
+      <!-- PERSONAL STORAGE AND NOTIFICATION -->
       <section v-if="screen === 'personal'" class="dashboard-grid">
         <div class="welcome-card">
-          <p class="eyebrow">Subsystem 3 · Saved Documents and Notifications</p>
+          <p class="eyebrow">Saved Documents and Notifications</p>
           <h3>Keep track of saved documents, notes and policy updates.</h3>
-          <p>
-            Users receive system alerts and email notifications when relevant or saved documents are updated.
-          </p>
+          <p>Users receive alerts when relevant or saved documents are updated.</p>
         </div>
 
         <StatCard label="Saved" :value="String(savedDocuments.length)" note="Personal collection" />
@@ -759,8 +763,8 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Notification and Update Alert Module</p>
-              <h3>Notification Preferences</h3>
+              <p class="eyebrow">Notification Preferences</p>
+              <h3>Manage Alerts</h3>
             </div>
 
             <button @click="toast = 'Notification preferences updated.'">
@@ -858,9 +862,7 @@
         <div class="welcome-card admin-theme">
           <p class="eyebrow">Administrator Workspace</p>
           <h3>Manage users, permissions, documents, AI suggestions and audit logs.</h3>
-          <p>
-            Admin functions are separated from normal user access and protected by dedicated login.
-          </p>
+          <p>Admin can control user access, roles and system records.</p>
         </div>
 
         <StatCard label="Users" :value="String(users.length)" note="Registered accounts" />
@@ -1237,14 +1239,27 @@ const faqs = [
   }
 ]
 
+const suggestedQuestions = [
+  'How do I reset my password?',
+  'How do I register an account?',
+  'Can guest users view restricted documents?',
+  'How do I search for leave policy?',
+  'How do I find promotion guidelines?',
+  'How do I upload a HR document?',
+  'How does AI classification work?',
+  'How do notifications work?',
+  'How do I save a document?',
+  'What salary guideline is available?'
+]
+
 const navItems = [
-  { id: 'public', label: 'Public Portal', subsystem: 'S1' },
-  { id: 'auth', label: 'Login / Register', subsystem: 'S1' },
-  { id: 'profile', label: 'Profile & Security', subsystem: 'S1' },
-  { id: 'documents', label: 'Document Management', subsystem: 'S2' },
-  { id: 'smart', label: 'Smart Support', subsystem: 'S3' },
-  { id: 'personal', label: 'Notifications & Saved', subsystem: 'S3' },
-  { id: 'admin', label: 'Admin Workspace', subsystem: 'All' }
+  { id: 'public', label: 'Public Portal' },
+  { id: 'auth', label: 'Login / Register' },
+  { id: 'profile', label: 'Profile & Security' },
+  { id: 'documents', label: 'Document Management' },
+  { id: 'smart', label: 'Smart Support' },
+  { id: 'personal', label: 'Notifications & Saved' },
+  { id: 'admin', label: 'Admin Workspace' }
 ]
 
 const authTabs = [
@@ -1320,9 +1335,15 @@ const chatInput = ref('')
 const chatMessages = ref([
   {
     sender: 'bot',
-    text: 'Hi, I can help you understand HR policies and find related documents.'
+    text:
+      'Hi, I am the Johor HR assistant. You can ask me about login, registration, password reset, documents, policy search, uploads, recommendations, notifications, and saved documents.'
   }
 ])
+
+const currentPageTitle = computed(() => {
+  const found = navItems.find((item) => item.id === screen.value)
+  return found ? found.label : 'Dashboard'
+})
 
 const sessionText = computed(() => {
   if (session.value === 'Guest') return 'Public mode'
@@ -1374,7 +1395,7 @@ function addLog(action, module, result = 'Success', user = 'System') {
 function fakeLogin(type) {
   session.value = type
   screen.value = type === 'Admin' ? 'admin' : 'personal'
-  toast.value = `${type} session created. This is a front-end prototype using mock data.`
+  toast.value = `${type} session created.`
   addLog(`${type} demo login`, 'Authentication', 'Success', type)
 }
 
@@ -1634,8 +1655,8 @@ function performSmartSearch() {
   }
 
   smartResults.value = results.length > 0 ? results : documents.value.filter((doc) => doc.access !== 'Restricted')
-  toast.value = 'Semantic search completed. Results ranked by relevance.'
-  addLog('Performed semantic search', 'Smart Search', 'Success', session.value)
+  toast.value = 'Smart search completed. Results ranked by relevance.'
+  addLog('Performed smart search', 'Smart Search', 'Success', session.value)
 }
 
 function refreshRecommendations() {
@@ -1644,34 +1665,25 @@ function refreshRecommendations() {
   addLog('Refreshed recommendations', 'Recommendation', 'Success', session.value)
 }
 
+function askSuggestedQuestion(question) {
+  chatInput.value = question
+  sendChatMessage()
+}
+
 function sendChatMessage() {
-  if (!chatInput.value.trim()) {
+  const question = chatInput.value.trim()
+
+  if (!question) {
     toast.value = 'Please type a question first.'
     return
   }
 
-  const userQuestion = chatInput.value
-
   chatMessages.value.push({
     sender: 'user',
-    text: userQuestion
+    text: question
   })
 
-  const question = userQuestion.toLowerCase()
-  let answer =
-    'I found related HR documents in the repository. You can check the recommended results below.'
-
-  if (question.includes('leave') || question.includes('cuti')) {
-    answer = 'For leave policy, you can refer to the sick leave guideline and staff leave circular.'
-  } else if (question.includes('promotion') || question.includes('pangkat')) {
-    answer =
-      'For promotion matters, the system recommends the promotion review and staff evaluation circular.'
-  } else if (question.includes('salary') || question.includes('gaji')) {
-    answer =
-      'For salary matters, the system recommends the salary adjustment and allowance guideline.'
-  } else if (question.includes('loan') || question.includes('pinjaman')) {
-    answer = 'For loan questions, the staff loan application FAQ and procedure document is recommended.'
-  }
+  const answer = generateChatbotAnswer(question)
 
   chatMessages.value.push({
     sender: 'bot',
@@ -1680,7 +1692,114 @@ function sendChatMessage() {
 
   chatInput.value = ''
   toast.value = 'Chatbot response generated.'
-  addLog('Used AI chatbot assistance', 'AI Chatbot', 'Success', session.value)
+  addLog('Used HR chatbot assistance', 'AI Chatbot', 'Success', session.value)
+}
+
+function generateChatbotAnswer(question) {
+  const text = question.toLowerCase()
+
+  if (text.includes('login') || text.includes('log in')) {
+    return 'To log in, open Login / Register, enter your government email and password, then complete MFA if it is enabled.'
+  }
+
+  if (text.includes('register') || text.includes('registration') || text.includes('account')) {
+    return 'To register an account, open Login / Register and choose Register. Enter your full name, government email, department, designation level and password.'
+  }
+
+  if (text.includes('reset') || text.includes('forgot') || text.includes('password')) {
+    return 'To reset your password, open Login / Register, choose Reset Password, enter your registered email, request a reset link, then enter the verification code and new password.'
+  }
+
+  if (text.includes('mfa') || text.includes('multi-factor') || text.includes('verification code')) {
+    return 'MFA adds extra login protection. You can enable or disable MFA from Profile & Security.'
+  }
+
+  if (text.includes('guest') || text.includes('public')) {
+    return 'Guest users can search and view public HR documents only. Registered or restricted documents require login.'
+  }
+
+  if (text.includes('restricted') || text.includes('access')) {
+    return 'Restricted documents require a registered account and the correct permission level.'
+  }
+
+  if (text.includes('download')) {
+    return 'Document download is available for registered users depending on the document access level. Public users can preview public details only.'
+  }
+
+  if (text.includes('upload') || text.includes('pdf')) {
+    return 'Administrators can upload HR documents from Document Management. The form requires title, reference number, issuing authority, effective date, document type and category.'
+  }
+
+  if (text.includes('metadata') || text.includes('extract')) {
+    return 'After upload, the system extracts document metadata such as title, reference number, issuing authority, effective date, type and category.'
+  }
+
+  if (text.includes('classify') || text.includes('classification') || text.includes('category')) {
+    return 'The AI classification section suggests document categories and tags. Administrators can review and approve them.'
+  }
+
+  if (text.includes('archive') || text.includes('version')) {
+    return 'Administrators can preview repository documents, archive old documents, and upload new versions when a document is amended.'
+  }
+
+  if (text.includes('notification') || text.includes('alert')) {
+    return 'Notifications inform users when relevant policies are added, saved documents are updated, or weekly recommendations are ready.'
+  }
+
+  if (text.includes('save') || text.includes('saved') || text.includes('bookmark')) {
+    return 'Users can save recommended documents into their personal collection and add personal notes.'
+  }
+
+  if (text.includes('recommend') || text.includes('recommendation')) {
+    return 'Recommendations are based on department, role, recent searches, viewed documents and related HR policy content.'
+  }
+
+  if (text.includes('leave') || text.includes('cuti') || text.includes('sick')) {
+    return findDocumentAnswer('Leave Policy')
+  }
+
+  if (text.includes('promotion') || text.includes('pangkat')) {
+    return findDocumentAnswer('Promotion')
+  }
+
+  if (text.includes('salary') || text.includes('gaji') || text.includes('allowance')) {
+    return findDocumentAnswer('Salary')
+  }
+
+  if (text.includes('loan') || text.includes('pinjaman')) {
+    return findDocumentAnswer('Loan')
+  }
+
+  if (text.includes('discipline') || text.includes('tatatertib')) {
+    return findDocumentAnswer('Discipline')
+  }
+
+  const matchedDocument = documents.value.find((doc) => {
+    const content = `${doc.title} ${doc.referenceNo} ${doc.category} ${doc.summary}`.toLowerCase()
+    return text
+      .split(' ')
+      .some((word) => word.length > 3 && content.includes(word))
+  })
+
+  if (matchedDocument) {
+    return `I found a related document: ${matchedDocument.title}. Reference number: ${matchedDocument.referenceNo}. Category: ${matchedDocument.category}. Access level: ${matchedDocument.access}.`
+  }
+
+  return 'I am not fully sure, but you can ask about login, registration, password reset, document upload, document search, leave policy, promotion, salary, notifications, or saved documents.'
+}
+
+function findDocumentAnswer(categoryName) {
+  const matchedDocs = documents.value.filter((doc) => doc.category === categoryName)
+
+  if (matchedDocs.length === 0) {
+    return `I could not find a document under ${categoryName} yet. Please check the document repository or ask an administrator to upload it.`
+  }
+
+  const docList = matchedDocs
+    .map((doc) => `${doc.title} (${doc.referenceNo})`)
+    .join(', ')
+
+  return `I found ${matchedDocs.length} related document(s) under ${categoryName}: ${docList}. You can open the Public Portal or Document Repository to view the details.`
 }
 
 function saveDocument(doc) {
