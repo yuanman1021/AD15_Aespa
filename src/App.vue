@@ -907,12 +907,15 @@
             <table>
               <thead>
                 <tr>
-                  <th>User</th>
-                  <th>Department</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
+                <th>User</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Action</th>
+              </tr>
               </thead>
 
               <tbody>
@@ -923,6 +926,7 @@
                   </td>
 
                   <td>{{ user.department }}</td>
+                  <td>{{ user.designation }}</td>
                   <td>{{ user.role }}</td>
 
                   <td>
@@ -930,6 +934,9 @@
                       {{ user.status }}
                     </span>
                   </td>
+
+                  <td>{{ user.created_at }}</td>
+                  <td>{{ user.updated_at }}</td>
 
                   <td>
                     <button @click="toggleUserStatus(user)">
@@ -1079,24 +1086,55 @@ const users = useLocalStorage('jhr_users', [
     name: 'Nur Aina Rahman',
     email: 'aina@johor.gov.my',
     department: 'Human Resource Management Division',
+    designation: 'Assistant Officer',
     role: 'Registered User',
-    status: 'Active'
+    status: 'Active',
+    created_at: '2026-01-10 09:00 AM',
+    updated_at: '2026-01-10 09:00 AM'
   },
   {
     id: 'USR002',
     name: 'Daniel Tan',
     email: 'daniel@johor.gov.my',
     department: 'Finance Department',
+    designation: 'Officer',
     role: 'Registered User',
-    status: 'Suspended'
+    status: 'Suspended',
+    created_at: '2026-01-12 10:30 AM',
+    updated_at: '2026-01-15 02:10 PM'
+  },
+  {
+    id: 'USR003',
+    name: 'Tung Ern',
+    email: 'tungern@johor.gov.my',
+    department: 'Knowledge and Document Management Unit',
+    designation: 'Document Officer',
+    role: 'Registered User',
+    status: 'Active',
+    created_at: '2026-01-05 10:00 AM',
+    updated_at: '2026-01-05 10:00 AM'
   },
   {
     id: 'ADM001',
     name: 'May Yan',
-    email: 'admin@johor.gov.my',
-    department: 'HRMD Admin Unit',
+    email: 'mayyan@johor.gov.my',
+    department: 'User and Access Management Unit',
+    designation: 'System Administrator',
     role: 'Administrator',
-    status: 'Active'
+    status: 'Active',
+    created_at: '2026-01-01 08:30 AM',
+    updated_at: '2026-01-01 08:30 AM'
+  },
+  {
+    id: 'ADM002',
+    name: 'Yuan Man',
+    email: 'yuanman@johor.gov.my',
+    department: 'Intelligent Recommendation and Support Unit',
+    designation: 'AI Support Administrator',
+    role: 'Administrator',
+    status: 'Active',
+    created_at: '2026-01-14 11:20 AM',
+    updated_at: '2026-01-14 11:20 AM'
   }
 ])
 
@@ -1392,6 +1430,69 @@ function addLog(action, module, result = 'Success', user = 'System') {
   })
 }
 
+function getCurrentDateTime() {
+  return new Date().toLocaleString('en-MY', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function normalizeUsers() {
+  users.value = users.value.map((user) => {
+    return {
+      ...user,
+      designation: user.designation || 'Not assigned',
+      created_at: user.created_at || getCurrentDateTime(),
+      updated_at: user.updated_at || getCurrentDateTime()
+    }
+  })
+
+  const defaultUsers = [
+    {
+      id: 'USR003',
+      name: 'Tung Ern',
+      email: 'tungern@johor.gov.my',
+      department: 'Knowledge and Document Management Unit',
+      designation: 'Document Officer',
+      role: 'Registered User',
+      status: 'Active',
+      created_at: '2026-01-05 10:00 AM',
+      updated_at: '2026-01-05 10:00 AM'
+    },
+    {
+      id: 'ADM002',
+      name: 'Yuan Man',
+      email: 'yuanman@johor.gov.my',
+      department: 'Intelligent Recommendation and Support Unit',
+      designation: 'AI Support Administrator',
+      role: 'Administrator',
+      status: 'Active',
+      created_at: '2026-01-14 11:20 AM',
+      updated_at: '2026-01-14 11:20 AM'
+    }
+  ]
+
+  defaultUsers.forEach((defaultUser) => {
+    const existingUser = users.value.find((user) => user.email === defaultUser.email)
+
+    if (existingUser) {
+      existingUser.id = defaultUser.id
+      existingUser.name = defaultUser.name
+      existingUser.department = defaultUser.department
+      existingUser.designation = defaultUser.designation
+      existingUser.role = defaultUser.role
+      existingUser.status = defaultUser.status
+      existingUser.created_at = existingUser.created_at || defaultUser.created_at
+      existingUser.updated_at = getCurrentDateTime()
+    } else {
+      users.value.push(defaultUser)
+    }
+  })
+}
+
 function fakeLogin(type) {
   session.value = type
   screen.value = type === 'Admin' ? 'admin' : 'personal'
@@ -1425,15 +1526,19 @@ function registerUser() {
     return
   }
 
+  const now = getCurrentDateTime()
+
   const newUser = {
     id: `USR${Date.now()}`,
     name: registerForm.value.name,
     email: registerForm.value.email,
     department: registerForm.value.department || 'Not assigned',
+    designation: registerForm.value.designation || 'Not assigned',
     role: 'Registered User',
-    status: 'Active'
+    status: 'Active',
+    created_at: now,
+    updated_at: now
   }
-
   users.value.unshift(newUser)
 
   registerForm.value = {
@@ -1488,6 +1593,18 @@ function openDocumentDetails(doc) {
 }
 
 function saveProfile() {
+  const now = getCurrentDateTime()
+
+  const currentUser = users.value.find((user) => user.email === profileForm.value.email)
+
+  if (currentUser) {
+    currentUser.name = profileForm.value.name
+    currentUser.email = profileForm.value.email
+    currentUser.department = profileForm.value.department
+    currentUser.designation = profileForm.value.designation
+    currentUser.updated_at = now
+  }
+
   toast.value = 'Profile updated successfully.'
   addLog('Updated profile information', 'Profile Management', 'Success', profileForm.value.name)
 }
@@ -1861,6 +1978,8 @@ function cycleNotificationFrequency() {
 }
 
 function toggleUserStatus(user) {
+  user.updated_at = getCurrentDateTime()
+
   if (user.status === 'Active') {
     user.status = 'Suspended'
     toast.value = `${user.name} account suspended.`
