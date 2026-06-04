@@ -720,10 +720,52 @@
                 <span>{{ doc.type }}</span>
               </div>
 
-              <button class="primary" @click="saveDocument(doc)">
-                Save Document
-              </button>
+              <div class="button-row">
+                <button class="primary" @click="saveDocument(doc)">
+                  Save Document
+                </button>
+
+                <button @click="openRecommendationReport(doc)">
+                  Report Incorrect
+                </button>
+              </div>
             </article>
+          </div>
+
+          <div v-if="reportDialogOpen" class="report-panel">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Recommendation Report</p>
+                <h3>Report Incorrect Recommendation</h3>
+              </div>
+
+              <button @click="cancelRecommendationReport">
+                Cancel
+              </button>
+            </div>
+
+            <p v-if="selectedRecommendation">
+              Reporting: <strong>{{ selectedRecommendation.title }}</strong>
+            </p>
+
+            <label class="field-label">Reason</label>
+            <select v-model="recommendationReportForm.reportReason">
+              <option>Irrelevant</option>
+              <option>Inaccurate</option>
+              <option>Outdated</option>
+              <option>Inappropriate</option>
+              <option>Others</option>
+            </select>
+
+            <label class="field-label">Description</label>
+            <textarea
+              v-model="recommendationReportForm.reportDescription"
+              placeholder="Explain why this recommendation is incorrect..."
+            ></textarea>
+
+            <button class="primary full" @click="submitRecommendationReport">
+              Submit Report
+            </button>
           </div>
         </div>
 
@@ -980,7 +1022,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import InputField from './components/InputField.vue'
 import StatCard from './components/StatCard.vue'
 import SettingCard from './components/SettingCard.vue'
@@ -1007,78 +1049,91 @@ function useLocalStorage(key, defaultValue) {
   return data
 }
 
-const documents = useLocalStorage('jhr_documents', [
-  {
-    documentId: 1,
-    referenceNo: 'JHR-CUTI-2026-01',
-    title: 'Garis Panduan Cuti Sakit Pegawai Kerajaan Johor',
-    category: 'Leave Policy',
-    type: 'Guideline',
-    status: 'Published',
-    access: 'Public',
-    effectiveDate: '12 Jan 2026',
-    version: '1.0',
-    reason: 'Matches your department and recent leave policy searches.',
-    summary:
-      'Official guideline explaining sick leave eligibility, supporting documents, approval flow, and department-level responsibilities.'
-  },
-  {
-    documentId: 2,
-    referenceNo: 'JHR-PANGKAT-2025-08',
-    title: 'Circular for Promotion Review and Staff Evaluation',
-    category: 'Promotion',
-    type: 'Circular',
-    status: 'Published',
-    access: 'Registered',
-    effectiveDate: '20 Dec 2025',
-    version: '2.1',
-    reason: 'Popular among officers with the same designation level.',
-    summary:
-      'Circular related to promotion review, evaluation schedule, staff performance evidence and decision recording procedures.'
-  },
-  {
-    documentId: 3,
-    referenceNo: 'JHR-TATATERTIB-2025-03',
-    title: 'Administrative Decision on Staff Discipline Procedure',
-    category: 'Discipline',
-    type: 'Administrative Decision',
-    status: 'Published',
-    access: 'Restricted',
-    effectiveDate: '03 Nov 2025',
-    version: '1.3',
-    reason: 'Related to HR compliance documents viewed recently.',
-    summary:
-      'Restricted administrative decision for internal officers only. Requires registered access and suitable permission level.'
-  },
-  {
-    documentId: 4,
-    referenceNo: 'JHR-GAJI-2025-11',
-    title: 'Salary Adjustment and Allowance Guideline',
-    category: 'Salary',
-    type: 'Guideline',
-    status: 'Published',
-    access: 'Registered',
-    effectiveDate: '18 Oct 2025',
-    version: '1.0',
-    reason: 'Recommended because your department viewed salary guidelines this week.',
-    summary:
-      'Guideline explaining salary adjustment request, allowance categories and supporting documents.'
-  },
-  {
-    documentId: 5,
-    referenceNo: 'JHR-PINJAMAN-2025-04',
-    title: 'Staff Loan Application FAQ and Procedure',
-    category: 'Loan',
-    type: 'Policy',
-    status: 'Published',
-    access: 'Public',
-    effectiveDate: '05 Sept 2025',
-    version: '1.0',
-    reason: 'Frequently asked by officers in similar departments.',
-    summary:
-      'Policy notes for staff loan eligibility, application procedure and supporting evidence.'
+/* const documents = ref([])
+
+async function loadDocuments() {
+  try {
+    const response = await fetch('http://localhost:3000/api/documents')
+    documents.value = await response.json()
+  } catch (error) {
+    toast.value = 'Failed to load documents from database.'
   }
-])
+}
+
+onMounted(() => {
+  loadDocuments()
+}) */
+
+const documents = ref([])
+const currentUserId = 2
+
+const selectedDoc = ref({
+  documentId: null,
+  referenceNo: '',
+  title: 'Loading documents...',
+  category: '',
+  type: '',
+  status: '',
+  access: 'Public',
+  effectiveDate: '',
+  version: '',
+  reason: '',
+  summary: 'Please wait while documents are loaded from the database.'
+})
+
+const smartResults = ref([])
+const reportDialogOpen = ref(false)
+const selectedRecommendation = ref(null)
+
+const recommendationReportForm = ref({
+  reportReason: 'Irrelevant',
+  reportDescription: ''
+})
+
+async function loadDocuments() {
+  try {
+    const response = await fetch('http://localhost:3000/api/documents')
+
+    if (!response.ok) {
+      throw new Error('Failed to load documents')
+    }
+
+    documents.value = await response.json()
+
+    if (documents.value.length > 0) {
+      selectedDoc.value = documents.value[0]
+      smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
+    }
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load documents from database.'
+  }
+}
+
+async function loadRecommendations() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/recommendations/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load recommendations')
+    }
+
+    const data = await response.json()
+
+    smartResults.value = data.length > 0
+      ? data
+      : documents.value.filter((doc) => doc.access !== 'Restricted')
+  } catch (error) {
+    console.error(error)
+    smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
+    toast.value = 'Failed to load recommendations from database.'
+  }
+}
+
+onMounted(async () => {
+  await loadDocuments()
+  await loadRecommendations()
+})
 
 const users = useLocalStorage('jhr_users', [
   {
@@ -1307,12 +1362,20 @@ const authTabs = [
   { id: 'admin', label: 'Admin Login' }
 ]
 
-const categories = ['All', 'Leave Policy', 'Promotion', 'Discipline', 'Salary', 'Loan']
+//const categories = ['All', 'Leave Policy', 'Promotion', 'Discipline', 'Salary', 'Loan']
+const categories = [
+  'All',
+  'Staff Benefits',
+  'Promotion',
+  'Overseas Travel',
+  'Contract Service',
+  'Promotion and Discipline'
+]
 
 const screen = ref('public')
 const query = ref('')
 const category = ref('All')
-const selectedDoc = ref(documents.value[0])
+//const selectedDoc = ref(documents.value[0])
 const authMode = ref('login')
 const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
@@ -1320,7 +1383,7 @@ const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
 const repoQuery = ref('')
 const repoType = ref('All Types')
 const smartQuery = ref('')
-const smartResults = ref(documents.value.filter((doc) => doc.access !== 'Restricted'))
+//const smartResults = ref(documents.value.filter((doc) => doc.access !== 'Restricted'))
 
 const mfaEnabled = ref(true)
 const policyUpdateEnabled = ref(true)
@@ -1776,10 +1839,89 @@ function performSmartSearch() {
   addLog('Performed smart search', 'Smart Search', 'Success', session.value)
 }
 
-function refreshRecommendations() {
+/*function refreshRecommendations() {
   smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
   toast.value = 'Recommendations refreshed based on department and recent searches.'
   addLog('Refreshed recommendations', 'Recommendation', 'Success', session.value)
+}*/
+
+async function refreshRecommendations() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/recommendations/refresh/${currentUserId}`,
+      {
+        method: 'POST'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh recommendations')
+    }
+
+    await loadRecommendations()
+
+    toast.value = 'Recommendations refreshed based on department and document activity.'
+    addLog('Refreshed recommendations', 'Recommendation', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to refresh recommendations.'
+  }
+}
+
+function openRecommendationReport(doc) {
+  if (!doc.recommendationId) {
+    toast.value = 'This recommendation cannot be reported because it has no recommendation record.'
+    return
+  }
+
+  selectedRecommendation.value = doc
+  recommendationReportForm.value = {
+    reportReason: 'Irrelevant',
+    reportDescription: ''
+  }
+  reportDialogOpen.value = true
+}
+
+async function submitRecommendationReport() {
+  if (!selectedRecommendation.value) {
+    toast.value = 'Please select a recommendation first.'
+    return
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/api/recommendation-reports', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        recommendationId: selectedRecommendation.value.recommendationId,
+        userId: currentUserId,
+        reportReason: recommendationReportForm.value.reportReason,
+        reportDescription: recommendationReportForm.value.reportDescription
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to submit recommendation report')
+    }
+
+    toast.value = 'Incorrect recommendation report submitted to administrator.'
+    reportDialogOpen.value = false
+    selectedRecommendation.value = null
+
+    await loadRecommendations()
+
+    addLog('Reported incorrect recommendation', 'Recommendation', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to submit recommendation report.'
+  }
+}
+
+function cancelRecommendationReport() {
+  reportDialogOpen.value = false
+  selectedRecommendation.value = null
 }
 
 function askSuggestedQuestion(question) {
