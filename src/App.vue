@@ -1075,30 +1075,77 @@
 
         <div class="wide-card">
           <div class="section-title">
-            <h3>Saved Documents and Personal Notes</h3>
-            <button @click="addSampleNote">
-              Add Note
+            <div>
+              <p class="eyebrow">Personal Storage</p>
+              <h3>Saved Documents and Personal Notes</h3>
+            </div>
+          </div>
+
+          <div
+            v-if="noteForm.documentId"
+            class="note-editor"
+          >
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Personal Note</p>
+                <h3>{{ noteForm.title }}</h3>
+              </div>
+
+              <button @click="cancelNoteEditor">
+                Cancel
+              </button>
+            </div>
+
+            <label class="field-label">Note Content</label>
+            <textarea
+              v-model="noteForm.noteContent"
+              class="feedback-textarea"
+              placeholder="Write your personal note for this document..."
+            ></textarea>
+
+            <button class="primary" @click="savePersonalNote">
+              Save Note
             </button>
           </div>
 
           <div class="doc-grid">
             <article
               v-for="item in savedDocuments"
-              :key="item.id"
+              :key="item.savedId"
               class="doc-card"
             >
               <span class="status-pill green">Saved</span>
               <h4>{{ item.title }}</h4>
-              <p>Note: {{ item.note }}</p>
+
+              <p v-if="item.note">
+                Note: {{ item.note }}
+              </p>
+
+              <p v-else class="muted">
+                No personal note yet.
+              </p>
 
               <div>
                 <span>{{ item.category }}</span>
-                <span>{{ item.updated }}</span>
+                <span>{{ new Date(item.updated).toLocaleDateString() }}</span>
               </div>
 
-              <button @click="removeSavedDocument(item.id)">
-                Remove
-              </button>
+              <div class="button-row">
+                <button @click="openNoteEditor(item)">
+                  {{ item.note ? 'Edit Note' : 'Add Note' }}
+                </button>
+
+                <button
+                  v-if="item.noteId"
+                  @click="deletePersonalNote(item)"
+                >
+                  Delete Note
+                </button>
+
+                <button @click="removeSavedDocument(item.savedId)">
+                  Remove
+                </button>
+              </div>
             </article>
 
             <div v-if="savedDocuments.length === 0" class="empty-state">
@@ -1406,6 +1453,21 @@ async function loadNotificationPreferences() {
   }
 }
 
+async function loadSavedDocuments() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/saved-documents/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load saved documents')
+    }
+
+    savedDocuments.value = await response.json()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load saved documents from database.'
+  }
+}
+
 onMounted(async () => {
   await loadDocuments()
   await loadRecommendations()
@@ -1417,6 +1479,7 @@ onMounted(async () => {
   await loadRecentSearchHistory()
   await loadTrendingDocuments()
   await loadFrequentlyUsedPolicies()
+  await loadSavedDocuments()
 })
 
 const users = useLocalStorage('jhr_users', [
@@ -1525,22 +1588,7 @@ const classificationQueue = useLocalStorage('jhr_classification_queue', [
 
 const notifications = ref([])
 
-const savedDocuments = useLocalStorage('jhr_saved_documents', [
-  {
-    id: 1,
-    title: 'Promotion Review and Staff Evaluation',
-    category: 'Promotion',
-    note: 'Check eligibility criteria before staff review.',
-    updated: 'Updated'
-  },
-  {
-    id: 2,
-    title: 'Salary Adjustment and Allowance Guideline',
-    category: 'Salary',
-    note: 'Useful for finance department reference.',
-    updated: 'Current'
-  }
-])
+const savedDocuments = ref([])
 
 const faqs = ref([])
 
@@ -1616,6 +1664,13 @@ const deliveryChannel = ref('In-System')
 const feedbackForm = ref({
   feedbackCategory: 'System Issue',
   feedbackContent: ''
+})
+
+const noteForm = ref({
+  savedId: null,
+  documentId: null,
+  title: '',
+  noteContent: ''
 })
 
 const loginForm = ref({
@@ -2426,41 +2481,139 @@ function findDocumentAnswer(categoryName) {
   return `I found ${matchedDocs.length} related document(s) under ${categoryName}: ${docList}. You can open the Public Portal or Document Repository to view the details.`
 }
 
-function saveDocument(doc) {
-  const alreadySaved = savedDocuments.value.some((item) => item.title === doc.title)
+async function saveDocument(doc) {
+  try {
+    const response = await fetch('http://localhost:3000/api/saved-documents', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        documentId: doc.documentId
+      })
+    })
 
-  if (alreadySaved) {
-    toast.value = 'This document is already saved.'
+    if (!response.ok) {
+      throw new Error('Failed to save document')
+    }
+
+    await loadSavedDocuments()
+
+    toast.value = `${doc.title} saved to personal collection.`
+    addLog('Saved favourite document', 'Saved Documents', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to save document.'
+  }
+}
+
+async function removeSavedDocument(savedId) {
+  try {
+    const response = await fetch(`http://localhost:3000/api/saved-documents/${savedId}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to remove saved document')
+    }
+
+    await loadSavedDocuments()
+
+    toast.value = 'Saved document removed.'
+    addLog('Removed favourite document', 'Saved Documents', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to remove saved document.'
+  }
+}
+
+function openNoteEditor(item) {
+  noteForm.value = {
+    savedId: item.savedId,
+    documentId: item.documentId,
+    title: item.title,
+    noteContent: item.note || ''
+  }
+}
+
+async function savePersonalNote() {
+  if (!noteForm.value.documentId) {
+    toast.value = 'Please select a saved document first.'
     return
   }
 
-  savedDocuments.value.unshift({
-    id: Date.now(),
-    title: doc.title,
-    category: doc.category,
-    note: 'Saved for future reference.',
-    updated: 'Current'
-  })
-
-  toast.value = `${doc.title} saved to personal collection.`
-  addLog('Saved favourite document', 'Saved Documents', 'Success', session.value)
-}
-
-function removeSavedDocument(id) {
-  savedDocuments.value = savedDocuments.value.filter((item) => item.id !== id)
-  toast.value = 'Saved document removed.'
-  addLog('Removed favourite document', 'Saved Documents', 'Success', session.value)
-}
-
-function addSampleNote() {
-  if (savedDocuments.value.length === 0) {
-    toast.value = 'Please save a document first before adding notes.'
+  if (!noteForm.value.noteContent.trim()) {
+    toast.value = 'Please enter a note before saving.'
     return
   }
 
-  savedDocuments.value[0].note = 'Updated note: Review this document before department meeting.'
-  toast.value = 'Personal note updated for the latest saved document.'
-  addLog('Added personal note', 'Personal Notes', 'Success', session.value)
+  try {
+    const response = await fetch('http://localhost:3000/api/personal-notes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        documentId: noteForm.value.documentId,
+        noteContent: noteForm.value.noteContent
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to save personal note')
+    }
+
+    await loadSavedDocuments()
+
+    noteForm.value = {
+      savedId: null,
+      documentId: null,
+      title: '',
+      noteContent: ''
+    }
+
+    toast.value = 'Personal note saved.'
+    addLog('Saved personal note', 'Personal Notes', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to save personal note.'
+  }
+}
+
+async function deletePersonalNote(item) {
+  if (!item.noteId) {
+    toast.value = 'This document has no note to delete.'
+    return
+  }
+
+  try {
+    const response = await fetch(`http://localhost:3000/api/personal-notes/${item.noteId}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete personal note')
+    }
+
+    await loadSavedDocuments()
+
+    toast.value = 'Personal note deleted.'
+    addLog('Deleted personal note', 'Personal Notes', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to delete personal note.'
+  }
+}
+
+function cancelNoteEditor() {
+  noteForm.value = {
+    savedId: null,
+    documentId: null,
+    title: '',
+    noteContent: ''
+  }
 }
 
 async function markAllNotificationsRead() {
