@@ -720,10 +720,52 @@
                 <span>{{ doc.type }}</span>
               </div>
 
-              <button class="primary" @click="saveDocument(doc)">
-                Save Document
-              </button>
+              <div class="button-row">
+                <button class="primary" @click="saveDocument(doc)">
+                  Save Document
+                </button>
+
+                <button @click="openRecommendationReport(doc)">
+                  Report Incorrect
+                </button>
+              </div>
             </article>
+          </div>
+
+          <div v-if="reportDialogOpen" class="report-panel">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Recommendation Report</p>
+                <h3>Report Incorrect Recommendation</h3>
+              </div>
+
+              <button @click="cancelRecommendationReport">
+                Cancel
+              </button>
+            </div>
+
+            <p v-if="selectedRecommendation">
+              Reporting: <strong>{{ selectedRecommendation.title }}</strong>
+            </p>
+
+            <label class="field-label">Reason</label>
+            <select v-model="recommendationReportForm.reportReason">
+              <option>Irrelevant</option>
+              <option>Inaccurate</option>
+              <option>Outdated</option>
+              <option>Inappropriate</option>
+              <option>Others</option>
+            </select>
+
+            <label class="field-label">Description</label>
+            <textarea
+              v-model="recommendationReportForm.reportDescription"
+              placeholder="Explain why this recommendation is incorrect..."
+            ></textarea>
+
+            <button class="primary full" @click="submitRecommendationReport">
+              Submit Report
+            </button>
           </div>
         </div>
 
@@ -1016,6 +1058,7 @@ onMounted(() => {
 }) */
 
 const documents = ref([])
+const currentUserId = 2
 
 const selectedDoc = ref({
   documentId: null,
@@ -1032,6 +1075,13 @@ const selectedDoc = ref({
 })
 
 const smartResults = ref([])
+const reportDialogOpen = ref(false)
+const selectedRecommendation = ref(null)
+
+const recommendationReportForm = ref({
+  reportReason: 'Irrelevant',
+  reportDescription: ''
+})
 
 async function loadDocuments() {
   try {
@@ -1053,8 +1103,29 @@ async function loadDocuments() {
   }
 }
 
-onMounted(() => {
-  loadDocuments()
+async function loadRecommendations() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/recommendations/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load recommendations')
+    }
+
+    const data = await response.json()
+
+    smartResults.value = data.length > 0
+      ? data
+      : documents.value.filter((doc) => doc.access !== 'Restricted')
+  } catch (error) {
+    console.error(error)
+    smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
+    toast.value = 'Failed to load recommendations from database.'
+  }
+}
+
+onMounted(async () => {
+  await loadDocuments()
+  await loadRecommendations()
 })
 
 const users = useLocalStorage('jhr_users', [
@@ -1651,10 +1722,89 @@ function performSmartSearch() {
   addLog('Performed smart search', 'Smart Search', 'Success', session.value)
 }
 
-function refreshRecommendations() {
+/*function refreshRecommendations() {
   smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
   toast.value = 'Recommendations refreshed based on department and recent searches.'
   addLog('Refreshed recommendations', 'Recommendation', 'Success', session.value)
+}*/
+
+async function refreshRecommendations() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/recommendations/refresh/${currentUserId}`,
+      {
+        method: 'POST'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh recommendations')
+    }
+
+    await loadRecommendations()
+
+    toast.value = 'Recommendations refreshed based on department and document activity.'
+    addLog('Refreshed recommendations', 'Recommendation', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to refresh recommendations.'
+  }
+}
+
+function openRecommendationReport(doc) {
+  if (!doc.recommendationId) {
+    toast.value = 'This recommendation cannot be reported because it has no recommendation record.'
+    return
+  }
+
+  selectedRecommendation.value = doc
+  recommendationReportForm.value = {
+    reportReason: 'Irrelevant',
+    reportDescription: ''
+  }
+  reportDialogOpen.value = true
+}
+
+async function submitRecommendationReport() {
+  if (!selectedRecommendation.value) {
+    toast.value = 'Please select a recommendation first.'
+    return
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/api/recommendation-reports', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        recommendationId: selectedRecommendation.value.recommendationId,
+        userId: currentUserId,
+        reportReason: recommendationReportForm.value.reportReason,
+        reportDescription: recommendationReportForm.value.reportDescription
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to submit recommendation report')
+    }
+
+    toast.value = 'Incorrect recommendation report submitted to administrator.'
+    reportDialogOpen.value = false
+    selectedRecommendation.value = null
+
+    await loadRecommendations()
+
+    addLog('Reported incorrect recommendation', 'Recommendation', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to submit recommendation report.'
+  }
+}
+
+function cancelRecommendationReport() {
+  reportDialogOpen.value = false
+  selectedRecommendation.value = null
 }
 
 function askSuggestedQuestion(question) {
