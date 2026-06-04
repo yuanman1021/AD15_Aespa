@@ -13,6 +13,7 @@ USE johor_hr_knowledge_hub;
 -- You can comment these lines if you do not want to reset.
 -- =========================================================
 
+DROP TABLE IF EXISTS recommendationReports;
 DROP TABLE IF EXISTS personalNotes;
 DROP TABLE IF EXISTS savedDocuments;
 DROP TABLE IF EXISTS notifications;
@@ -85,6 +86,35 @@ CREATE TABLE recommendations (
   CONSTRAINT fk_recommendation_document
     FOREIGN KEY (documentId) REFERENCES documents(documentId)
     ON DELETE CASCADE
+);
+
+-- =========================================================
+-- RECOMMENDATION REPORTS TABLE
+-- For Report Incorrect Recommendation function
+-- =========================================================
+
+CREATE TABLE recommendationReports (
+  reportId INT AUTO_INCREMENT PRIMARY KEY,
+  recommendationId INT NOT NULL,
+  userId INT NOT NULL,
+  adminId INT NULL,
+  reportReason VARCHAR(100) NOT NULL,
+  reportDescription VARCHAR(1000),
+  reportStatus VARCHAR(50) DEFAULT 'Pending',
+  submittedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  reviewedAt DATETIME NULL,
+
+  CONSTRAINT fk_report_recommendation
+    FOREIGN KEY (recommendationId) REFERENCES recommendations(recommendationId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_report_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_report_admin
+    FOREIGN KEY (adminId) REFERENCES users(userId)
+    ON DELETE SET NULL
 );
 
 -- =========================================================
@@ -399,3 +429,4 @@ SELECT * FROM recommendations;
 SELECT * FROM notifications;
 SELECT * FROM savedDocuments;
 SELECT * FROM personalNotes;
+SELECT * FROM recommendationReports;
