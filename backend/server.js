@@ -408,6 +408,189 @@ app.post('/api/escalation-requests', async (req, res) => {
   }
 })
 
+// Get notifications
+app.get('/api/notifications/:userId', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+        notificationId AS id,
+        userId,
+        documentId,
+        title,
+        message,
+        type,
+        isRead AS read,
+        createdAt AS time,
+        readAt
+      FROM notifications
+      WHERE userId = ?
+      ORDER BY createdAt DESC`,
+      [req.params.userId]
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load notifications',
+      error: error.message
+    })
+  }
+})
+
+// Mark one notification as read
+app.patch('/api/notifications/:notificationId/read', async (req, res) => {
+  try {
+    await db.query(
+      `UPDATE notifications
+       SET isRead = 1, readAt = NOW()
+       WHERE notificationId = ?`,
+      [req.params.notificationId]
+    )
+
+    res.json({
+      message: 'Notification marked as read'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to mark notification as read',
+      error: error.message
+    })
+  }
+})
+
+// Mark all notifications as read
+app.patch('/api/notifications/read-all/:userId', async (req, res) => {
+  try {
+    await db.query(
+      `UPDATE notifications
+       SET isRead = 1, readAt = NOW()
+       WHERE userId = ?`,
+      [req.params.userId]
+    )
+
+    res.json({
+      message: 'All notifications marked as read'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to mark all notifications as read',
+      error: error.message
+    })
+  }
+})
+
+// Get notification preferences
+app.get('/api/notification-preferences/:userId', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM notificationPreferences
+       WHERE userId = ?`,
+      [req.params.userId]
+    )
+
+    if (rows.length === 0) {
+      await db.query(
+        `INSERT INTO notificationPreferences
+        (userId, policyUpdateEnabled, savedUpdateEnabled, notificationFrequency, deliveryChannel)
+        VALUES (?, 1, 1, 'Daily', 'In-System')`,
+        [req.params.userId]
+      )
+
+      return res.json({
+        userId: Number(req.params.userId),
+        policyUpdateEnabled: 1,
+        savedUpdateEnabled: 1,
+        notificationFrequency: 'Daily',
+        deliveryChannel: 'In-System'
+      })
+    }
+
+    res.json(rows[0])
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load notification preferences',
+      error: error.message
+    })
+  }
+})
+
+// Save notification preferences
+app.put('/api/notification-preferences/:userId', async (req, res) => {
+  try {
+    const {
+      policyUpdateEnabled,
+      savedUpdateEnabled,
+      notificationFrequency,
+      deliveryChannel
+    } = req.body
+
+    await db.query(
+      `INSERT INTO notificationPreferences
+      (userId, policyUpdateEnabled, savedUpdateEnabled, notificationFrequency, deliveryChannel)
+      VALUES (?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+      policyUpdateEnabled = VALUES(policyUpdateEnabled),
+      savedUpdateEnabled = VALUES(savedUpdateEnabled),
+      notificationFrequency = VALUES(notificationFrequency),
+      deliveryChannel = VALUES(deliveryChannel)`,
+      [
+        req.params.userId,
+        policyUpdateEnabled ? 1 : 0,
+        savedUpdateEnabled ? 1 : 0,
+        notificationFrequency || 'Daily',
+        deliveryChannel || 'In-System'
+      ]
+    )
+
+    res.json({
+      message: 'Notification preferences saved successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to save notification preferences',
+      error: error.message
+    })
+  }
+})
+
+// Submit user feedback
+app.post('/api/user-feedback', async (req, res) => {
+  try {
+    const {
+      userId,
+      feedbackCategory,
+      feedbackContent
+    } = req.body
+
+    if (!userId || !feedbackCategory || !feedbackContent) {
+      return res.status(400).json({
+        message: 'userId, feedbackCategory and feedbackContent are required'
+      })
+    }
+
+    await db.query(
+      `INSERT INTO userFeedback
+      (userId, feedbackCategory, feedbackContent, feedbackStatus)
+      VALUES (?, ?, ?, ?)`,
+      [
+        userId,
+        feedbackCategory,
+        feedbackContent,
+        'Pending'
+      ]
+    )
+
+    res.json({
+      message: 'Feedback submitted successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to submit feedback',
+      error: error.message
+    })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Backend running at http://localhost:${PORT}`)
 })

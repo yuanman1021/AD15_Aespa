@@ -871,7 +871,7 @@
               <h3>Manage Alerts</h3>
             </div>
 
-            <button @click="toast = 'Notification preferences updated.'">
+            <button @click="saveNotificationPreferences">
               Save Preferences
             </button>
           </div>
@@ -897,6 +897,13 @@
               :action="notificationFrequency"
               @click="cycleNotificationFrequency"
             />
+
+            <SettingCard
+              title="Delivery Channel"
+              desc="Choose how notifications are delivered."
+              :action="deliveryChannel"
+              @click="deliveryChannel = deliveryChannel === 'In-System' ? 'Email' : deliveryChannel === 'Email' ? 'Both' : 'In-System'"
+            />
           </div>
         </div>
 
@@ -919,11 +926,55 @@
               <div>
                 <strong>{{ notice.title }}</strong>
                 <p>{{ notice.message }}</p>
+                <small>Type: {{ notice.type }}</small>
               </div>
 
-              <em>{{ notice.time }}</em>
+              <div class="notification-actions">
+                <em>{{ new Date(notice.time).toLocaleString() }}</em>
+
+                <button
+                  v-if="!notice.read"
+                  @click="markNotificationRead(notice.id)"
+                >
+                  Mark as Read
+                </button>
+              </div>
+            </div>
+
+            <p v-if="notifications.length === 0" class="muted">
+              No notifications available.
+            </p>
+          </div>
+        </div>
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">User Feedback</p>
+              <h3>Submit Feedback</h3>
             </div>
           </div>
+
+          <label class="field-label">Feedback Category</label>
+          <select v-model="feedbackForm.feedbackCategory" class="feedback-input">
+            <option>System Issue</option>
+            <option>Document Issue</option>
+            <option>Chatbot Issue</option>
+            <option>Search Issue</option>
+            <option>Suggestion</option>
+            <option>Others</option>
+          </select>
+
+          <label class="field-label">Feedback Content</label>
+          <textarea
+            v-model="feedbackForm.feedbackContent"
+            class="feedback-textarea"
+            placeholder="Write your feedback here..."
+          ></textarea>
+
+          <button class="primary" @click="submitUserFeedback">
+            Submit Feedback
+          </button>
         </div>
 
         <div class="wide-card">
@@ -1214,11 +1265,48 @@ async function loadConversationHistory() {
   }
 }
 
+async function loadNotifications() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/notifications/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load notifications')
+    }
+
+    notifications.value = await response.json()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load notifications from database.'
+  }
+}
+
+async function loadNotificationPreferences() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/notification-preferences/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load notification preferences')
+    }
+
+    const data = await response.json()
+
+    policyUpdateEnabled.value = data.policyUpdateEnabled === 1
+    savedUpdateEnabled.value = data.savedUpdateEnabled === 1
+    notificationFrequency.value = data.notificationFrequency || 'Daily'
+    deliveryChannel.value = data.deliveryChannel || 'In-System'
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load notification preferences.'
+  }
+}
+
 onMounted(async () => {
   await loadDocuments()
   await loadRecommendations()
   await loadFaqs()
   await loadConversationHistory()
+  await loadNotifications()
+  await loadNotificationPreferences()
 })
 
 const users = useLocalStorage('jhr_users', [
@@ -1325,29 +1413,7 @@ const classificationQueue = useLocalStorage('jhr_classification_queue', [
   }
 ])
 
-const notifications = useLocalStorage('jhr_notifications', [
-  {
-    id: 1,
-    title: 'Saved document updated',
-    message: 'Promotion Review Circular has a new version available.',
-    time: '10 min ago',
-    read: false
-  },
-  {
-    id: 2,
-    title: 'New relevant policy',
-    message: 'A salary guideline was published for your department.',
-    time: '1 hour ago',
-    read: false
-  },
-  {
-    id: 3,
-    title: 'Weekly digest ready',
-    message: 'You have 5 recommended HR documents this week.',
-    time: 'Yesterday',
-    read: true
-  }
-])
+const notifications = ref([])
 
 const savedDocuments = useLocalStorage('jhr_saved_documents', [
   {
@@ -1425,6 +1491,12 @@ const mfaEnabled = ref(true)
 const policyUpdateEnabled = ref(true)
 const savedUpdateEnabled = ref(true)
 const notificationFrequency = ref('Daily')
+const deliveryChannel = ref('In-System')
+
+const feedbackForm = ref({
+  feedbackCategory: 'System Issue',
+  feedbackContent: ''
+})
 
 const loginForm = ref({
   email: '',
@@ -2187,13 +2259,50 @@ function addSampleNote() {
   addLog('Added personal note', 'Personal Notes', 'Success', session.value)
 }
 
-function markAllNotificationsRead() {
-  notifications.value.forEach((notice) => {
-    notice.read = true
-  })
+async function markAllNotificationsRead() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/notifications/read-all/${currentUserId}`,
+      {
+        method: 'PATCH'
+      }
+    )
 
-  toast.value = 'All notifications marked as read.'
-  addLog('Marked notifications as read', 'Notifications', 'Success', session.value)
+    if (!response.ok) {
+      throw new Error('Failed to mark all notifications as read')
+    }
+
+    await loadNotifications()
+
+    toast.value = 'All notifications marked as read.'
+    addLog('Marked notifications as read', 'Notifications', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to mark notifications as read.'
+  }
+}
+
+async function markNotificationRead(notificationId) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/notifications/${notificationId}/read`,
+      {
+        method: 'PATCH'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to mark notification as read')
+    }
+
+    await loadNotifications()
+
+    toast.value = 'Notification marked as read.'
+    addLog('Marked notification as read', 'Notifications', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to mark notification as read.'
+  }
 }
 
 function cycleNotificationFrequency() {
@@ -2205,7 +2314,73 @@ function cycleNotificationFrequency() {
     notificationFrequency.value = 'Instant'
   }
 
-  toast.value = `Notification frequency changed to ${notificationFrequency.value}.`
+  toast.value = `Notification frequency changed to ${notificationFrequency.value}. Click Save Preferences to update database.`
+}
+
+async function saveNotificationPreferences() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/notification-preferences/${currentUserId}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          policyUpdateEnabled: policyUpdateEnabled.value,
+          savedUpdateEnabled: savedUpdateEnabled.value,
+          notificationFrequency: notificationFrequency.value,
+          deliveryChannel: deliveryChannel.value
+        })
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to save notification preferences')
+    }
+
+    toast.value = 'Notification preferences updated.'
+    addLog('Updated notification preferences', 'Notifications', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to save notification preferences.'
+  }
+}
+
+async function submitUserFeedback() {
+  if (!feedbackForm.value.feedbackContent.trim()) {
+    toast.value = 'Please enter your feedback before submitting.'
+    return
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/api/user-feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        feedbackCategory: feedbackForm.value.feedbackCategory,
+        feedbackContent: feedbackForm.value.feedbackContent
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to submit feedback')
+    }
+
+    feedbackForm.value = {
+      feedbackCategory: 'System Issue',
+      feedbackContent: ''
+    }
+
+    toast.value = 'Feedback submitted successfully.'
+    addLog('Submitted user feedback', 'User Feedback', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to submit feedback.'
+  }
 }
 
 function toggleUserStatus(user) {
