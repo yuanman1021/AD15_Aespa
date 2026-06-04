@@ -644,14 +644,49 @@
           <div class="search-box single">
             <input
               v-model="smartQuery"
-              placeholder="Example: What leave policy applies for long medical leave?"
+              placeholder="Example: TASKA subsidy, promotion TBK, SPKN travel..."
               @keyup.enter="performSmartSearch"
             />
           </div>
 
+          <div v-if="searchSuggestions.length > 0" class="suggestion-list">
+            <button
+              v-for="suggestion in searchSuggestions"
+              :key="suggestion.suggestionId"
+              @click="selectSearchSuggestion(suggestion)"
+            >
+              {{ suggestion.suggestionText }}
+            </button>
+          </div>
+
+          <label class="field-label">Sort Results</label>
+          <select v-model="smartSortBy" class="feedback-input">
+            <option value="relevance">Relevance</option>
+            <option value="latest">Latest Updated</option>
+            <option value="title">Title A-Z</option>
+            <option value="most_viewed">Most Viewed</option>
+          </select>
+
           <button class="primary" @click="performSmartSearch">
             Perform Smart Search
           </button>
+
+          <div class="history-panel">
+            <p class="eyebrow">Recent Search History</p>
+
+            <button
+              v-for="history in recentSearchHistory"
+              :key="history.searchId"
+              class="history-chip"
+              @click="smartQuery = history.searchQuery; performSmartSearch()"
+            >
+              {{ history.searchQuery }}
+            </button>
+
+            <p v-if="recentSearchHistory.length === 0" class="muted">
+              No recent search history yet.
+            </p>
+          </div>
         </div>
 
         <div class="detail-card chatbot-card">
@@ -691,6 +726,49 @@
               Send
             </button>
           </div>
+
+          <div class="assistant-actions">
+            <button @click="rateChatbotResponse(1)">
+              👍 Helpful
+            </button>
+
+            <button @click="rateChatbotResponse(0)">
+              👎 Not Helpful
+            </button>
+
+            <button @click="escalateLatestQuestion">
+              Escalate to HR Officer
+            </button>
+          </div>
+
+          <input
+            v-model="ratingComment"
+            class="feedback-input"
+            placeholder="Optional chatbot feedback comment..."
+          />
+
+          <div class="history-panel">
+            <p class="eyebrow">Conversation History</p>
+
+            <div
+              v-for="item in conversationHistory"
+              :key="item.conversationId"
+              class="history-item"
+            >
+              <strong>{{ item.questionText }}</strong>
+              <p>{{ item.responseText }}</p>
+              <small>
+                Status: {{ item.conversationStatus }}
+                <span v-if="item.ratingValue !== null">
+                  | Rating: {{ item.ratingValue === 1 ? 'Helpful' : 'Not Helpful' }}
+                </span>
+              </small>
+            </div>
+
+            <p v-if="conversationHistory.length === 0" class="muted">
+              No conversation history yet.
+            </p>
+          </div>
         </div>
 
         <div class="wide-card">
@@ -712,18 +790,88 @@
               class="doc-card"
             >
               <span class="status-pill green">Recommended</span>
-              <h4>{{ doc.title }}</h4>
-              <p>Reason: {{ doc.reason }}</p>
+              <h4 v-html="highlightMatchedContent(doc.title)"></h4>
+
+              <p v-if="doc.reason">
+                Reason: {{ doc.reason }}
+              </p>
+
+              <p v-if="doc.summary" v-html="highlightMatchedContent(doc.summary)"></p>
+
+              <p v-if="doc.relevanceScore">
+                Relevance Score: {{ doc.relevanceScore }}
+              </p>
 
               <div>
                 <span>{{ doc.category }}</span>
                 <span>{{ doc.type }}</span>
               </div>
 
-              <button class="primary" @click="saveDocument(doc)">
-                Save Document
-              </button>
+              <div class="button-row">
+                <button class="primary" @click="saveDocument(doc)">
+                  Save Document
+                </button>
+
+                <button @click="generateDocumentSummary(doc)">
+                  Generate Summary
+                </button>
+
+                <button @click="openRecommendationReport(doc)">
+                  Report Incorrect
+                </button>
+              </div>
             </article>
+          </div>
+
+          <div v-if="generatedSummary" class="summary-panel">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">AI Document Summary</p>
+                <h3>{{ selectedSummaryDoc?.title }}</h3>
+              </div>
+
+              <button @click="generatedSummary = ''">
+                Close
+              </button>
+            </div>
+
+            <p>{{ generatedSummary }}</p>
+          </div>
+
+          <div v-if="reportDialogOpen" class="report-panel">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Recommendation Report</p>
+                <h3>Report Incorrect Recommendation</h3>
+              </div>
+
+              <button @click="cancelRecommendationReport">
+                Cancel
+              </button>
+            </div>
+
+            <p v-if="selectedRecommendation">
+              Reporting: <strong>{{ selectedRecommendation.title }}</strong>
+            </p>
+
+            <label class="field-label">Reason</label>
+            <select v-model="recommendationReportForm.reportReason">
+              <option>Irrelevant</option>
+              <option>Inaccurate</option>
+              <option>Outdated</option>
+              <option>Inappropriate</option>
+              <option>Others</option>
+            </select>
+
+            <label class="field-label">Description</label>
+            <textarea
+              v-model="recommendationReportForm.reportDescription"
+              placeholder="Explain why this recommendation is incorrect..."
+            ></textarea>
+
+            <button class="primary full" @click="submitRecommendationReport">
+              Submit Report
+            </button>
           </div>
         </div>
 
@@ -734,7 +882,7 @@
               <h3>Frequently Asked Questions</h3>
             </div>
 
-            <button @click="toast = 'Question escalated to HR officer.'">
+            <button @click="escalateLatestQuestion">
               Escalate to HR Officer
             </button>
           </div>
@@ -744,6 +892,58 @@
               <summary>{{ faq.question }}</summary>
               <p>{{ faq.answer }}</p>
             </details>
+          </div>
+        </div>
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Trending Documents</p>
+              <h3>Currently Popular HR Documents</h3>
+            </div>
+          </div>
+
+          <div class="doc-grid">
+            <article
+              v-for="doc in trendingDocuments"
+              :key="doc.trendingId"
+              class="doc-card"
+    >
+              <span class="status-pill green">Trending</span>
+              <h4>{{ doc.title }}</h4>
+              <p>{{ doc.summary }}</p>
+
+              <div>
+                <span>Views: {{ doc.viewCount }}</span>
+                <span>Score: {{ doc.trendingScore }}</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Frequently Used Policies</p>
+              <h3>Suggested Frequently Used Policies</h3>
+            </div>
+          </div>
+
+          <div class="doc-grid">
+            <article
+              v-for="doc in frequentlyUsedPolicies"
+              :key="doc.documentId"
+              class="doc-card"
+            >
+              <span class="status-pill amber">Frequently Used</span>
+              <h4>{{ doc.title }}</h4>
+              <p>{{ doc.summary }}</p>
+
+              <div>
+                <span>{{ doc.category }}</span>
+                <span>Views: {{ doc.totalViews }}</span>
+              </div>
+            </article>
           </div>
         </div>
       </section>
@@ -767,7 +967,7 @@
               <h3>Manage Alerts</h3>
             </div>
 
-            <button @click="toast = 'Notification preferences updated.'">
+            <button @click="saveNotificationPreferences">
               Save Preferences
             </button>
           </div>
@@ -793,6 +993,13 @@
               :action="notificationFrequency"
               @click="cycleNotificationFrequency"
             />
+
+            <SettingCard
+              title="Delivery Channel"
+              desc="Choose how notifications are delivered."
+              :action="deliveryChannel"
+              @click="deliveryChannel = deliveryChannel === 'In-System' ? 'Email' : deliveryChannel === 'Email' ? 'Both' : 'In-System'"
+            />
           </div>
         </div>
 
@@ -815,39 +1022,130 @@
               <div>
                 <strong>{{ notice.title }}</strong>
                 <p>{{ notice.message }}</p>
+                <small>Type: {{ notice.type }}</small>
               </div>
 
-              <em>{{ notice.time }}</em>
+              <div class="notification-actions">
+                <em>{{ new Date(notice.time).toLocaleString() }}</em>
+
+                <button
+                  v-if="!notice.read"
+                  @click="markNotificationRead(notice.id)"
+                >
+                  Mark as Read
+                </button>
+              </div>
             </div>
+
+            <p v-if="notifications.length === 0" class="muted">
+              No notifications available.
+            </p>
           </div>
         </div>
 
         <div class="wide-card">
           <div class="section-title">
-            <h3>Saved Documents and Personal Notes</h3>
-            <button @click="addSampleNote">
-              Add Note
+            <div>
+              <p class="eyebrow">User Feedback</p>
+              <h3>Submit Feedback</h3>
+            </div>
+          </div>
+
+          <label class="field-label">Feedback Category</label>
+          <select v-model="feedbackForm.feedbackCategory" class="feedback-input">
+            <option>System Issue</option>
+            <option>Document Issue</option>
+            <option>Chatbot Issue</option>
+            <option>Search Issue</option>
+            <option>Suggestion</option>
+            <option>Others</option>
+          </select>
+
+          <label class="field-label">Feedback Content</label>
+          <textarea
+            v-model="feedbackForm.feedbackContent"
+            class="feedback-textarea"
+            placeholder="Write your feedback here..."
+          ></textarea>
+
+          <button class="primary" @click="submitUserFeedback">
+            Submit Feedback
+          </button>
+        </div>
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Personal Storage</p>
+              <h3>Saved Documents and Personal Notes</h3>
+            </div>
+          </div>
+
+          <div
+            v-if="noteForm.documentId"
+            class="note-editor"
+          >
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Personal Note</p>
+                <h3>{{ noteForm.title }}</h3>
+              </div>
+
+              <button @click="cancelNoteEditor">
+                Cancel
+              </button>
+            </div>
+
+            <label class="field-label">Note Content</label>
+            <textarea
+              v-model="noteForm.noteContent"
+              class="feedback-textarea"
+              placeholder="Write your personal note for this document..."
+            ></textarea>
+
+            <button class="primary" @click="savePersonalNote">
+              Save Note
             </button>
           </div>
 
           <div class="doc-grid">
             <article
               v-for="item in savedDocuments"
-              :key="item.id"
+              :key="item.savedId"
               class="doc-card"
             >
               <span class="status-pill green">Saved</span>
               <h4>{{ item.title }}</h4>
-              <p>Note: {{ item.note }}</p>
+
+              <p v-if="item.note">
+                Note: {{ item.note }}
+              </p>
+
+              <p v-else class="muted">
+                No personal note yet.
+              </p>
 
               <div>
                 <span>{{ item.category }}</span>
-                <span>{{ item.updated }}</span>
+                <span>{{ new Date(item.updated).toLocaleDateString() }}</span>
               </div>
 
-              <button @click="removeSavedDocument(item.id)">
-                Remove
-              </button>
+              <div class="button-row">
+                <button @click="openNoteEditor(item)">
+                  {{ item.note ? 'Edit Note' : 'Add Note' }}
+                </button>
+
+                <button
+                  v-if="item.noteId"
+                  @click="deletePersonalNote(item)"
+                >
+                  Delete Note
+                </button>
+
+                <button @click="removeSavedDocument(item.savedId)">
+                  Remove
+                </button>
+              </div>
             </article>
 
             <div v-if="savedDocuments.length === 0" class="empty-state">
@@ -907,12 +1205,15 @@
             <table>
               <thead>
                 <tr>
-                  <th>User</th>
-                  <th>Department</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
+                <th>User</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Action</th>
+              </tr>
               </thead>
 
               <tbody>
@@ -923,6 +1224,7 @@
                   </td>
 
                   <td>{{ user.department }}</td>
+                  <td>{{ user.designation }}</td>
                   <td>{{ user.role }}</td>
 
                   <td>
@@ -930,6 +1232,9 @@
                       {{ user.status }}
                     </span>
                   </td>
+
+                  <td>{{ user.created_at }}</td>
+                  <td>{{ user.updated_at }}</td>
 
                   <td>
                     <button @click="toggleUserStatus(user)">
@@ -973,26 +1278,36 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import InputField from './components/InputField.vue'
 import StatCard from './components/StatCard.vue'
 import SettingCard from './components/SettingCard.vue'
 
 function useLocalStorage(key, defaultValue) {
-  let storedValue = null
+  let initialValue = defaultValue
 
   try {
-    storedValue = localStorage.getItem(key)
+    const storedValue = localStorage.getItem(key)
+
+    if (storedValue) {
+      initialValue = JSON.parse(storedValue)
+    }
   } catch (error) {
-    storedValue = null
+    console.warn(`Invalid localStorage data for ${key}. Resetting to default value.`)
+    localStorage.removeItem(key)
+    initialValue = defaultValue
   }
 
-  const data = ref(storedValue ? JSON.parse(storedValue) : defaultValue)
+  const data = ref(initialValue)
 
   watch(
     data,
     (newValue) => {
-      localStorage.setItem(key, JSON.stringify(newValue))
+      try {
+        localStorage.setItem(key, JSON.stringify(newValue))
+      } catch (error) {
+        console.warn(`Failed to save ${key} to localStorage.`)
+      }
     },
     { deep: true }
   )
@@ -1000,78 +1315,179 @@ function useLocalStorage(key, defaultValue) {
   return data
 }
 
-const documents = useLocalStorage('jhr_documents', [
-  {
-    documentId: 1,
-    referenceNo: 'JHR-CUTI-2026-01',
-    title: 'Garis Panduan Cuti Sakit Pegawai Kerajaan Johor',
-    category: 'Leave Policy',
-    type: 'Guideline',
-    status: 'Published',
-    access: 'Public',
-    effectiveDate: '12 Jan 2026',
-    version: '1.0',
-    reason: 'Matches your department and recent leave policy searches.',
-    summary:
-      'Official guideline explaining sick leave eligibility, supporting documents, approval flow, and department-level responsibilities.'
-  },
-  {
-    documentId: 2,
-    referenceNo: 'JHR-PANGKAT-2025-08',
-    title: 'Circular for Promotion Review and Staff Evaluation',
-    category: 'Promotion',
-    type: 'Circular',
-    status: 'Published',
-    access: 'Registered',
-    effectiveDate: '20 Dec 2025',
-    version: '2.1',
-    reason: 'Popular among officers with the same designation level.',
-    summary:
-      'Circular related to promotion review, evaluation schedule, staff performance evidence and decision recording procedures.'
-  },
-  {
-    documentId: 3,
-    referenceNo: 'JHR-TATATERTIB-2025-03',
-    title: 'Administrative Decision on Staff Discipline Procedure',
-    category: 'Discipline',
-    type: 'Administrative Decision',
-    status: 'Published',
-    access: 'Restricted',
-    effectiveDate: '03 Nov 2025',
-    version: '1.3',
-    reason: 'Related to HR compliance documents viewed recently.',
-    summary:
-      'Restricted administrative decision for internal officers only. Requires registered access and suitable permission level.'
-  },
-  {
-    documentId: 4,
-    referenceNo: 'JHR-GAJI-2025-11',
-    title: 'Salary Adjustment and Allowance Guideline',
-    category: 'Salary',
-    type: 'Guideline',
-    status: 'Published',
-    access: 'Registered',
-    effectiveDate: '18 Oct 2025',
-    version: '1.0',
-    reason: 'Recommended because your department viewed salary guidelines this week.',
-    summary:
-      'Guideline explaining salary adjustment request, allowance categories and supporting documents.'
-  },
-  {
-    documentId: 5,
-    referenceNo: 'JHR-PINJAMAN-2025-04',
-    title: 'Staff Loan Application FAQ and Procedure',
-    category: 'Loan',
-    type: 'Policy',
-    status: 'Published',
-    access: 'Public',
-    effectiveDate: '05 Sept 2025',
-    version: '1.0',
-    reason: 'Frequently asked by officers in similar departments.',
-    summary:
-      'Policy notes for staff loan eligibility, application procedure and supporting evidence.'
+/* const documents = ref([])
+
+async function loadDocuments() {
+  try {
+    const response = await fetch('http://localhost:3000/api/documents')
+    documents.value = await response.json()
+  } catch (error) {
+    toast.value = 'Failed to load documents from database.'
   }
-])
+}
+
+onMounted(() => {
+  loadDocuments()
+}) */
+
+const documents = ref([])
+const currentUserId = 2
+
+const selectedDoc = ref({
+  documentId: null,
+  referenceNo: '',
+  title: 'Loading documents...',
+  category: '',
+  type: '',
+  status: '',
+  access: 'Public',
+  effectiveDate: '',
+  version: '',
+  reason: '',
+  summary: 'Please wait while documents are loaded from the database.'
+})
+
+const smartResults = ref([])
+const reportDialogOpen = ref(false)
+const selectedRecommendation = ref(null)
+
+const recommendationReportForm = ref({
+  reportReason: 'Irrelevant',
+  reportDescription: ''
+})
+
+async function loadDocuments() {
+  try {
+    const response = await fetch('http://localhost:3000/api/documents')
+
+    if (!response.ok) {
+      throw new Error('Failed to load documents')
+    }
+
+    documents.value = await response.json()
+
+    if (documents.value.length > 0) {
+      selectedDoc.value = documents.value[0]
+      smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
+    }
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load documents from database.'
+  }
+}
+
+async function loadRecommendations() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/recommendations/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load recommendations')
+    }
+
+    const data = await response.json()
+
+    smartResults.value = data.length > 0
+      ? data
+      : documents.value.filter((doc) => doc.access !== 'Restricted')
+  } catch (error) {
+    console.error(error)
+    smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
+    toast.value = 'Failed to load recommendations from database.'
+  }
+}
+
+async function loadFaqs() {
+  try {
+    const response = await fetch('http://localhost:3000/api/faqs')
+
+    if (!response.ok) {
+      throw new Error('Failed to load FAQs')
+    }
+
+    faqs.value = await response.json()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load FAQs from database.'
+  }
+}
+
+async function loadConversationHistory() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/chatbot/conversations/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load conversation history')
+    }
+
+    conversationHistory.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function loadNotifications() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/notifications/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load notifications')
+    }
+
+    notifications.value = await response.json()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load notifications from database.'
+  }
+}
+
+async function loadNotificationPreferences() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/notification-preferences/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load notification preferences')
+    }
+
+    const data = await response.json()
+
+    policyUpdateEnabled.value = data.policyUpdateEnabled === 1
+    savedUpdateEnabled.value = data.savedUpdateEnabled === 1
+    notificationFrequency.value = data.notificationFrequency || 'Daily'
+    deliveryChannel.value = data.deliveryChannel || 'In-System'
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load notification preferences.'
+  }
+}
+
+async function loadSavedDocuments() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/saved-documents/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load saved documents')
+    }
+
+    savedDocuments.value = await response.json()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load saved documents from database.'
+  }
+}
+
+onMounted(async () => {
+  await loadDocuments()
+  await loadRecommendations()
+  await loadFaqs()
+  await loadConversationHistory()
+  await loadNotifications()
+  await loadNotificationPreferences()
+  await loadSearchSuggestions()
+  await loadRecentSearchHistory()
+  await loadTrendingDocuments()
+  await loadFrequentlyUsedPolicies()
+  await loadSavedDocuments()
+})
 
 const users = useLocalStorage('jhr_users', [
   {
@@ -1079,24 +1495,55 @@ const users = useLocalStorage('jhr_users', [
     name: 'Nur Aina Rahman',
     email: 'aina@johor.gov.my',
     department: 'Human Resource Management Division',
+    designation: 'Assistant Officer',
     role: 'Registered User',
-    status: 'Active'
+    status: 'Active',
+    created_at: '2026-01-10 09:00 AM',
+    updated_at: '2026-01-10 09:00 AM'
   },
   {
     id: 'USR002',
     name: 'Daniel Tan',
     email: 'daniel@johor.gov.my',
     department: 'Finance Department',
+    designation: 'Officer',
     role: 'Registered User',
-    status: 'Suspended'
+    status: 'Suspended',
+    created_at: '2026-01-12 10:30 AM',
+    updated_at: '2026-01-15 02:10 PM'
+  },
+  {
+    id: 'USR003',
+    name: 'Tung Ern',
+    email: 'tungern@johor.gov.my',
+    department: 'Knowledge and Document Management Unit',
+    designation: 'Document Officer',
+    role: 'Registered User',
+    status: 'Active',
+    created_at: '2026-01-05 10:00 AM',
+    updated_at: '2026-01-05 10:00 AM'
   },
   {
     id: 'ADM001',
     name: 'May Yan',
-    email: 'admin@johor.gov.my',
-    department: 'HRMD Admin Unit',
+    email: 'mayyan@johor.gov.my',
+    department: 'User and Access Management Unit',
+    designation: 'System Administrator',
     role: 'Administrator',
-    status: 'Active'
+    status: 'Active',
+    created_at: '2026-01-01 08:30 AM',
+    updated_at: '2026-01-01 08:30 AM'
+  },
+  {
+    id: 'ADM002',
+    name: 'Yuan Man',
+    email: 'yuanman@johor.gov.my',
+    department: 'Intelligent Recommendation and Support Unit',
+    designation: 'AI Support Administrator',
+    role: 'Administrator',
+    status: 'Active',
+    created_at: '2026-01-14 11:20 AM',
+    updated_at: '2026-01-14 11:20 AM'
   }
 ])
 
@@ -1177,67 +1624,11 @@ const classificationQueue = useLocalStorage('jhr_classification_queue', [
   }
 ])
 
-const notifications = useLocalStorage('jhr_notifications', [
-  {
-    id: 1,
-    title: 'Saved document updated',
-    message: 'Promotion Review Circular has a new version available.',
-    time: '10 min ago',
-    read: false
-  },
-  {
-    id: 2,
-    title: 'New relevant policy',
-    message: 'A salary guideline was published for your department.',
-    time: '1 hour ago',
-    read: false
-  },
-  {
-    id: 3,
-    title: 'Weekly digest ready',
-    message: 'You have 5 recommended HR documents this week.',
-    time: 'Yesterday',
-    read: true
-  }
-])
+const notifications = ref([])
 
-const savedDocuments = useLocalStorage('jhr_saved_documents', [
-  {
-    id: 1,
-    title: 'Promotion Review and Staff Evaluation',
-    category: 'Promotion',
-    note: 'Check eligibility criteria before staff review.',
-    updated: 'Updated'
-  },
-  {
-    id: 2,
-    title: 'Salary Adjustment and Allowance Guideline',
-    category: 'Salary',
-    note: 'Useful for finance department reference.',
-    updated: 'Current'
-  }
-])
+const savedDocuments = ref([])
 
-const faqs = [
-  {
-    id: 1,
-    question: 'How do I search for a circular by reference number?',
-    answer:
-      'Enter the reference number in the search box or use the document repository search filter.'
-  },
-  {
-    id: 2,
-    question: 'Why can I not download a restricted document?',
-    answer:
-      'Restricted documents require registered access and suitable permissions set by the administrator.'
-  },
-  {
-    id: 3,
-    question: 'How are document recommendations generated?',
-    answer:
-      'They are based on your department, role, recent searches, viewed documents and related content.'
-  }
-]
+const faqs = ref([])
 
 const suggestedQuestions = [
   'How do I reset my password?',
@@ -1269,12 +1660,20 @@ const authTabs = [
   { id: 'admin', label: 'Admin Login' }
 ]
 
-const categories = ['All', 'Leave Policy', 'Promotion', 'Discipline', 'Salary', 'Loan']
+//const categories = ['All', 'Leave Policy', 'Promotion', 'Discipline', 'Salary', 'Loan']
+const categories = [
+  'All',
+  'Staff Benefits',
+  'Promotion',
+  'Overseas Travel',
+  'Contract Service',
+  'Promotion and Discipline'
+]
 
 const screen = ref('public')
 const query = ref('')
 const category = ref('All')
-const selectedDoc = ref(documents.value[0])
+//const selectedDoc = ref(documents.value[0])
 const authMode = ref('login')
 const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
@@ -1282,12 +1681,35 @@ const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
 const repoQuery = ref('')
 const repoType = ref('All Types')
 const smartQuery = ref('')
-const smartResults = ref(documents.value.filter((doc) => doc.access !== 'Restricted'))
+const smartSortBy = ref('relevance')
+const searchSuggestions = ref([])
+const recentSearchHistory = ref([])
+const trendingDocuments = ref([])
+const frequentlyUsedPolicies = ref([])
+const lastSearchKeyword = ref('')
+
+watch(smartQuery, () => {
+  loadSearchSuggestions()
+})
+//const smartResults = ref(documents.value.filter((doc) => doc.access !== 'Restricted'))
 
 const mfaEnabled = ref(true)
 const policyUpdateEnabled = ref(true)
 const savedUpdateEnabled = ref(true)
 const notificationFrequency = ref('Daily')
+const deliveryChannel = ref('In-System')
+
+const feedbackForm = ref({
+  feedbackCategory: 'System Issue',
+  feedbackContent: ''
+})
+
+const noteForm = ref({
+  savedId: null,
+  documentId: null,
+  title: '',
+  noteContent: ''
+})
 
 const loginForm = ref({
   email: '',
@@ -1332,6 +1754,11 @@ const uploadForm = ref({
 })
 
 const chatInput = ref('')
+const conversationHistory = ref([])
+const latestConversationId = ref(null)
+const generatedSummary = ref('')
+const selectedSummaryDoc = ref(null)
+const ratingComment = ref('')
 const chatMessages = ref([
   {
     sender: 'bot',
@@ -1392,6 +1819,69 @@ function addLog(action, module, result = 'Success', user = 'System') {
   })
 }
 
+function getCurrentDateTime() {
+  return new Date().toLocaleString('en-MY', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function normalizeUsers() {
+  users.value = users.value.map((user) => {
+    return {
+      ...user,
+      designation: user.designation || 'Not assigned',
+      created_at: user.created_at || getCurrentDateTime(),
+      updated_at: user.updated_at || getCurrentDateTime()
+    }
+  })
+
+  const defaultUsers = [
+    {
+      id: 'USR003',
+      name: 'Tung Ern',
+      email: 'tungern@johor.gov.my',
+      department: 'Knowledge and Document Management Unit',
+      designation: 'Document Officer',
+      role: 'Registered User',
+      status: 'Active',
+      created_at: '2026-01-05 10:00 AM',
+      updated_at: '2026-01-05 10:00 AM'
+    },
+    {
+      id: 'ADM002',
+      name: 'Yuan Man',
+      email: 'yuanman@johor.gov.my',
+      department: 'Intelligent Recommendation and Support Unit',
+      designation: 'AI Support Administrator',
+      role: 'Administrator',
+      status: 'Active',
+      created_at: '2026-01-14 11:20 AM',
+      updated_at: '2026-01-14 11:20 AM'
+    }
+  ]
+
+  defaultUsers.forEach((defaultUser) => {
+    const existingUser = users.value.find((user) => user.email === defaultUser.email)
+
+    if (existingUser) {
+      existingUser.id = defaultUser.id
+      existingUser.name = defaultUser.name
+      existingUser.department = defaultUser.department
+      existingUser.designation = defaultUser.designation
+      existingUser.role = defaultUser.role
+      existingUser.status = defaultUser.status
+      existingUser.created_at = existingUser.created_at || defaultUser.created_at
+      existingUser.updated_at = getCurrentDateTime()
+    } else {
+      users.value.push(defaultUser)
+    }
+  })
+}
+
 function fakeLogin(type) {
   session.value = type
   screen.value = type === 'Admin' ? 'admin' : 'personal'
@@ -1425,15 +1915,19 @@ function registerUser() {
     return
   }
 
+  const now = getCurrentDateTime()
+
   const newUser = {
     id: `USR${Date.now()}`,
     name: registerForm.value.name,
     email: registerForm.value.email,
     department: registerForm.value.department || 'Not assigned',
+    designation: registerForm.value.designation || 'Not assigned',
     role: 'Registered User',
-    status: 'Active'
+    status: 'Active',
+    created_at: now,
+    updated_at: now
   }
-
   users.value.unshift(newUser)
 
   registerForm.value = {
@@ -1488,6 +1982,18 @@ function openDocumentDetails(doc) {
 }
 
 function saveProfile() {
+  const now = getCurrentDateTime()
+
+  const currentUser = users.value.find((user) => user.email === profileForm.value.email)
+
+  if (currentUser) {
+    currentUser.name = profileForm.value.name
+    currentUser.email = profileForm.value.email
+    currentUser.department = profileForm.value.department
+    currentUser.designation = profileForm.value.designation
+    currentUser.updated_at = now
+  }
+
   toast.value = 'Profile updated successfully.'
   addLog('Updated profile information', 'Profile Management', 'Success', profileForm.value.name)
 }
@@ -1630,39 +2136,202 @@ function uploadNewVersion() {
   addLog('Uploaded new document version', 'Version Management', 'Success', 'Administrator')
 }
 
-function performSmartSearch() {
+async function loadSearchSuggestions() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/search-suggestions?keyword=${encodeURIComponent(smartQuery.value)}`
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to load search suggestions')
+    }
+
+    searchSuggestions.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function selectSearchSuggestion(suggestion) {
+  smartQuery.value = suggestion.suggestionText
+  performSmartSearch()
+}
+
+async function loadRecentSearchHistory() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/search-history/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load recent search history')
+    }
+
+    recentSearchHistory.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function loadTrendingDocuments() {
+  try {
+    const response = await fetch('http://localhost:3000/api/trending-documents')
+
+    if (!response.ok) {
+      throw new Error('Failed to load trending documents')
+    }
+
+    trendingDocuments.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function loadFrequentlyUsedPolicies() {
+  try {
+    const response = await fetch('http://localhost:3000/api/frequently-used-policies')
+
+    if (!response.ok) {
+      throw new Error('Failed to load frequently used policies')
+    }
+
+    frequentlyUsedPolicies.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function performSmartSearch() {
   if (!smartQuery.value.trim()) {
     smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
     toast.value = 'Showing general recommended documents.'
     return
   }
 
-  const keyword = smartQuery.value.toLowerCase()
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/search?userId=${currentUserId}&keyword=${encodeURIComponent(smartQuery.value)}&sortBy=${smartSortBy.value}`
+    )
 
-  let results = documents.value.filter((doc) => {
-    const searchText = `${doc.title} ${doc.category} ${doc.summary}`.toLowerCase()
-    return searchText.includes(keyword)
-  })
+    if (!response.ok) {
+      throw new Error('Smart search failed')
+    }
 
-  if (keyword.includes('leave') || keyword.includes('cuti')) {
-    results = documents.value.filter((doc) => doc.category === 'Leave Policy')
-  } else if (keyword.includes('promotion') || keyword.includes('pangkat')) {
-    results = documents.value.filter((doc) => doc.category === 'Promotion')
-  } else if (keyword.includes('salary') || keyword.includes('gaji')) {
-    results = documents.value.filter((doc) => doc.category === 'Salary')
-  } else if (keyword.includes('loan') || keyword.includes('pinjaman')) {
-    results = documents.value.filter((doc) => doc.category === 'Loan')
+    const data = await response.json()
+
+    smartResults.value = data.results.length > 0
+      ? data.results
+      : documents.value.filter((doc) => doc.access !== 'Restricted')
+
+    lastSearchKeyword.value = smartQuery.value
+
+    await loadRecentSearchHistory()
+    await loadSearchSuggestions()
+
+    toast.value = 'Smart search completed. Results ranked and saved to search history.'
+    addLog('Performed smart search', 'Smart Search', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Smart search failed.'
   }
-
-  smartResults.value = results.length > 0 ? results : documents.value.filter((doc) => doc.access !== 'Restricted')
-  toast.value = 'Smart search completed. Results ranked by relevance.'
-  addLog('Performed smart search', 'Smart Search', 'Success', session.value)
 }
 
-function refreshRecommendations() {
+function highlightMatchedContent(text) {
+  if (!text) return ''
+
+  const keyword = lastSearchKeyword.value || smartQuery.value
+
+  if (!keyword.trim()) {
+    return text
+  }
+
+  const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const regex = new RegExp(`(${escapedKeyword})`, 'gi')
+
+  return text.replace(regex, '<mark>$1</mark>')
+}
+
+/*function refreshRecommendations() {
   smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
   toast.value = 'Recommendations refreshed based on department and recent searches.'
   addLog('Refreshed recommendations', 'Recommendation', 'Success', session.value)
+}*/
+
+async function refreshRecommendations() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/recommendations/refresh/${currentUserId}`,
+      {
+        method: 'POST'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh recommendations')
+    }
+
+    await loadRecommendations()
+
+    toast.value = 'Recommendations refreshed based on department and document activity.'
+    addLog('Refreshed recommendations', 'Recommendation', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to refresh recommendations.'
+  }
+}
+
+function openRecommendationReport(doc) {
+  if (!doc.recommendationId) {
+    toast.value = 'This recommendation cannot be reported because it has no recommendation record.'
+    return
+  }
+
+  selectedRecommendation.value = doc
+  recommendationReportForm.value = {
+    reportReason: 'Irrelevant',
+    reportDescription: ''
+  }
+  reportDialogOpen.value = true
+}
+
+async function submitRecommendationReport() {
+  if (!selectedRecommendation.value) {
+    toast.value = 'Please select a recommendation first.'
+    return
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/api/recommendation-reports', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        recommendationId: selectedRecommendation.value.recommendationId,
+        userId: currentUserId,
+        reportReason: recommendationReportForm.value.reportReason,
+        reportDescription: recommendationReportForm.value.reportDescription
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to submit recommendation report')
+    }
+
+    toast.value = 'Incorrect recommendation report submitted to administrator.'
+    reportDialogOpen.value = false
+    selectedRecommendation.value = null
+
+    await loadRecommendations()
+
+    addLog('Reported incorrect recommendation', 'Recommendation', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to submit recommendation report.'
+  }
+}
+
+function cancelRecommendationReport() {
+  reportDialogOpen.value = false
+  selectedRecommendation.value = null
 }
 
 function askSuggestedQuestion(question) {
@@ -1670,7 +2339,7 @@ function askSuggestedQuestion(question) {
   sendChatMessage()
 }
 
-function sendChatMessage() {
+async function sendChatMessage() {
   const question = chatInput.value.trim()
 
   if (!question) {
@@ -1690,9 +2359,136 @@ function sendChatMessage() {
     text: answer
   })
 
+  try {
+    const response = await fetch('http://localhost:3000/api/chatbot/conversations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        questionText: question,
+        responseText: answer,
+        confidenceScore: 88.00
+      })
+    })
+
+    const data = await response.json()
+    latestConversationId.value = data.conversationId
+
+    await loadConversationHistory()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Chatbot answered, but conversation was not saved.'
+  }
+
   chatInput.value = ''
   toast.value = 'Chatbot response generated.'
   addLog('Used HR chatbot assistance', 'AI Chatbot', 'Success', session.value)
+}
+
+async function rateChatbotResponse(value) {
+  if (!latestConversationId.value) {
+    toast.value = 'Please ask the chatbot a question before rating.'
+    return
+  }
+
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/chatbot/conversations/${latestConversationId.value}/rating`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ratingValue: value,
+          ratingComment: ratingComment.value
+        })
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to rate chatbot response')
+    }
+
+    toast.value = value === 1
+      ? 'Thank you for rating the chatbot response as helpful.'
+      : 'Thank you. Your feedback will help improve chatbot response quality.'
+
+    ratingComment.value = ''
+    await loadConversationHistory()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to save chatbot rating.'
+  }
+}
+
+async function generateDocumentSummary(doc) {
+  try {
+    const response = await fetch('http://localhost:3000/api/document-summaries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        documentId: doc.documentId,
+        userId: currentUserId
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to generate document summary')
+    }
+
+    const data = await response.json()
+
+    selectedSummaryDoc.value = doc
+    generatedSummary.value = data.summaryText
+
+    toast.value = 'Document summary generated.'
+    addLog('Generated document summary', 'AI Summary', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to generate document summary.'
+  }
+}
+
+async function escalateLatestQuestion() {
+  if (!latestConversationId.value && chatMessages.value.length <= 1) {
+    toast.value = 'Please ask the chatbot a question before escalation.'
+    return
+  }
+
+  const latestUserMessage = [...chatMessages.value]
+    .reverse()
+    .find((message) => message.sender === 'user')
+
+  try {
+    const response = await fetch('http://localhost:3000/api/escalation-requests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        conversationId: latestConversationId.value,
+        userId: currentUserId,
+        escalationQuestion: latestUserMessage ? latestUserMessage.text : 'General HR question',
+        escalationDescription: 'User requested HR officer support from chatbot panel.'
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to escalate question')
+    }
+
+    toast.value = 'Question escalated to HR officer.'
+    await loadConversationHistory()
+    addLog('Escalated question to HR officer', 'AI Chatbot', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to escalate question.'
+  }
 }
 
 function generateChatbotAnswer(question) {
@@ -1802,50 +2598,185 @@ function findDocumentAnswer(categoryName) {
   return `I found ${matchedDocs.length} related document(s) under ${categoryName}: ${docList}. You can open the Public Portal or Document Repository to view the details.`
 }
 
-function saveDocument(doc) {
-  const alreadySaved = savedDocuments.value.some((item) => item.title === doc.title)
+async function saveDocument(doc) {
+  try {
+    const response = await fetch('http://localhost:3000/api/saved-documents', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        documentId: doc.documentId
+      })
+    })
 
-  if (alreadySaved) {
-    toast.value = 'This document is already saved.'
+    if (!response.ok) {
+      throw new Error('Failed to save document')
+    }
+
+    await loadSavedDocuments()
+
+    toast.value = `${doc.title} saved to personal collection.`
+    addLog('Saved favourite document', 'Saved Documents', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to save document.'
+  }
+}
+
+async function removeSavedDocument(savedId) {
+  try {
+    const response = await fetch(`http://localhost:3000/api/saved-documents/${savedId}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to remove saved document')
+    }
+
+    await loadSavedDocuments()
+
+    toast.value = 'Saved document removed.'
+    addLog('Removed favourite document', 'Saved Documents', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to remove saved document.'
+  }
+}
+
+function openNoteEditor(item) {
+  noteForm.value = {
+    savedId: item.savedId,
+    documentId: item.documentId,
+    title: item.title,
+    noteContent: item.note || ''
+  }
+}
+
+async function savePersonalNote() {
+  if (!noteForm.value.documentId) {
+    toast.value = 'Please select a saved document first.'
     return
   }
 
-  savedDocuments.value.unshift({
-    id: Date.now(),
-    title: doc.title,
-    category: doc.category,
-    note: 'Saved for future reference.',
-    updated: 'Current'
-  })
-
-  toast.value = `${doc.title} saved to personal collection.`
-  addLog('Saved favourite document', 'Saved Documents', 'Success', session.value)
-}
-
-function removeSavedDocument(id) {
-  savedDocuments.value = savedDocuments.value.filter((item) => item.id !== id)
-  toast.value = 'Saved document removed.'
-  addLog('Removed favourite document', 'Saved Documents', 'Success', session.value)
-}
-
-function addSampleNote() {
-  if (savedDocuments.value.length === 0) {
-    toast.value = 'Please save a document first before adding notes.'
+  if (!noteForm.value.noteContent.trim()) {
+    toast.value = 'Please enter a note before saving.'
     return
   }
 
-  savedDocuments.value[0].note = 'Updated note: Review this document before department meeting.'
-  toast.value = 'Personal note updated for the latest saved document.'
-  addLog('Added personal note', 'Personal Notes', 'Success', session.value)
+  try {
+    const response = await fetch('http://localhost:3000/api/personal-notes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        documentId: noteForm.value.documentId,
+        noteContent: noteForm.value.noteContent
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to save personal note')
+    }
+
+    await loadSavedDocuments()
+
+    noteForm.value = {
+      savedId: null,
+      documentId: null,
+      title: '',
+      noteContent: ''
+    }
+
+    toast.value = 'Personal note saved.'
+    addLog('Saved personal note', 'Personal Notes', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to save personal note.'
+  }
 }
 
-function markAllNotificationsRead() {
-  notifications.value.forEach((notice) => {
-    notice.read = true
-  })
+async function deletePersonalNote(item) {
+  if (!item.noteId) {
+    toast.value = 'This document has no note to delete.'
+    return
+  }
 
-  toast.value = 'All notifications marked as read.'
-  addLog('Marked notifications as read', 'Notifications', 'Success', session.value)
+  try {
+    const response = await fetch(`http://localhost:3000/api/personal-notes/${item.noteId}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to delete personal note')
+    }
+
+    await loadSavedDocuments()
+
+    toast.value = 'Personal note deleted.'
+    addLog('Deleted personal note', 'Personal Notes', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to delete personal note.'
+  }
+}
+
+function cancelNoteEditor() {
+  noteForm.value = {
+    savedId: null,
+    documentId: null,
+    title: '',
+    noteContent: ''
+  }
+}
+
+async function markAllNotificationsRead() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/notifications/read-all/${currentUserId}`,
+      {
+        method: 'PATCH'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to mark all notifications as read')
+    }
+
+    await loadNotifications()
+
+    toast.value = 'All notifications marked as read.'
+    addLog('Marked notifications as read', 'Notifications', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to mark notifications as read.'
+  }
+}
+
+async function markNotificationRead(notificationId) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/notifications/${notificationId}/read`,
+      {
+        method: 'PATCH'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to mark notification as read')
+    }
+
+    await loadNotifications()
+
+    toast.value = 'Notification marked as read.'
+    addLog('Marked notification as read', 'Notifications', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to mark notification as read.'
+  }
 }
 
 function cycleNotificationFrequency() {
@@ -1857,10 +2788,78 @@ function cycleNotificationFrequency() {
     notificationFrequency.value = 'Instant'
   }
 
-  toast.value = `Notification frequency changed to ${notificationFrequency.value}.`
+  toast.value = `Notification frequency changed to ${notificationFrequency.value}. Click Save Preferences to update database.`
+}
+
+async function saveNotificationPreferences() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/notification-preferences/${currentUserId}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          policyUpdateEnabled: policyUpdateEnabled.value,
+          savedUpdateEnabled: savedUpdateEnabled.value,
+          notificationFrequency: notificationFrequency.value,
+          deliveryChannel: deliveryChannel.value
+        })
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to save notification preferences')
+    }
+
+    toast.value = 'Notification preferences updated.'
+    addLog('Updated notification preferences', 'Notifications', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to save notification preferences.'
+  }
+}
+
+async function submitUserFeedback() {
+  if (!feedbackForm.value.feedbackContent.trim()) {
+    toast.value = 'Please enter your feedback before submitting.'
+    return
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/api/user-feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        feedbackCategory: feedbackForm.value.feedbackCategory,
+        feedbackContent: feedbackForm.value.feedbackContent
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to submit feedback')
+    }
+
+    feedbackForm.value = {
+      feedbackCategory: 'System Issue',
+      feedbackContent: ''
+    }
+
+    toast.value = 'Feedback submitted successfully.'
+    addLog('Submitted user feedback', 'User Feedback', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to submit feedback.'
+  }
 }
 
 function toggleUserStatus(user) {
+  user.updated_at = getCurrentDateTime()
+
   if (user.status === 'Active') {
     user.status = 'Suspended'
     toast.value = `${user.name} account suspended.`
