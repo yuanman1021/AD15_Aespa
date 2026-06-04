@@ -671,6 +671,13 @@
             Perform Smart Search
           </button>
 
+          <button
+            v-if="hasSearched"
+            @click="clearSearchResults"
+          >
+            Clear Search
+          </button>
+
           <div class="history-panel">
             <p class="eyebrow">Recent Search History</p>
 
@@ -771,11 +778,57 @@
           </div>
         </div>
 
+        <div v-if="hasSearched" class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Search Results</p>
+              <h3>Smart Search Result Documents</h3>
+            </div>
+
+            <button @click="clearSearchResults">
+              Clear
+            </button>
+          </div>
+
+          <div class="doc-grid">
+            <article
+              v-for="doc in searchResults"
+              :key="doc.documentId"
+              class="doc-card"
+            >
+              <span class="status-pill amber">Search Result</span>
+
+              <h4 v-html="highlightMatchedContent(doc.title)"></h4>
+
+              <p v-if="doc.summary">{{ doc.summary }}</p>
+
+              <div>
+                <span>{{ doc.category }}</span>
+                <span>{{ doc.type }}</span>
+              </div>
+
+              <div class="button-row">
+                <button class="primary" @click="saveDocument(doc)">
+                  Save Document
+                </button>
+
+                <button @click="generateDocumentSummary(doc)">
+                  Generate Summary
+                </button>
+              </div>
+            </article>
+
+            <div v-if="searchResults.length === 0" class="empty-state">
+              No matching document found. Try searching TASKA, TBK, SPKN, COS, CFS, promotion, or contract.
+            </div>
+          </div>
+        </div>
+
         <div class="wide-card">
           <div class="section-title">
             <div>
               <p class="eyebrow">Recommendations</p>
-              <h3>Recommended / Search Result Documents</h3>
+              <h3>Recommended Documents</h3>
             </div>
 
             <button @click="refreshRecommendations">
@@ -790,7 +843,7 @@
               class="doc-card"
             >
               <span class="status-pill green">Recommended</span>
-              <h4 v-html="highlightMatchedContent(doc.title)"></h4>
+              <h4>{{ doc.title }}</h4>
 
               <p v-if="doc.reason">
                 Reason: {{ doc.reason }}
@@ -823,7 +876,7 @@
             </article>
 
             <div v-if="smartResults.length === 0" class="empty-state">
-              No matching document found. Try searching TASKA, TBK, SPKN, COS, CFS, promotion, or contract.
+              No recommended documents available.
             </div>
           </div>
 
@@ -1351,7 +1404,10 @@ const selectedDoc = ref({
   summary: 'Please wait while documents are loaded from the database.'
 })
 
-const smartResults = ref([])
+const smartResults = ref([]) // recommended documents only
+const searchResults = ref([]) // smart search results only
+const hasSearched = ref(false)
+
 const reportDialogOpen = ref(false)
 const selectedRecommendation = ref(null)
 
@@ -1372,7 +1428,6 @@ async function loadDocuments() {
 
     if (documents.value.length > 0) {
       selectedDoc.value = documents.value[0]
-      smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
     }
   } catch (error) {
     console.error(error)
@@ -2199,8 +2254,9 @@ async function loadFrequentlyUsedPolicies() {
 
 async function performSmartSearch() {
   if (!smartQuery.value.trim()) {
-    smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
-    toast.value = 'Showing general recommended documents.'
+    searchResults.value = []
+    hasSearched.value = false
+    toast.value = 'Please enter a keyword to search.'
     return
   }
 
@@ -2215,24 +2271,32 @@ async function performSmartSearch() {
 
     const data = await response.json()
 
-    smartResults.value = data.results
+    searchResults.value = data.results
+    hasSearched.value = true
+    lastSearchKeyword.value = smartQuery.value
+
+    await loadRecentSearchHistory()
+    await loadSearchSuggestions()
 
     if (data.results.length === 0) {
       toast.value = 'No matching document found. Try another keyword such as TASKA, TBK, SPKN, COS, or CFS.'
       return
     }
 
-    lastSearchKeyword.value = smartQuery.value
-
-    await loadRecentSearchHistory()
-    await loadSearchSuggestions()
-
-    toast.value = 'Smart search completed. Results ranked and saved to search history.'
+    toast.value = 'Smart search completed. Results are shown in the Search Results section.'
     addLog('Performed smart search', 'Smart Search', 'Success', session.value)
   } catch (error) {
     console.error(error)
     toast.value = 'Smart search failed.'
   }
+}
+
+function clearSearchResults() {
+  smartQuery.value = ''
+  searchResults.value = []
+  hasSearched.value = false
+  lastSearchKeyword.value = ''
+  toast.value = 'Search results cleared.'
 }
 
 function highlightMatchedContent(text) {
