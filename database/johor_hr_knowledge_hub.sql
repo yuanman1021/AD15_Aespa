@@ -13,9 +13,19 @@ USE johor_hr_knowledge_hub;
 -- You can comment these lines if you do not want to reset.
 -- =========================================================
 
+DROP TABLE IF EXISTS searchResults;
+DROP TABLE IF EXISTS searchSuggestions;
+DROP TABLE IF EXISTS trendingDocuments;
+DROP TABLE IF EXISTS searchHistory;
+DROP TABLE IF EXISTS escalationRequests;
+DROP TABLE IF EXISTS documentSummaries;
+DROP TABLE IF EXISTS chatbotConversations;
+DROP TABLE IF EXISTS faqs;
 DROP TABLE IF EXISTS recommendationReports;
 DROP TABLE IF EXISTS personalNotes;
 DROP TABLE IF EXISTS savedDocuments;
+DROP TABLE IF EXISTS userFeedback;
+DROP TABLE IF EXISTS notificationPreferences;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS recommendations;
 DROP TABLE IF EXISTS documents;
@@ -118,6 +128,99 @@ CREATE TABLE recommendationReports (
 );
 
 -- =========================================================
+-- FAQS TABLE
+-- For FAQ and Knowledge Assistance Module
+-- =========================================================
+
+CREATE TABLE faqs (
+  faqId INT AUTO_INCREMENT PRIMARY KEY,
+  question VARCHAR(500) NOT NULL,
+  answer VARCHAR(1000) NOT NULL,
+  category VARCHAR(100) DEFAULT 'General',
+  status VARCHAR(50) DEFAULT 'Published',
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =========================================================
+-- CHATBOT CONVERSATIONS TABLE
+-- For chatbot assistance, rating and history
+-- =========================================================
+
+CREATE TABLE chatbotConversations (
+  conversationId INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT,
+  questionText VARCHAR(1000) NOT NULL,
+  responseText VARCHAR(2000),
+  relatedDocumentId INT NULL,
+  confidenceScore DECIMAL(5,2) DEFAULT 0.00,
+  ratingValue INT NULL,
+  ratingComment VARCHAR(500) NULL,
+  conversationStatus VARCHAR(50) DEFAULT 'Answered',
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_chatbot_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_chatbot_document
+    FOREIGN KEY (relatedDocumentId) REFERENCES documents(documentId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- DOCUMENT SUMMARIES TABLE
+-- For Generate Document Summary function
+-- =========================================================
+
+CREATE TABLE documentSummaries (
+  summaryId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  userId INT,
+  summaryText VARCHAR(2000) NOT NULL,
+  summaryStatus VARCHAR(50) DEFAULT 'Generated',
+  generatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_summary_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_summary_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- ESCALATION REQUESTS TABLE
+-- For Escalate Question to HR Officer function
+-- =========================================================
+
+CREATE TABLE escalationRequests (
+  escalationId INT AUTO_INCREMENT PRIMARY KEY,
+  conversationId INT NULL,
+  userId INT,
+  hrOfficerId INT NULL,
+  escalationQuestion VARCHAR(1000) NOT NULL,
+  escalationDescription VARCHAR(1000),
+  escalationStatus VARCHAR(50) DEFAULT 'Pending',
+  submittedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  resolvedAt DATETIME NULL,
+
+  CONSTRAINT fk_escalation_conversation
+    FOREIGN KEY (conversationId) REFERENCES chatbotConversations(conversationId)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_escalation_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_escalation_hr_officer
+    FOREIGN KEY (hrOfficerId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
 -- NOTIFICATIONS TABLE
 -- For Notification and Update Alert Module
 -- =========================================================
@@ -140,6 +243,132 @@ CREATE TABLE notifications (
   CONSTRAINT fk_notification_document
     FOREIGN KEY (documentId) REFERENCES documents(documentId)
     ON DELETE SET NULL
+);
+
+-- =========================================================
+-- NOTIFICATION PREFERENCES TABLE
+-- For Manage Notification Preferences function
+-- =========================================================
+
+CREATE TABLE notificationPreferences (
+  preferenceId INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT NOT NULL,
+  policyUpdateEnabled TINYINT(1) DEFAULT 1,
+  savedUpdateEnabled TINYINT(1) DEFAULT 1,
+  notificationFrequency VARCHAR(50) DEFAULT 'Daily',
+  deliveryChannel VARCHAR(50) DEFAULT 'In-System',
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_notification_preference_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT unique_notification_preference_user
+    UNIQUE (userId)
+);
+
+-- =========================================================
+-- USER FEEDBACK TABLE
+-- For Submit User Feedback function
+-- =========================================================
+
+CREATE TABLE userFeedback (
+  feedbackId INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT NOT NULL,
+  adminId INT NULL,
+  feedbackCategory VARCHAR(100) NOT NULL,
+  feedbackContent VARCHAR(1000) NOT NULL,
+  feedbackStatus VARCHAR(50) DEFAULT 'Pending',
+  submittedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  reviewedAt DATETIME NULL,
+
+  CONSTRAINT fk_feedback_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_feedback_admin
+    FOREIGN KEY (adminId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- SEARCH HISTORY TABLE
+-- For Smart Search and Recent Search History
+-- =========================================================
+
+CREATE TABLE searchHistory (
+  searchId INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT,
+  searchQuery VARCHAR(255) NOT NULL,
+  searchType VARCHAR(50) DEFAULT 'Semantic Search',
+  resultCount INT DEFAULT 0,
+  searchedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_search_history_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- SEARCH RESULTS TABLE
+-- For storing ranked search results
+-- =========================================================
+
+CREATE TABLE searchResults (
+  resultId INT AUTO_INCREMENT PRIMARY KEY,
+  searchId INT NOT NULL,
+  documentId INT NOT NULL,
+  relevanceScore DECIMAL(5,2) DEFAULT 0.00,
+  resultRank INT DEFAULT 1,
+  matchedContent VARCHAR(1000),
+  matchType VARCHAR(50) DEFAULT 'keyword',
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_search_result_history
+    FOREIGN KEY (searchId) REFERENCES searchHistory(searchId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_search_result_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE
+);
+
+-- =========================================================
+-- SEARCH SUGGESTIONS TABLE
+-- For search bar suggestions
+-- =========================================================
+
+CREATE TABLE searchSuggestions (
+  suggestionId INT AUTO_INCREMENT PRIMARY KEY,
+  searchId INT NULL,
+  suggestionText VARCHAR(255) NOT NULL,
+  suggestionType VARCHAR(50) DEFAULT 'popular_query',
+  usageCount INT DEFAULT 0,
+  isActive TINYINT(1) DEFAULT 1,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_search_suggestion_history
+    FOREIGN KEY (searchId) REFERENCES searchHistory(searchId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- TRENDING DOCUMENTS TABLE
+-- For trending and frequently used policies
+-- =========================================================
+
+CREATE TABLE trendingDocuments (
+  trendingId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  viewCount INT DEFAULT 0,
+  downloadCount INT DEFAULT 0,
+  searchCount INT DEFAULT 0,
+  trendingScore DECIMAL(5,2) DEFAULT 0.00,
+  calculatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_trending_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE
 );
 
 -- =========================================================
@@ -175,6 +404,7 @@ CREATE TABLE personalNotes (
   userId INT NOT NULL,
   documentId INT NOT NULL,
   noteContent VARCHAR(1000) NOT NULL,
+  noteStatus VARCHAR(50) DEFAULT 'Active',
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -213,6 +443,22 @@ VALUES
   'registered_user',
   'HR Officer',
   'Active'
+);
+
+-- =========================================================
+-- SAMPLE NOTIFICATION PREFERENCE
+-- For registered user
+-- =========================================================
+
+INSERT INTO notificationPreferences
+(userId, policyUpdateEnabled, savedUpdateEnabled, notificationFrequency, deliveryChannel)
+VALUES
+(
+  2,
+  1,
+  1,
+  'Daily',
+  'In-System'
 );
 
 -- =========================================================
@@ -322,6 +568,73 @@ VALUES
 );
 
 -- =========================================================
+-- SAMPLE SEARCH SUGGESTIONS
+-- For Smart Search Module
+-- =========================================================
+
+INSERT INTO searchSuggestions
+(suggestionText, suggestionType, usageCount, isActive)
+VALUES
+('TASKA subsidy application', 'popular_query', 18, 1),
+('promotion TBK guideline', 'popular_query', 25, 1),
+('SPKN overseas travel', 'popular_query', 14, 1),
+('contract service COS CFS', 'popular_query', 9, 1),
+('promotion and discipline', 'popular_query', 11, 1);
+
+-- =========================================================
+-- SAMPLE TRENDING DOCUMENTS
+-- For Smart Search Module
+-- =========================================================
+
+INSERT INTO trendingDocuments
+(documentId, viewCount, downloadCount, searchCount, trendingScore)
+VALUES
+(3, 88, 37, 30, 95.50),
+(2, 65, 24, 22, 89.00),
+(4, 51, 12, 18, 78.50),
+(1, 42, 15, 15, 72.00),
+(5, 34, 9, 10, 66.50);
+
+-- =========================================================
+-- SAMPLE FAQS
+-- For FAQ and Knowledge Assistance Module
+-- =========================================================
+
+INSERT INTO faqs
+(question, answer, category, status)
+VALUES
+(
+  'How do I search for a HR document?',
+  'You can search by document title, reference number, category or keyword from the Public Portal or Smart Support page.',
+  'Search',
+  'Published'
+),
+(
+  'Why can I not access a restricted document?',
+  'Restricted documents require registered user access and suitable permission level before they can be viewed or downloaded.',
+  'Access Control',
+  'Published'
+),
+(
+  'How are document recommendations generated?',
+  'Recommendations are generated based on user activity, document category, recent searches and frequently accessed documents.',
+  'Recommendation',
+  'Published'
+),
+(
+  'How do I apply for TASKA subsidy?',
+  'You may refer to the TASKA subsidy guideline and complete the Borang Permohonan Subsidi TASKA with the required supporting documents.',
+  'Staff Benefits',
+  'Published'
+),
+(
+  'How do I find promotion guidelines?',
+  'Search for promotion, pangkat, TBK, or staff evaluation in the Smart Search module to view related promotion documents.',
+  'Promotion',
+  'Published'
+);
+
+-- =========================================================
 -- SAMPLE RECOMMENDATIONS
 -- For UI display testing
 -- =========================================================
@@ -405,17 +718,19 @@ VALUES
 -- =========================================================
 
 INSERT INTO personalNotes
-(userId, documentId, noteContent)
+(userId, documentId, noteContent, noteStatus)
 VALUES
 (
   2,
   2,
-  'Check TASKA subsidy eligibility before submitting monthly claim.'
+  'Check TASKA subsidy eligibility before submitting monthly claim.',
+  'Active'
 ),
 (
   2,
   3,
-  'Important for officers who have completed 13 years of service.'
+  'Important for officers who have completed 13 years of service.',
+  'Active'
 );
 
 -- =========================================================
@@ -430,3 +745,14 @@ SELECT * FROM notifications;
 SELECT * FROM savedDocuments;
 SELECT * FROM personalNotes;
 SELECT * FROM recommendationReports;
+SELECT * FROM faqs;
+SELECT * FROM chatbotConversations;
+SELECT * FROM documentSummaries;
+SELECT * FROM escalationRequests;
+SELECT * FROM notifications;
+SELECT * FROM notificationPreferences;
+SELECT * FROM userFeedback;
+SELECT * FROM searchHistory;
+SELECT * FROM searchResults;
+SELECT * FROM searchSuggestions;
+SELECT * FROM trendingDocuments;
