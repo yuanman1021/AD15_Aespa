@@ -409,27 +409,36 @@ app.post('/api/escalation-requests', async (req, res) => {
 })
 
 // Get notifications
+// Get notifications
 app.get('/api/notifications/:userId', async (req, res) => {
   try {
+    const { userId } = req.params
+
     const [rows] = await db.query(
-      `SELECT 
+      `
+      SELECT
         notificationId AS id,
-        userId,
-        documentId,
         title,
         message,
         type,
-        isRead AS read,
-        createdAt AS time,
+        isRead AS \`read\`,
+        createdAt AS \`time\`,
         readAt
       FROM notifications
       WHERE userId = ?
-      ORDER BY createdAt DESC`,
-      [req.params.userId]
+      ORDER BY createdAt DESC
+      `,
+      [userId]
     )
 
-    res.json(rows)
+    const formattedRows = rows.map((row) => ({
+      ...row,
+      read: Boolean(row.read)
+    }))
+
+    res.json(formattedRows)
   } catch (error) {
+    console.error('Failed to load notifications:', error)
     res.status(500).json({
       message: 'Failed to load notifications',
       error: error.message
@@ -484,7 +493,7 @@ app.get('/api/notification-preferences/:userId', async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT * FROM notificationPreferences
-       WHERE userId = ?`,
+      WHERE userId = ?`,
       [req.params.userId]
     )
 
