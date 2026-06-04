@@ -644,14 +644,49 @@
           <div class="search-box single">
             <input
               v-model="smartQuery"
-              placeholder="Example: What leave policy applies for long medical leave?"
+              placeholder="Example: TASKA subsidy, promotion TBK, SPKN travel..."
               @keyup.enter="performSmartSearch"
             />
           </div>
 
+          <div v-if="searchSuggestions.length > 0" class="suggestion-list">
+            <button
+              v-for="suggestion in searchSuggestions"
+              :key="suggestion.suggestionId"
+              @click="selectSearchSuggestion(suggestion)"
+            >
+              {{ suggestion.suggestionText }}
+            </button>
+          </div>
+
+          <label class="field-label">Sort Results</label>
+          <select v-model="smartSortBy" class="feedback-input">
+            <option value="relevance">Relevance</option>
+            <option value="latest">Latest Updated</option>
+            <option value="title">Title A-Z</option>
+            <option value="most_viewed">Most Viewed</option>
+          </select>
+
           <button class="primary" @click="performSmartSearch">
             Perform Smart Search
           </button>
+
+          <div class="history-panel">
+            <p class="eyebrow">Recent Search History</p>
+
+            <button
+              v-for="history in recentSearchHistory"
+              :key="history.searchId"
+              class="history-chip"
+              @click="smartQuery = history.searchQuery; performSmartSearch()"
+            >
+              {{ history.searchQuery }}
+            </button>
+
+            <p v-if="recentSearchHistory.length === 0" class="muted">
+              No recent search history yet.
+            </p>
+          </div>
         </div>
 
         <div class="detail-card chatbot-card">
@@ -755,8 +790,17 @@
               class="doc-card"
             >
               <span class="status-pill green">Recommended</span>
-              <h4>{{ doc.title }}</h4>
-              <p>Reason: {{ doc.reason }}</p>
+              <h4 v-html="highlightMatchedContent(doc.title)"></h4>
+
+              <p v-if="doc.reason">
+                Reason: {{ doc.reason }}
+              </p>
+
+              <p v-if="doc.summary" v-html="highlightMatchedContent(doc.summary)"></p>
+
+              <p v-if="doc.relevanceScore">
+                Relevance Score: {{ doc.relevanceScore }}
+              </p>
 
               <div>
                 <span>{{ doc.category }}</span>
@@ -848,6 +892,58 @@
               <summary>{{ faq.question }}</summary>
               <p>{{ faq.answer }}</p>
             </details>
+          </div>
+        </div>
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Trending Documents</p>
+              <h3>Currently Popular HR Documents</h3>
+            </div>
+          </div>
+
+          <div class="doc-grid">
+            <article
+              v-for="doc in trendingDocuments"
+              :key="doc.trendingId"
+              class="doc-card"
+    >
+              <span class="status-pill green">Trending</span>
+              <h4>{{ doc.title }}</h4>
+              <p>{{ doc.summary }}</p>
+
+              <div>
+                <span>Views: {{ doc.viewCount }}</span>
+                <span>Score: {{ doc.trendingScore }}</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Frequently Used Policies</p>
+              <h3>Suggested Frequently Used Policies</h3>
+            </div>
+          </div>
+
+          <div class="doc-grid">
+            <article
+              v-for="doc in frequentlyUsedPolicies"
+              :key="doc.documentId"
+              class="doc-card"
+            >
+              <span class="status-pill amber">Frequently Used</span>
+              <h4>{{ doc.title }}</h4>
+              <p>{{ doc.summary }}</p>
+
+              <div>
+                <span>{{ doc.category }}</span>
+                <span>Views: {{ doc.totalViews }}</span>
+              </div>
+            </article>
           </div>
         </div>
       </section>
@@ -1134,20 +1230,30 @@ import StatCard from './components/StatCard.vue'
 import SettingCard from './components/SettingCard.vue'
 
 function useLocalStorage(key, defaultValue) {
-  let storedValue = null
+  let initialValue = defaultValue
 
   try {
-    storedValue = localStorage.getItem(key)
+    const storedValue = localStorage.getItem(key)
+
+    if (storedValue) {
+      initialValue = JSON.parse(storedValue)
+    }
   } catch (error) {
-    storedValue = null
+    console.warn(`Invalid localStorage data for ${key}. Resetting to default value.`)
+    localStorage.removeItem(key)
+    initialValue = defaultValue
   }
 
-  const data = ref(storedValue ? JSON.parse(storedValue) : defaultValue)
+  const data = ref(initialValue)
 
   watch(
     data,
     (newValue) => {
-      localStorage.setItem(key, JSON.stringify(newValue))
+      try {
+        localStorage.setItem(key, JSON.stringify(newValue))
+      } catch (error) {
+        console.warn(`Failed to save ${key} to localStorage.`)
+      }
     },
     { deep: true }
   )
@@ -1307,6 +1413,10 @@ onMounted(async () => {
   await loadConversationHistory()
   await loadNotifications()
   await loadNotificationPreferences()
+  await loadSearchSuggestions()
+  await loadRecentSearchHistory()
+  await loadTrendingDocuments()
+  await loadFrequentlyUsedPolicies()
 })
 
 const users = useLocalStorage('jhr_users', [
@@ -1485,6 +1595,16 @@ const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
 const repoQuery = ref('')
 const repoType = ref('All Types')
 const smartQuery = ref('')
+const smartSortBy = ref('relevance')
+const searchSuggestions = ref([])
+const recentSearchHistory = ref([])
+const trendingDocuments = ref([])
+const frequentlyUsedPolicies = ref([])
+const lastSearchKeyword = ref('')
+
+watch(smartQuery, () => {
+  loadSearchSuggestions()
+})
 //const smartResults = ref(documents.value.filter((doc) => doc.access !== 'Restricted'))
 
 const mfaEnabled = ref(true)
@@ -1844,33 +1964,117 @@ function uploadNewVersion() {
   addLog('Uploaded new document version', 'Version Management', 'Success', 'Administrator')
 }
 
-function performSmartSearch() {
+async function loadSearchSuggestions() {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/search-suggestions?keyword=${encodeURIComponent(smartQuery.value)}`
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to load search suggestions')
+    }
+
+    searchSuggestions.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function selectSearchSuggestion(suggestion) {
+  smartQuery.value = suggestion.suggestionText
+  performSmartSearch()
+}
+
+async function loadRecentSearchHistory() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/search-history/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load recent search history')
+    }
+
+    recentSearchHistory.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function loadTrendingDocuments() {
+  try {
+    const response = await fetch('http://localhost:3000/api/trending-documents')
+
+    if (!response.ok) {
+      throw new Error('Failed to load trending documents')
+    }
+
+    trendingDocuments.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function loadFrequentlyUsedPolicies() {
+  try {
+    const response = await fetch('http://localhost:3000/api/frequently-used-policies')
+
+    if (!response.ok) {
+      throw new Error('Failed to load frequently used policies')
+    }
+
+    frequentlyUsedPolicies.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function performSmartSearch() {
   if (!smartQuery.value.trim()) {
     smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
     toast.value = 'Showing general recommended documents.'
     return
   }
 
-  const keyword = smartQuery.value.toLowerCase()
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/search?userId=${currentUserId}&keyword=${encodeURIComponent(smartQuery.value)}&sortBy=${smartSortBy.value}`
+    )
 
-  let results = documents.value.filter((doc) => {
-    const searchText = `${doc.title} ${doc.category} ${doc.summary}`.toLowerCase()
-    return searchText.includes(keyword)
-  })
+    if (!response.ok) {
+      throw new Error('Smart search failed')
+    }
 
-  if (keyword.includes('leave') || keyword.includes('cuti')) {
-    results = documents.value.filter((doc) => doc.category === 'Leave Policy')
-  } else if (keyword.includes('promotion') || keyword.includes('pangkat')) {
-    results = documents.value.filter((doc) => doc.category === 'Promotion')
-  } else if (keyword.includes('salary') || keyword.includes('gaji')) {
-    results = documents.value.filter((doc) => doc.category === 'Salary')
-  } else if (keyword.includes('loan') || keyword.includes('pinjaman')) {
-    results = documents.value.filter((doc) => doc.category === 'Loan')
+    const data = await response.json()
+
+    smartResults.value = data.results.length > 0
+      ? data.results
+      : documents.value.filter((doc) => doc.access !== 'Restricted')
+
+    lastSearchKeyword.value = smartQuery.value
+
+    await loadRecentSearchHistory()
+    await loadSearchSuggestions()
+
+    toast.value = 'Smart search completed. Results ranked and saved to search history.'
+    addLog('Performed smart search', 'Smart Search', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Smart search failed.'
+  }
+}
+
+function highlightMatchedContent(text) {
+  if (!text) return ''
+
+  const keyword = lastSearchKeyword.value || smartQuery.value
+
+  if (!keyword.trim()) {
+    return text
   }
 
-  smartResults.value = results.length > 0 ? results : documents.value.filter((doc) => doc.access !== 'Restricted')
-  toast.value = 'Smart search completed. Results ranked by relevance.'
-  addLog('Performed smart search', 'Smart Search', 'Success', session.value)
+  const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const regex = new RegExp(`(${escapedKeyword})`, 'gi')
+
+  return text.replace(regex, '<mark>$1</mark>')
 }
 
 /*function refreshRecommendations() {

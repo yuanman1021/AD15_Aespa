@@ -1041,3 +1041,32 @@ td button + button {
   font: inherit;
   resize: vertical;
 }
+
+.suggestion-list {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0.8rem 0 1rem;
+}
+
+.suggestion-list button,
+.history-chip {
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+}
+
+.suggestion-list button:hover,
+.history-chip:hover {
+  background: #e2e8f0;
+}
+
+mark {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.05rem 0.2rem;
+  border-radius: 0.25rem;
+}

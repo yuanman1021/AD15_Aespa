@@ -591,6 +591,215 @@ app.post('/api/user-feedback', async (req, res) => {
   }
 })
 
+// Smart search API
+app.get('/api/search', async (req, res) => {
+  try {
+    const userId = req.query.userId || null
+    const keyword = (req.query.keyword || '').trim()
+    const sortBy = req.query.sortBy || 'relevance'
+
+    if (!keyword) {
+      return res.json({
+        searchId: null,
+        results: []
+      })
+    }
+
+    const searchKeyword = `%${keyword}%`
+
+    let orderBy = 'relevanceScore DESC'
+
+    if (sortBy === 'latest') {
+      orderBy = 'd.updatedAt DESC'
+    } else if (sortBy === 'title') {
+      orderBy = 'd.title ASC'
+    } else if (sortBy === 'most_viewed') {
+      orderBy = 'd.totalViews DESC'
+    }
+
+    const [matchedDocuments] = await db.query(
+      `SELECT 
+        d.*,
+        CASE
+          WHEN d.title LIKE ? THEN 95.00
+          WHEN d.category LIKE ? THEN 85.00
+          WHEN d.summary LIKE ? THEN 75.00
+          WHEN d.referenceNo LIKE ? THEN 70.00
+          ELSE 50.00
+        END AS relevanceScore,
+        CASE
+          WHEN d.title LIKE ? THEN 'title'
+          WHEN d.category LIKE ? THEN 'category'
+          WHEN d.summary LIKE ? THEN 'summary'
+          WHEN d.referenceNo LIKE ? THEN 'reference'
+          ELSE 'general'
+        END AS matchType
+      FROM documents d
+      WHERE d.title LIKE ?
+      OR d.category LIKE ?
+      OR d.summary LIKE ?
+      OR d.referenceNo LIKE ?
+      ORDER BY ${orderBy}`,
+      [
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword,
+        searchKeyword
+      ]
+    )
+
+    const [historyResult] = await db.query(
+      `INSERT INTO searchHistory
+      (userId, searchQuery, searchType, resultCount)
+      VALUES (?, ?, ?, ?)`,
+      [
+        userId,
+        keyword,
+        'Semantic Search',
+        matchedDocuments.length
+      ]
+    )
+
+    const searchId = historyResult.insertId
+
+    for (let index = 0; index < matchedDocuments.length; index++) {
+      const doc = matchedDocuments[index]
+
+      await db.query(
+        `INSERT INTO searchResults
+        (searchId, documentId, relevanceScore, resultRank, matchedContent, matchType)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          searchId,
+          doc.documentId,
+          doc.relevanceScore,
+          index + 1,
+          doc.summary || doc.title,
+          doc.matchType
+        ]
+      )
+    }
+
+    await db.query(
+      `INSERT INTO searchSuggestions
+      (searchId, suggestionText, suggestionType, usageCount, isActive)
+      VALUES (?, ?, 'recent_query', 1, 1)`,
+      [searchId, keyword]
+    )
+
+    res.json({
+      searchId,
+      results: matchedDocuments
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Smart search failed',
+      error: error.message
+    })
+  }
+})
+
+// Get search suggestions
+app.get('/api/search-suggestions', async (req, res) => {
+  try {
+    const keyword = (req.query.keyword || '').trim()
+    const searchKeyword = `%${keyword}%`
+
+    const [rows] = await db.query(
+      `SELECT *
+       FROM searchSuggestions
+       WHERE isActive = 1
+       AND suggestionText LIKE ?
+       ORDER BY usageCount DESC, updatedAt DESC
+       LIMIT 6`,
+      [searchKeyword]
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load search suggestions',
+      error: error.message
+    })
+  }
+})
+
+// Get recent search history
+app.get('/api/search-history/:userId', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT *
+       FROM searchHistory
+       WHERE userId = ?
+       ORDER BY searchedAt DESC
+       LIMIT 6`,
+      [req.params.userId]
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load search history',
+      error: error.message
+    })
+  }
+})
+
+// Get trending documents
+app.get('/api/trending-documents', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+        t.trendingId,
+        t.viewCount,
+        t.downloadCount,
+        t.searchCount,
+        t.trendingScore,
+        t.calculatedAt,
+        d.*
+       FROM trendingDocuments t
+       JOIN documents d ON t.documentId = d.documentId
+       ORDER BY t.trendingScore DESC
+       LIMIT 5`
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load trending documents',
+      error: error.message
+    })
+  }
+})
+
+// Get frequently used policies
+app.get('/api/frequently-used-policies', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT *
+       FROM documents
+       WHERE status = 'Published'
+       ORDER BY totalViews DESC, totalDownloads DESC
+       LIMIT 5`
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load frequently used policies',
+      error: error.message
+    })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Backend running at http://localhost:${PORT}`)
 })

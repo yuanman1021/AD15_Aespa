@@ -13,6 +13,10 @@ USE johor_hr_knowledge_hub;
 -- You can comment these lines if you do not want to reset.
 -- =========================================================
 
+DROP TABLE IF EXISTS searchResults;
+DROP TABLE IF EXISTS searchSuggestions;
+DROP TABLE IF EXISTS trendingDocuments;
+DROP TABLE IF EXISTS searchHistory;
 DROP TABLE IF EXISTS escalationRequests;
 DROP TABLE IF EXISTS documentSummaries;
 DROP TABLE IF EXISTS chatbotConversations;
@@ -288,6 +292,86 @@ CREATE TABLE userFeedback (
 );
 
 -- =========================================================
+-- SEARCH HISTORY TABLE
+-- For Smart Search and Recent Search History
+-- =========================================================
+
+CREATE TABLE searchHistory (
+  searchId INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT,
+  searchQuery VARCHAR(255) NOT NULL,
+  searchType VARCHAR(50) DEFAULT 'Semantic Search',
+  resultCount INT DEFAULT 0,
+  searchedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_search_history_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- SEARCH RESULTS TABLE
+-- For storing ranked search results
+-- =========================================================
+
+CREATE TABLE searchResults (
+  resultId INT AUTO_INCREMENT PRIMARY KEY,
+  searchId INT NOT NULL,
+  documentId INT NOT NULL,
+  relevanceScore DECIMAL(5,2) DEFAULT 0.00,
+  resultRank INT DEFAULT 1,
+  matchedContent VARCHAR(1000),
+  matchType VARCHAR(50) DEFAULT 'keyword',
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_search_result_history
+    FOREIGN KEY (searchId) REFERENCES searchHistory(searchId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_search_result_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE
+);
+
+-- =========================================================
+-- SEARCH SUGGESTIONS TABLE
+-- For search bar suggestions
+-- =========================================================
+
+CREATE TABLE searchSuggestions (
+  suggestionId INT AUTO_INCREMENT PRIMARY KEY,
+  searchId INT NULL,
+  suggestionText VARCHAR(255) NOT NULL,
+  suggestionType VARCHAR(50) DEFAULT 'popular_query',
+  usageCount INT DEFAULT 0,
+  isActive TINYINT(1) DEFAULT 1,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_search_suggestion_history
+    FOREIGN KEY (searchId) REFERENCES searchHistory(searchId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- TRENDING DOCUMENTS TABLE
+-- For trending and frequently used policies
+-- =========================================================
+
+CREATE TABLE trendingDocuments (
+  trendingId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  viewCount INT DEFAULT 0,
+  downloadCount INT DEFAULT 0,
+  searchCount INT DEFAULT 0,
+  trendingScore DECIMAL(5,2) DEFAULT 0.00,
+  calculatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_trending_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE
+);
+
+-- =========================================================
 -- SAVED DOCUMENTS TABLE
 -- For Saved Documents and Personal Storage Module
 -- =========================================================
@@ -483,6 +567,34 @@ VALUES
 );
 
 -- =========================================================
+-- SAMPLE SEARCH SUGGESTIONS
+-- For Smart Search Module
+-- =========================================================
+
+INSERT INTO searchSuggestions
+(suggestionText, suggestionType, usageCount, isActive)
+VALUES
+('TASKA subsidy application', 'popular_query', 18, 1),
+('promotion TBK guideline', 'popular_query', 25, 1),
+('SPKN overseas travel', 'popular_query', 14, 1),
+('contract service COS CFS', 'popular_query', 9, 1),
+('promotion and discipline', 'popular_query', 11, 1);
+
+-- =========================================================
+-- SAMPLE TRENDING DOCUMENTS
+-- For Smart Search Module
+-- =========================================================
+
+INSERT INTO trendingDocuments
+(documentId, viewCount, downloadCount, searchCount, trendingScore)
+VALUES
+(3, 88, 37, 30, 95.50),
+(2, 65, 24, 22, 89.00),
+(4, 51, 12, 18, 78.50),
+(1, 42, 15, 15, 72.00),
+(5, 34, 9, 10, 66.50);
+
+-- =========================================================
 -- SAMPLE FAQS
 -- For FAQ and Knowledge Assistance Module
 -- =========================================================
@@ -637,3 +749,7 @@ SELECT * FROM escalationRequests;
 SELECT * FROM notifications;
 SELECT * FROM notificationPreferences;
 SELECT * FROM userFeedback;
+SELECT * FROM searchHistory;
+SELECT * FROM searchResults;
+SELECT * FROM searchSuggestions;
+SELECT * FROM trendingDocuments;
