@@ -45,9 +45,10 @@ button:disabled {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   grid-template-columns: 290px 1fr;
+  overflow: hidden;
 }
 
 /* SIDEBAR */
@@ -59,6 +60,8 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .brand {
@@ -157,8 +160,10 @@ button:disabled {
 /* MAIN LAYOUT */
 
 .main-panel {
+  height: 100vh;
   padding: 28px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .topbar {
