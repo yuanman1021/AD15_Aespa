@@ -691,6 +691,49 @@
               Send
             </button>
           </div>
+
+          <div class="assistant-actions">
+            <button @click="rateChatbotResponse(1)">
+              👍 Helpful
+            </button>
+
+            <button @click="rateChatbotResponse(0)">
+              👎 Not Helpful
+            </button>
+
+            <button @click="escalateLatestQuestion">
+              Escalate to HR Officer
+            </button>
+          </div>
+
+          <input
+            v-model="ratingComment"
+            class="feedback-input"
+            placeholder="Optional chatbot feedback comment..."
+          />
+
+          <div class="history-panel">
+            <p class="eyebrow">Conversation History</p>
+
+            <div
+              v-for="item in conversationHistory"
+              :key="item.conversationId"
+              class="history-item"
+            >
+              <strong>{{ item.questionText }}</strong>
+              <p>{{ item.responseText }}</p>
+              <small>
+                Status: {{ item.conversationStatus }}
+                <span v-if="item.ratingValue !== null">
+                  | Rating: {{ item.ratingValue === 1 ? 'Helpful' : 'Not Helpful' }}
+                </span>
+              </small>
+            </div>
+
+            <p v-if="conversationHistory.length === 0" class="muted">
+              No conversation history yet.
+            </p>
+          </div>
         </div>
 
         <div class="wide-card">
@@ -725,11 +768,30 @@
                   Save Document
                 </button>
 
+                <button @click="generateDocumentSummary(doc)">
+                  Generate Summary
+                </button>
+
                 <button @click="openRecommendationReport(doc)">
                   Report Incorrect
                 </button>
               </div>
             </article>
+          </div>
+
+          <div v-if="generatedSummary" class="summary-panel">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">AI Document Summary</p>
+                <h3>{{ selectedSummaryDoc?.title }}</h3>
+              </div>
+
+              <button @click="generatedSummary = ''">
+                Close
+              </button>
+            </div>
+
+            <p>{{ generatedSummary }}</p>
           </div>
 
           <div v-if="reportDialogOpen" class="report-panel">
@@ -776,7 +838,7 @@
               <h3>Frequently Asked Questions</h3>
             </div>
 
-            <button @click="toast = 'Question escalated to HR officer.'">
+            <button @click="escalateLatestQuestion">
               Escalate to HR Officer
             </button>
           </div>
@@ -1123,9 +1185,40 @@ async function loadRecommendations() {
   }
 }
 
+async function loadFaqs() {
+  try {
+    const response = await fetch('http://localhost:3000/api/faqs')
+
+    if (!response.ok) {
+      throw new Error('Failed to load FAQs')
+    }
+
+    faqs.value = await response.json()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to load FAQs from database.'
+  }
+}
+
+async function loadConversationHistory() {
+  try {
+    const response = await fetch(`http://localhost:3000/api/chatbot/conversations/${currentUserId}`)
+
+    if (!response.ok) {
+      throw new Error('Failed to load conversation history')
+    }
+
+    conversationHistory.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 onMounted(async () => {
   await loadDocuments()
   await loadRecommendations()
+  await loadFaqs()
+  await loadConversationHistory()
 })
 
 const users = useLocalStorage('jhr_users', [
@@ -1273,26 +1366,7 @@ const savedDocuments = useLocalStorage('jhr_saved_documents', [
   }
 ])
 
-const faqs = [
-  {
-    id: 1,
-    question: 'How do I search for a circular by reference number?',
-    answer:
-      'Enter the reference number in the search box or use the document repository search filter.'
-  },
-  {
-    id: 2,
-    question: 'Why can I not download a restricted document?',
-    answer:
-      'Restricted documents require registered access and suitable permissions set by the administrator.'
-  },
-  {
-    id: 3,
-    question: 'How are document recommendations generated?',
-    answer:
-      'They are based on your department, role, recent searches, viewed documents and related content.'
-  }
-]
+const faqs = ref([])
 
 const suggestedQuestions = [
   'How do I reset my password?',
@@ -1395,6 +1469,11 @@ const uploadForm = ref({
 })
 
 const chatInput = ref('')
+const conversationHistory = ref([])
+const latestConversationId = ref(null)
+const generatedSummary = ref('')
+const selectedSummaryDoc = ref(null)
+const ratingComment = ref('')
 const chatMessages = ref([
   {
     sender: 'bot',
@@ -1812,7 +1891,7 @@ function askSuggestedQuestion(question) {
   sendChatMessage()
 }
 
-function sendChatMessage() {
+async function sendChatMessage() {
   const question = chatInput.value.trim()
 
   if (!question) {
@@ -1832,9 +1911,136 @@ function sendChatMessage() {
     text: answer
   })
 
+  try {
+    const response = await fetch('http://localhost:3000/api/chatbot/conversations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        questionText: question,
+        responseText: answer,
+        confidenceScore: 88.00
+      })
+    })
+
+    const data = await response.json()
+    latestConversationId.value = data.conversationId
+
+    await loadConversationHistory()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Chatbot answered, but conversation was not saved.'
+  }
+
   chatInput.value = ''
   toast.value = 'Chatbot response generated.'
   addLog('Used HR chatbot assistance', 'AI Chatbot', 'Success', session.value)
+}
+
+async function rateChatbotResponse(value) {
+  if (!latestConversationId.value) {
+    toast.value = 'Please ask the chatbot a question before rating.'
+    return
+  }
+
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/chatbot/conversations/${latestConversationId.value}/rating`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ratingValue: value,
+          ratingComment: ratingComment.value
+        })
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to rate chatbot response')
+    }
+
+    toast.value = value === 1
+      ? 'Thank you for rating the chatbot response as helpful.'
+      : 'Thank you. Your feedback will help improve chatbot response quality.'
+
+    ratingComment.value = ''
+    await loadConversationHistory()
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to save chatbot rating.'
+  }
+}
+
+async function generateDocumentSummary(doc) {
+  try {
+    const response = await fetch('http://localhost:3000/api/document-summaries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        documentId: doc.documentId,
+        userId: currentUserId
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to generate document summary')
+    }
+
+    const data = await response.json()
+
+    selectedSummaryDoc.value = doc
+    generatedSummary.value = data.summaryText
+
+    toast.value = 'Document summary generated.'
+    addLog('Generated document summary', 'AI Summary', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to generate document summary.'
+  }
+}
+
+async function escalateLatestQuestion() {
+  if (!latestConversationId.value && chatMessages.value.length <= 1) {
+    toast.value = 'Please ask the chatbot a question before escalation.'
+    return
+  }
+
+  const latestUserMessage = [...chatMessages.value]
+    .reverse()
+    .find((message) => message.sender === 'user')
+
+  try {
+    const response = await fetch('http://localhost:3000/api/escalation-requests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        conversationId: latestConversationId.value,
+        userId: currentUserId,
+        escalationQuestion: latestUserMessage ? latestUserMessage.text : 'General HR question',
+        escalationDescription: 'User requested HR officer support from chatbot panel.'
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to escalate question')
+    }
+
+    toast.value = 'Question escalated to HR officer.'
+    await loadConversationHistory()
+    addLog('Escalated question to HR officer', 'AI Chatbot', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to escalate question.'
+  }
 }
 
 function generateChatbotAnswer(question) {

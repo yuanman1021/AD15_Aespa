@@ -200,6 +200,214 @@ app.post('/api/recommendation-reports', async (req, res) => {
   }
 })
 
+// Get FAQs
+app.get('/api/faqs', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM faqs 
+       WHERE status = 'Published'
+       ORDER BY faqId ASC`
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load FAQs',
+      error: error.message
+    })
+  }
+})
+
+// Save chatbot conversation
+app.post('/api/chatbot/conversations', async (req, res) => {
+  try {
+    const {
+      userId,
+      questionText,
+      responseText,
+      relatedDocumentId,
+      confidenceScore
+    } = req.body
+
+    if (!questionText) {
+      return res.status(400).json({
+        message: 'questionText is required'
+      })
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO chatbotConversations
+      (userId, questionText, responseText, relatedDocumentId, confidenceScore, conversationStatus)
+      VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        userId || null,
+        questionText,
+        responseText || '',
+        relatedDocumentId || null,
+        confidenceScore || 85.00,
+        'Answered'
+      ]
+    )
+
+    res.json({
+      message: 'Chatbot conversation saved successfully',
+      conversationId: result.insertId
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to save chatbot conversation',
+      error: error.message
+    })
+  }
+})
+
+// Get chatbot conversation history
+app.get('/api/chatbot/conversations/:userId', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT * FROM chatbotConversations
+       WHERE userId = ?
+       ORDER BY createdAt DESC
+       LIMIT 10`,
+      [req.params.userId]
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load chatbot conversation history',
+      error: error.message
+    })
+  }
+})
+
+// Rate chatbot response
+app.patch('/api/chatbot/conversations/:conversationId/rating', async (req, res) => {
+  try {
+    const { ratingValue, ratingComment } = req.body
+
+    await db.query(
+      `UPDATE chatbotConversations
+       SET ratingValue = ?, ratingComment = ?
+       WHERE conversationId = ?`,
+      [
+        ratingValue,
+        ratingComment || '',
+        req.params.conversationId
+      ]
+    )
+
+    res.json({
+      message: 'Chatbot response rating saved successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to rate chatbot response',
+      error: error.message
+    })
+  }
+})
+
+// Generate document summary
+app.post('/api/document-summaries', async (req, res) => {
+  try {
+    const { documentId, userId } = req.body
+
+    if (!documentId) {
+      return res.status(400).json({
+        message: 'documentId is required'
+      })
+    }
+
+    const [documents] = await db.query(
+      `SELECT * FROM documents WHERE documentId = ?`,
+      [documentId]
+    )
+
+    if (documents.length === 0) {
+      return res.status(404).json({
+        message: 'Document not found'
+      })
+    }
+
+    const doc = documents[0]
+
+    const summaryText = `Summary for ${doc.title}: ${doc.summary || 'This document contains HR policy information related to ' + doc.category + '.'}`
+
+    const [result] = await db.query(
+      `INSERT INTO documentSummaries
+      (documentId, userId, summaryText, summaryStatus)
+      VALUES (?, ?, ?, ?)`,
+      [
+        documentId,
+        userId || null,
+        summaryText,
+        'Generated'
+      ]
+    )
+
+    res.json({
+      message: 'Document summary generated successfully',
+      summaryId: result.insertId,
+      summaryText
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to generate document summary',
+      error: error.message
+    })
+  }
+})
+
+// Escalate question to HR officer
+app.post('/api/escalation-requests', async (req, res) => {
+  try {
+    const {
+      conversationId,
+      userId,
+      escalationQuestion,
+      escalationDescription
+    } = req.body
+
+    if (!escalationQuestion) {
+      return res.status(400).json({
+        message: 'escalationQuestion is required'
+      })
+    }
+
+    await db.query(
+      `INSERT INTO escalationRequests
+      (conversationId, userId, escalationQuestion, escalationDescription, escalationStatus)
+      VALUES (?, ?, ?, ?, ?)`,
+      [
+        conversationId || null,
+        userId || null,
+        escalationQuestion,
+        escalationDescription || '',
+        'Pending'
+      ]
+    )
+
+    if (conversationId) {
+      await db.query(
+        `UPDATE chatbotConversations
+         SET conversationStatus = 'Escalated'
+         WHERE conversationId = ?`,
+        [conversationId]
+      )
+    }
+
+    res.json({
+      message: 'Question escalated to HR officer successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to escalate question',
+      error: error.message
+    })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Backend running at http://localhost:${PORT}`)
 })

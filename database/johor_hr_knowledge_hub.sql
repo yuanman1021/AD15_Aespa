@@ -13,6 +13,10 @@ USE johor_hr_knowledge_hub;
 -- You can comment these lines if you do not want to reset.
 -- =========================================================
 
+DROP TABLE IF EXISTS escalationRequests;
+DROP TABLE IF EXISTS documentSummaries;
+DROP TABLE IF EXISTS chatbotConversations;
+DROP TABLE IF EXISTS faqs;
 DROP TABLE IF EXISTS recommendationReports;
 DROP TABLE IF EXISTS personalNotes;
 DROP TABLE IF EXISTS savedDocuments;
@@ -114,6 +118,99 @@ CREATE TABLE recommendationReports (
 
   CONSTRAINT fk_report_admin
     FOREIGN KEY (adminId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- FAQS TABLE
+-- For FAQ and Knowledge Assistance Module
+-- =========================================================
+
+CREATE TABLE faqs (
+  faqId INT AUTO_INCREMENT PRIMARY KEY,
+  question VARCHAR(500) NOT NULL,
+  answer VARCHAR(1000) NOT NULL,
+  category VARCHAR(100) DEFAULT 'General',
+  status VARCHAR(50) DEFAULT 'Published',
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =========================================================
+-- CHATBOT CONVERSATIONS TABLE
+-- For chatbot assistance, rating and history
+-- =========================================================
+
+CREATE TABLE chatbotConversations (
+  conversationId INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT,
+  questionText VARCHAR(1000) NOT NULL,
+  responseText VARCHAR(2000),
+  relatedDocumentId INT NULL,
+  confidenceScore DECIMAL(5,2) DEFAULT 0.00,
+  ratingValue INT NULL,
+  ratingComment VARCHAR(500) NULL,
+  conversationStatus VARCHAR(50) DEFAULT 'Answered',
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_chatbot_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_chatbot_document
+    FOREIGN KEY (relatedDocumentId) REFERENCES documents(documentId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- DOCUMENT SUMMARIES TABLE
+-- For Generate Document Summary function
+-- =========================================================
+
+CREATE TABLE documentSummaries (
+  summaryId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  userId INT,
+  summaryText VARCHAR(2000) NOT NULL,
+  summaryStatus VARCHAR(50) DEFAULT 'Generated',
+  generatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_summary_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_summary_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- ESCALATION REQUESTS TABLE
+-- For Escalate Question to HR Officer function
+-- =========================================================
+
+CREATE TABLE escalationRequests (
+  escalationId INT AUTO_INCREMENT PRIMARY KEY,
+  conversationId INT NULL,
+  userId INT,
+  hrOfficerId INT NULL,
+  escalationQuestion VARCHAR(1000) NOT NULL,
+  escalationDescription VARCHAR(1000),
+  escalationStatus VARCHAR(50) DEFAULT 'Pending',
+  submittedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  resolvedAt DATETIME NULL,
+
+  CONSTRAINT fk_escalation_conversation
+    FOREIGN KEY (conversationId) REFERENCES chatbotConversations(conversationId)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_escalation_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_escalation_hr_officer
+    FOREIGN KEY (hrOfficerId) REFERENCES users(userId)
     ON DELETE SET NULL
 );
 
@@ -322,6 +419,45 @@ VALUES
 );
 
 -- =========================================================
+-- SAMPLE FAQS
+-- For FAQ and Knowledge Assistance Module
+-- =========================================================
+
+INSERT INTO faqs
+(question, answer, category, status)
+VALUES
+(
+  'How do I search for a HR document?',
+  'You can search by document title, reference number, category or keyword from the Public Portal or Smart Support page.',
+  'Search',
+  'Published'
+),
+(
+  'Why can I not access a restricted document?',
+  'Restricted documents require registered user access and suitable permission level before they can be viewed or downloaded.',
+  'Access Control',
+  'Published'
+),
+(
+  'How are document recommendations generated?',
+  'Recommendations are generated based on user activity, document category, recent searches and frequently accessed documents.',
+  'Recommendation',
+  'Published'
+),
+(
+  'How do I apply for TASKA subsidy?',
+  'You may refer to the TASKA subsidy guideline and complete the Borang Permohonan Subsidi TASKA with the required supporting documents.',
+  'Staff Benefits',
+  'Published'
+),
+(
+  'How do I find promotion guidelines?',
+  'Search for promotion, pangkat, TBK, or staff evaluation in the Smart Search module to view related promotion documents.',
+  'Promotion',
+  'Published'
+);
+
+-- =========================================================
 -- SAMPLE RECOMMENDATIONS
 -- For UI display testing
 -- =========================================================
@@ -430,3 +566,7 @@ SELECT * FROM notifications;
 SELECT * FROM savedDocuments;
 SELECT * FROM personalNotes;
 SELECT * FROM recommendationReports;
+SELECT * FROM faqs;
+SELECT * FROM chatbotConversations;
+SELECT * FROM documentSummaries;
+SELECT * FROM escalationRequests;
