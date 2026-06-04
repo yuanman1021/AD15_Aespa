@@ -20,6 +20,8 @@ DROP TABLE IF EXISTS faqs;
 DROP TABLE IF EXISTS recommendationReports;
 DROP TABLE IF EXISTS personalNotes;
 DROP TABLE IF EXISTS savedDocuments;
+DROP TABLE IF EXISTS userFeedback;
+DROP TABLE IF EXISTS notificationPreferences;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS recommendations;
 DROP TABLE IF EXISTS documents;
@@ -240,6 +242,52 @@ CREATE TABLE notifications (
 );
 
 -- =========================================================
+-- NOTIFICATION PREFERENCES TABLE
+-- For Manage Notification Preferences function
+-- =========================================================
+
+CREATE TABLE notificationPreferences (
+  preferenceId INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT NOT NULL,
+  policyUpdateEnabled TINYINT(1) DEFAULT 1,
+  savedUpdateEnabled TINYINT(1) DEFAULT 1,
+  notificationFrequency VARCHAR(50) DEFAULT 'Daily',
+  deliveryChannel VARCHAR(50) DEFAULT 'In-System',
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_notification_preference_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT unique_notification_preference_user
+    UNIQUE (userId)
+);
+
+-- =========================================================
+-- USER FEEDBACK TABLE
+-- For Submit User Feedback function
+-- =========================================================
+
+CREATE TABLE userFeedback (
+  feedbackId INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT NOT NULL,
+  adminId INT NULL,
+  feedbackCategory VARCHAR(100) NOT NULL,
+  feedbackContent VARCHAR(1000) NOT NULL,
+  feedbackStatus VARCHAR(50) DEFAULT 'Pending',
+  submittedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  reviewedAt DATETIME NULL,
+
+  CONSTRAINT fk_feedback_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_feedback_admin
+    FOREIGN KEY (adminId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
 -- SAVED DOCUMENTS TABLE
 -- For Saved Documents and Personal Storage Module
 -- =========================================================
@@ -310,6 +358,22 @@ VALUES
   'registered_user',
   'HR Officer',
   'Active'
+);
+
+-- =========================================================
+-- SAMPLE NOTIFICATION PREFERENCE
+-- For registered user
+-- =========================================================
+
+INSERT INTO notificationPreferences
+(userId, policyUpdateEnabled, savedUpdateEnabled, notificationFrequency, deliveryChannel)
+VALUES
+(
+  2,
+  1,
+  1,
+  'Daily',
+  'In-System'
 );
 
 -- =========================================================
@@ -570,3 +634,6 @@ SELECT * FROM faqs;
 SELECT * FROM chatbotConversations;
 SELECT * FROM documentSummaries;
 SELECT * FROM escalationRequests;
+SELECT * FROM notifications;
+SELECT * FROM notificationPreferences;
+SELECT * FROM userFeedback;
