@@ -404,6 +404,7 @@ CREATE TABLE personalNotes (
   userId INT NOT NULL,
   documentId INT NOT NULL,
   noteContent VARCHAR(1000) NOT NULL,
+  noteStatus VARCHAR(50) DEFAULT 'Active',
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -717,17 +718,19 @@ VALUES
 -- =========================================================
 
 INSERT INTO personalNotes
-(userId, documentId, noteContent)
+(userId, documentId, noteContent, noteStatus)
 VALUES
 (
   2,
   2,
-  'Check TASKA subsidy eligibility before submitting monthly claim.'
+  'Check TASKA subsidy eligibility before submitting monthly claim.',
+  'Active'
 ),
 (
   2,
   3,
-  'Important for officers who have completed 13 years of service.'
+  'Important for officers who have completed 13 years of service.',
+  'Active'
 );
 
 -- =========================================================

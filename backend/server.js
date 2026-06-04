@@ -800,6 +800,182 @@ app.get('/api/frequently-used-policies', async (req, res) => {
   }
 })
 
+// Get saved documents
+app.get('/api/saved-documents/:userId', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT 
+        s.savedId AS id,
+        s.savedId,
+        s.userId,
+        s.documentId,
+        s.savedAt,
+        d.referenceNo,
+        d.title,
+        d.category,
+        d.type,
+        d.status,
+        d.access,
+        d.effectiveDate,
+        d.version,
+        d.summary,
+        d.fileName,
+        d.filePath,
+        COALESCE(n.noteId, NULL) AS noteId,
+        COALESCE(n.noteContent, '') AS note,
+        COALESCE(n.noteStatus, 'No Note') AS noteStatus,
+        COALESCE(n.updatedAt, s.savedAt) AS updated
+      FROM savedDocuments s
+      JOIN documents d ON s.documentId = d.documentId
+      LEFT JOIN personalNotes n 
+        ON s.documentId = n.documentId 
+        AND s.userId = n.userId
+        AND n.noteStatus = 'Active'
+      WHERE s.userId = ?
+      ORDER BY s.savedAt DESC`,
+      [req.params.userId]
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load saved documents',
+      error: error.message
+    })
+  }
+})
+
+// Save favourite document
+app.post('/api/saved-documents', async (req, res) => {
+  try {
+    const { userId, documentId } = req.body
+
+    if (!userId || !documentId) {
+      return res.status(400).json({
+        message: 'userId and documentId are required'
+      })
+    }
+
+    await db.query(
+      `INSERT IGNORE INTO savedDocuments
+      (userId, documentId)
+      VALUES (?, ?)`,
+      [userId, documentId]
+    )
+
+    res.json({
+      message: 'Document saved successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to save document',
+      error: error.message
+    })
+  }
+})
+
+// Remove favourite document
+app.delete('/api/saved-documents/:savedId', async (req, res) => {
+  try {
+    await db.query(
+      `DELETE FROM savedDocuments
+       WHERE savedId = ?`,
+      [req.params.savedId]
+    )
+
+    res.json({
+      message: 'Saved document removed successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to remove saved document',
+      error: error.message
+    })
+  }
+})
+
+// Add or update personal note
+app.post('/api/personal-notes', async (req, res) => {
+  try {
+    const {
+      userId,
+      documentId,
+      noteContent
+    } = req.body
+
+    if (!userId || !documentId || !noteContent) {
+      return res.status(400).json({
+        message: 'userId, documentId and noteContent are required'
+      })
+    }
+
+    const [existingNotes] = await db.query(
+      `SELECT noteId 
+       FROM personalNotes 
+       WHERE userId = ? 
+       AND documentId = ? 
+       AND noteStatus = 'Active'
+       LIMIT 1`,
+      [userId, documentId]
+    )
+
+    if (existingNotes.length > 0) {
+      await db.query(
+        `UPDATE personalNotes
+         SET noteContent = ?, updatedAt = NOW()
+         WHERE noteId = ?`,
+        [noteContent, existingNotes[0].noteId]
+      )
+
+      return res.json({
+        message: 'Personal note updated successfully'
+      })
+    }
+
+    await db.query(
+      `INSERT INTO personalNotes
+      (userId, documentId, noteContent, noteStatus)
+      VALUES (?, ?, ?, ?)`,
+      [
+        userId,
+        documentId,
+        noteContent,
+        'Active'
+      ]
+    )
+
+    res.json({
+      message: 'Personal note added successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to save personal note',
+      error: error.message
+    })
+  }
+})
+
+// Delete personal note
+app.delete('/api/personal-notes/:noteId', async (req, res) => {
+  try {
+    await db.query(
+      `UPDATE personalNotes
+       SET noteStatus = 'Deleted', updatedAt = NOW()
+       WHERE noteId = ?`,
+      [req.params.noteId]
+    )
+
+    res.json({
+      message: 'Personal note deleted successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to delete personal note',
+      error: error.message
+    })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Backend running at http://localhost:${PORT}`)
 })
