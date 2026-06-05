@@ -841,7 +841,7 @@ VALUES
   'Promotion and Discipline',
   'Reference Document',
   'Published',
-  'Restricted',
+  'Registered',
   '2025',
   '1.0',
   'Related to promotion and disciplinary guideline reference.',

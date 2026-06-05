@@ -17,7 +17,7 @@
 
       <nav class="nav-list">
         <button
-          v-for="item in navItems"
+          v-for="item in visibleNavItems"
           :key="item.id"
           :class="{ active: screen === item.id }"
           @click="screen = item.id"
@@ -40,7 +40,9 @@
 
         <div class="top-actions">
           <button @click="fakeLogin('User')">User Login</button>
-          <button class="primary" @click="fakeLogin('Admin')">Admin Login</button>
+          <button class="primary" @click="screen = 'auth'; authMode = 'admin'">
+            Admin Login
+          </button>
         </div>
       </header>
 
@@ -350,7 +352,7 @@
           </div>
         </div>
       </section>
-      
+
       <!-- PROFILE -->
       <section v-if="screen === 'profile'" class="grid-two">
         <div class="profile-card">
@@ -1568,7 +1570,7 @@
       </section>
 
       <!-- ADMIN WORKSPACE -->
-      <section v-if="screen === 'admin'" class="dashboard-grid">
+      <section v-if="screen === 'admin' && session === 'Admin'" class="dashboard-grid">
         <div class="welcome-card admin-theme">
           <p class="eyebrow">Administrator Workspace</p>
           <h3>Manage users, permissions, documents, AI suggestions and audit logs.</h3>
@@ -1773,6 +1775,12 @@ function useLocalStorage(key, defaultValue) {
     },
     { deep: true }
   )
+  
+  watch(session, () => {
+  if (session.value !== 'Admin' && screen.value === 'admin') {
+    screen.value = 'public'
+  }
+})
 
   return data
 }
@@ -2111,6 +2119,14 @@ const navItems = [
   { id: 'personal', label: 'Notifications & Saved' },
   { id: 'admin', label: 'Admin Workspace' }
 ]
+
+const visibleNavItems = computed(() => {
+  if (session.value === 'Admin') {
+    return navItems
+  }
+
+  return navItems.filter((item) => item.id !== 'admin')
+})
 
 const authTabs = [
   { id: 'login', label: 'User Login' },
