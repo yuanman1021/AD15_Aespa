@@ -17,7 +17,7 @@
 
       <nav class="nav-list">
         <button
-          v-for="item in navItems"
+          v-for="item in visibleNavItems"
           :key="item.id"
           :class="{ active: screen === item.id }"
           @click="screen = item.id"
@@ -40,7 +40,9 @@
 
         <div class="top-actions">
           <button @click="fakeLogin('User')">User Login</button>
-          <button class="primary" @click="fakeLogin('Admin')">Admin Login</button>
+          <button class="primary" @click="screen = 'auth'; authMode = 'admin'">
+            Admin Login
+          </button>
         </div>
       </header>
 
@@ -350,7 +352,7 @@
           </div>
         </div>
       </section>
-      
+
       <!-- PROFILE -->
       <section v-if="screen === 'profile'" class="grid-two">
         <div class="profile-card">
@@ -1674,7 +1676,7 @@
       </section>
 
       <!-- ADMIN WORKSPACE -->
-      <section v-if="screen === 'admin'" class="dashboard-grid">
+      <section v-if="screen === 'admin' && session === 'Admin'" class="dashboard-grid">
         <div class="welcome-card admin-theme">
           <p class="eyebrow">Administrator Workspace</p>
           <h3>Manage users, permissions, documents, AI suggestions and audit logs.</h3>
@@ -2361,6 +2363,14 @@ const authMode = ref('login')
 const resetModalOpen = ref(false)
 const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
+
+const visibleNavItems = computed(() => {
+  if (session.value === 'Admin') {
+    return navItems
+  }
+
+  return navItems.filter((item) => item.id !== 'admin')
+})
 
 const repoQuery = ref('')
 const repoType = ref('All Types')
