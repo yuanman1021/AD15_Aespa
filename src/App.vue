@@ -1477,7 +1477,53 @@
 
         <div class="wide-card">
           <div class="section-title">
-            <h3>Recent Notifications</h3>
+            <div>
+              <p class="eyebrow">Smart Alerts</p>
+              <h3>Recommended Alerts Based on User Activity</h3>
+            </div>
+
+            <button @click="loadNotifications">
+              Refresh Alerts
+            </button>
+          </div>
+
+          <div
+            v-for="alert in smartAlerts"
+            :key="alert.id"
+            class="smart-alert-item"
+          >
+            <span :class="alert.read ? 'dot green-dot' : 'dot amber-dot'"></span>
+
+            <div>
+              <strong>{{ alert.title }}</strong>
+              <p>{{ alert.message }}</p>
+              <small>
+                Type: {{ alert.type }}
+                <span v-if="alert.time">
+                  | {{ new Date(alert.time).toLocaleString() }}
+                </span>
+              </small>
+            </div>
+
+            <button
+              v-if="!alert.read"
+              @click="markNotificationRead(alert.id)"
+            >
+              Mark as Read
+            </button>
+          </div>
+
+          <p v-if="smartAlerts.length === 0" class="muted">
+            No smart alerts available.
+          </p>
+        </div>
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Recent Notifications</p>
+              <h3>Policy Updates and Alerts</h3>
+            </div>
             <button @click="markAllNotificationsRead">
               Mark All as Read
             </button>
@@ -1485,7 +1531,7 @@
 
           <div class="log-list">
             <div
-              v-for="notice in notifications"
+              v-for="notice in policyNotifications"
               :key="notice.id"
               class="log-item"
             >
@@ -1509,7 +1555,7 @@
               </div>
             </div>
 
-            <p v-if="notifications.length === 0" class="muted">
+            <p v-if="policyNotifications.length === 0" class="muted">
               No notifications available.
             </p>
           </div>
@@ -2252,6 +2298,14 @@ const classificationQueue = useLocalStorage('jhr_classification_queue', [
 ])
 
 const notifications = ref([])
+
+const smartAlerts = computed(() => {
+  return notifications.value.filter((notice) => notice.type === 'smart_alert')
+})
+
+const policyNotifications = computed(() => {
+  return notifications.value.filter((notice) => notice.type !== 'smart_alert')
+})
 
 const savedDocuments = ref([])
 

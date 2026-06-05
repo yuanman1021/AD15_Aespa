@@ -985,8 +985,24 @@ VALUES
 (
   2,
   3,
-  'Promotion guideline updated',
+  'Smart Alert: Promotion guideline updated',
   'A time-based promotion guideline has been added for public service officers.',
+  'smart_alert',
+  0
+),
+(
+  2,
+  3,
+  'Smart Alert: Promotion guideline may be relevant',
+  'Based on recent promotion-related searches, the TBK promotion guideline may be useful for your reference.',
+  'smart_alert',
+  0
+),
+(
+  2,
+  4,
+  'Smart Alert: SPKN travel guideline detected',
+  'The SPKN overseas travel guideline is frequently accessed and may be relevant for officers preparing overseas travel applications.',
   'smart_alert',
   0
 ),
