@@ -166,6 +166,81 @@
             </div>
           </div>
         </div>
+       <div
+    v-if="publicDetailsModalOpen"
+    class="modal-overlay"
+    @click.self="publicDetailsModalOpen = false"
+  >
+    <div class="modal-card public-detail-modal">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Public Document Details</p>
+          <h3>{{ selectedDoc.title }}</h3>
+        </div>
+
+        <button @click="publicDetailsModalOpen = false">
+          Close
+        </button>
+      </div>
+
+      <div class="public-detail-header">
+        <span class="status-pill green">{{ selectedDoc.access }}</span>
+        <span class="status-pill">{{ selectedDoc.status }}</span>
+              <span class="status-pill">Version {{ selectedDoc.version }}</span>
+            </div>
+
+            <dl>
+              <div>
+                <dt>Reference Number</dt>
+                <dd>{{ selectedDoc.referenceNo }}</dd>
+              </div>
+              <div>
+                <dt>Category</dt>
+                <dd>{{ selectedDoc.category }}</dd>
+              </div>
+              <div>
+                <dt>Document Type</dt>
+                <dd>{{ selectedDoc.type }}</dd>
+              </div>
+              <div>
+                <dt>Effective Date</dt>
+                <dd>{{ selectedDoc.effectiveDate }}</dd>
+              </div>
+              <div>
+                <dt>Issuing Department</dt>
+                <dd>Johor Human Resource Management Division</dd>
+              </div>
+              <div>
+                <dt>Document Purpose</dt>
+                <dd>Provides official guidance for HR-related procedures.</dd>
+              </div>
+            </dl>
+
+            <div class="public-summary-box">
+              <h4>Document Summary</h4>
+              <p>{{ selectedDoc.summary }}</p>
+            </div>
+
+            <div class="public-summary-box">
+              <h4>Prototype Note</h4>
+              <p>
+                This page shows the public document information available to guest users.
+                Additional actions such as download, bookmark, AI chatbot, recommendations
+                and notification subscription require login.
+              </p>
+            </div>
+
+            <div class="button-row">
+              <button class="primary" @click="publicDetailsModalOpen = false">
+                Back to Public Portal
+              </button>
+
+              <button @click="screen = 'auth'; authMode = 'register'; publicDetailsModalOpen = false">
+                Request Account Registration
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- LOGIN / REGISTER -->
@@ -232,7 +307,10 @@
               Login as Registered User
             </button>
 
-            <button class="link-button" @click="resetModalOpen = true">
+            <button
+              class="link-button"
+              @click="resetAccountType = 'user'; resetModalOpen = true"
+            >
               Forgot password?
             </button>
           </div>
@@ -303,6 +381,12 @@
             <button class="primary full" @click="adminLogin">
               Login as Administrator
             </button>
+            <button
+              class="link-button"
+              @click="resetAccountType = 'admin'; resetModalOpen = true"
+            >
+              Forgot password?
+            </button>
           </div>
                 </div>
 
@@ -311,7 +395,9 @@
             <div class="section-title">
               <div>
                 <p class="eyebrow">Account Recovery</p>
-                <h3>Reset Password</h3>
+                <h3>
+                  {{ resetAccountType === 'admin' ? 'Reset Admin Password' : 'Reset User Password' }}
+                </h3>
               </div>
 
               <button @click="resetModalOpen = false">
@@ -320,13 +406,17 @@
             </div>
 
             <p class="muted">
-              Enter your registered government email, verification code and new password.
+              {{
+                resetAccountType === 'admin'
+                  ? 'Enter your administrator email, verification code and new password.'
+                  : 'Enter your registered government email, verification code and new password.'
+              }}
             </p>
 
             <InputField
               v-model="resetForm.email"
-              label="Registered Email"
-              placeholder="user@johor.gov.my"
+              :label="resetAccountType === 'admin' ? 'Admin Email' : 'Registered Email'"
+              :placeholder="resetAccountType === 'admin' ? 'admin@johor.gov.my' : 'user@johor.gov.my'"
             />
 
             <button class="primary full" @click="sendResetLink">
@@ -447,8 +537,50 @@
               desc="Request own account deactivation."
               action="Request"
               danger
-              @click="toast = 'Account deactivation request submitted.'"
+              @click="deactivationModalOpen = true"
             />
+          </div>
+        </div>
+
+        <div
+          v-if="deactivationModalOpen"
+          class="modal-overlay"
+          @click.self="deactivationModalOpen = false"
+        >
+          <div class="modal-card deactivation-form-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Account Deactivation</p>
+                <h3>Request Account Deactivation</h3>
+              </div>
+
+              <button @click="cancelDeactivationRequest">
+                Cancel
+              </button>
+            </div>
+
+            <p class="muted">
+              Submit a request to deactivate your account. The request will be reviewed by an administrator before the account is deactivated.
+            </p>
+
+            <label class="input-group">
+              <span>Reason for Deactivation</span>
+              <textarea
+                v-model="deactivationForm.reason"
+                class="feedback-textarea"
+                placeholder="Example: I no longer need access to the Johor HR Knowledge Hub."
+              ></textarea>
+            </label>
+
+            <InputField
+              v-model="deactivationForm.confirmText"
+              label="Type DEACTIVATE to confirm"
+              placeholder="DEACTIVATE"
+            />
+
+            <button class="secondary full" @click="submitDeactivationRequest">
+              Submit Deactivation Request
+            </button>
           </div>
         </div>
       </section>
@@ -1753,12 +1885,12 @@
         </div>
 
        <div class="wide-card">
-  <div class="section-title">
-    <h3>Role and Permission Control</h3>
-    <button @click="openCreateRoleForm">
-      Create Role
-    </button>
-  </div>
+        <div class="section-title">
+          <h3>Role and Permission Control</h3>
+          <button @click="openCreateRoleForm">
+            Create Role
+          </button>
+        </div>
 
   <div class="role-grid">
     <article
@@ -1950,6 +2082,31 @@ function useLocalStorage(key, defaultValue) {
   return data
 }
 
+  function submitDeactivationRequest() {
+    if (!deactivationForm.value.reason.trim()) {
+      toast.value = 'Please enter a reason for account deactivation.'
+      return
+    }
+
+    if (deactivationForm.value.confirmText !== 'DEACTIVATE') {
+      toast.value = 'Please type DEACTIVATE to confirm the request.'
+      return
+    }
+
+    toast.value = 'Account deactivation request submitted for administrator review.'
+    addLog('Submitted account deactivation request', 'Profile Management', 'Warning', session.value)
+    cancelDeactivationRequest()
+  }
+
+  function cancelDeactivationRequest() {
+    deactivationModalOpen.value = false
+
+    deactivationForm.value = {
+      reason: '',
+      confirmText: ''
+    }
+  }
+
 /* const documents = ref([])
 
 async function loadDocuments() {
@@ -1981,6 +2138,8 @@ const selectedDoc = ref({
   reason: '',
   summary: 'Please wait while documents are loaded from the database.'
 })
+
+const publicDetailsModalOpen = ref(false)
 
 const smartResults = ref([]) // recommended documents only
 const searchResults = ref([]) // smart search results only
@@ -2361,6 +2520,7 @@ const roleForm = ref({
 //const selectedDoc = ref(documents.value[0])
 const authMode = ref('login')
 const resetModalOpen = ref(false)
+const resetAccountType = ref('user')
 const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
 
@@ -2389,6 +2549,12 @@ watch(smartQuery, () => {
 
 const mfaEnabled = ref(true)
 const policyUpdateEnabled = ref(true)
+const deactivationModalOpen = ref(false)
+const deactivationForm = ref({
+  reason: '',
+  confirmText: ''
+})
+
 const savedUpdateEnabled = ref(true)
 const notificationFrequency = ref('Daily')
 const deliveryChannel = ref('In-System')
@@ -2710,7 +2876,7 @@ function logoutPrototype() {
 
 function openDocumentDetails(doc) {
   selectedDoc.value = doc
-  toast.value = `Opened public document details for ${doc.referenceNo}.`
+  publicDetailsModalOpen.value = true
   addLog('Viewed public document details', 'Public Search', 'Success', session.value)
 }
 
