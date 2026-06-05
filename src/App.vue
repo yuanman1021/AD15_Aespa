@@ -27,7 +27,7 @@
       </nav>
 
       <button class="ghost-button" @click="logoutPrototype">
-        Logout Prototype
+        Logout 
       </button>
     </aside>
 
@@ -39,8 +39,8 @@
         </div>
 
         <div class="top-actions">
-          <button @click="fakeLogin('User')">Demo User Login</button>
-          <button class="primary" @click="fakeLogin('Admin')">Demo Admin Login</button>
+          <button @click="fakeLogin('User')">User Login</button>
+          <button class="primary" @click="fakeLogin('Admin')">Admin Login</button>
         </div>
       </header>
 
