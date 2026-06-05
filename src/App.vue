@@ -2090,9 +2090,38 @@ const uploadForm = ref({
   referenceNo: '',
   issuingAuthority: '',
   effectiveDate: '',
+  expiryDate: '',
+  departmentTag: '',
   type: 'Guideline',
-  category: 'Leave Policy'
+  category: 'Leave Policy',
+  access: 'Registered',
+  language: 'BM',
+  fileName: '',
+  fileSizeKb: 0,
+  fileObject: null
 })
+
+// ── Subsystem 2 new reactive state ──
+const repoCategory = ref('')
+const repoStatus = ref('')
+const repoAccess = ref('')
+const uploadStatus = ref(null)
+const showArchiveModal = ref(false)
+const archiveTarget = ref(null)
+const archiveForm = ref({ reason: '', successorReference: '', reasonDetails: '' })
+const showVersionModal = ref(false)
+const versionForm = ref({
+  documentId: '',
+  changeSummary: '',
+  updateType: '',
+  newEffectiveDate: '',
+  fileName: '',
+  fileObject: null
+})
+const documentAuditLog = ref([])
+const fileInputRef = ref(null)
+const versionFileInputRef = ref(null)
+
 
 const chatInput = ref('')
 const conversationHistory = ref([])
@@ -2130,10 +2159,13 @@ const filteredDocs = computed(() => {
 
 const repositoryDocs = computed(() => {
   return documents.value.filter((doc) => {
-    const searchText = `${doc.title} ${doc.referenceNo}`.toLowerCase()
-    const matchesQuery = searchText.includes(repoQuery.value.toLowerCase())
-    const matchesType = repoType.value === 'All Types' || doc.type === repoType.value
-    return matchesQuery && matchesType
+    const searchText = `${doc.title} ${doc.referenceNo} ${doc.category}`.toLowerCase()
+    const matchesQuery = !repoQuery.value || searchText.includes(repoQuery.value.toLowerCase())
+    const matchesType = !repoType.value || doc.type === repoType.value
+    const matchesCategory = !repoCategory.value || doc.category === repoCategory.value
+    const matchesStatus = !repoStatus.value || doc.status === repoStatus.value
+    const matchesAccess = !repoAccess.value || doc.access === repoAccess.value
+    return matchesQuery && matchesType && matchesCategory && matchesStatus && matchesAccess
   })
 })
 
@@ -2345,9 +2377,57 @@ function toggleMfa() {
   addLog('Changed MFA setting', 'Account Security', 'Success', profileForm.value.name)
 }
 
+// ─── MODULE 4.1: DOCUMENT UPLOAD FUNCTIONS ───
+
+function triggerFileInput() {
+  fileInputRef.value?.click()
+}
+
+function handleFileSelect(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.type !== 'application/pdf') {
+    uploadStatus.value = { type: 'error', message: 'Only PDF files are accepted.' }
+    return
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    uploadStatus.value = { type: 'error', message: 'File size must not exceed 20MB.' }
+    return
+  }
+  uploadForm.value.fileName = file.name
+  uploadForm.value.fileSizeKb = Math.round(file.size / 1024)
+  uploadForm.value.fileObject = file
+  uploadStatus.value = null
+}
+
+function handleFileDrop(event) {
+  const file = event.dataTransfer.files[0]
+  if (!file) return
+  handleFileSelect({ target: { files: [file] } })
+}
+
+function clearFile() {
+  uploadForm.value.fileName = ''
+  uploadForm.value.fileSizeKb = 0
+  uploadForm.value.fileObject = null
+  if (fileInputRef.value) fileInputRef.value.value = ''
+}
+
 function uploadDocument() {
   if (!uploadForm.value.title || !uploadForm.value.referenceNo) {
     toast.value = 'Please enter document title and reference number.'
+    return
+  }
+  if (!uploadForm.value.issuingAuthority) {
+    toast.value = 'Please enter the issuing authority.'
+    return
+  }
+  if (!uploadForm.value.effectiveDate) {
+    toast.value = 'Please enter the effective date.'
+    return
+  }
+  if (!uploadForm.value.fileName) {
+    toast.value = 'Please select a PDF file to upload.'
     return
   }
 
@@ -2357,12 +2437,18 @@ function uploadDocument() {
     title: uploadForm.value.title,
     category: uploadForm.value.category,
     type: uploadForm.value.type || 'Guideline',
-    status: 'Published',
-    access: 'Registered',
-    effectiveDate: uploadForm.value.effectiveDate || 'Not set',
+    status: 'Pending Review',
+    access: uploadForm.value.access || 'Registered',
+    language: uploadForm.value.language || 'BM',
+    effectiveDate: uploadForm.value.effectiveDate,
+    expiryDate: uploadForm.value.expiryDate || null,
+    departmentTag: uploadForm.value.departmentTag || '',
     version: '1.0',
-    reason: 'Newly uploaded document.',
-    summary: `Uploaded by ${uploadForm.value.issuingAuthority || 'Administrator'}. Metadata has been extracted and is ready for review.`
+    fileName: uploadForm.value.fileName,
+    fileSizeKb: uploadForm.value.fileSizeKb,
+    totalViews: 0,
+    totalDownloads: 0,
+    summary: `Uploaded by ${uploadForm.value.issuingAuthority}. Pending AI classification review.`
   }
 
   documents.value.unshift(newDocument)
@@ -2373,21 +2459,17 @@ function uploadDocument() {
     title: uploadForm.value.title,
     status: 'Pending Review',
     suggestions: [uploadForm.value.category, 'HR Policy'],
-    tags: ['New Upload', uploadForm.value.type || 'Guideline']
+    tags: [uploadForm.value.departmentTag || 'HRMD', uploadForm.value.type || 'Guideline'],
+    confidence: Math.floor(Math.random() * 20) + 75,
+    editing: false,
+    modifiedCategory: '',
+    modifiedDepartmentTag: ''
   })
 
-  notifications.value.unshift({
-    id: Date.now(),
-    title: 'New document uploaded',
-    message: `${uploadForm.value.title} was added to the repository.`,
-    time: 'Just now',
-    read: false
-  })
-
-  addLog('Uploaded HR document', 'Document Upload', 'Success', 'Administrator')
+  addAuditEntry('upload', newDocument.title, 'Document uploaded and sent for classification review')
+  uploadStatus.value = { type: 'success', message: `"${newDocument.title}" uploaded and added to AI classification queue.` }
   resetUploadForm()
-
-  toast.value = 'Document uploaded successfully and added to AI classification review.'
+  toast.value = 'Document uploaded successfully.'
 }
 
 function saveDocumentAsDraft() {
@@ -2403,19 +2485,22 @@ function saveDocumentAsDraft() {
     category: uploadForm.value.category,
     type: uploadForm.value.type || 'Guideline',
     status: 'Draft',
-    access: 'Registered',
+    access: uploadForm.value.access || 'Registered',
+    language: uploadForm.value.language || 'BM',
     effectiveDate: uploadForm.value.effectiveDate || 'Not set',
+    departmentTag: uploadForm.value.departmentTag || '',
     version: '1.0',
-    reason: 'Draft document.',
+    fileName: uploadForm.value.fileName || '',
+    totalViews: 0,
+    totalDownloads: 0,
     summary: `Draft saved by ${uploadForm.value.issuingAuthority || 'Administrator'}.`
   }
 
   documents.value.unshift(draftDocument)
   selectedDoc.value = draftDocument
-  addLog('Saved document as draft', 'Document Upload', 'Success', 'Administrator')
+  addAuditEntry('draft', draftDocument.title, 'Document saved as draft')
   resetUploadForm()
-
-  toast.value = 'Document saved as draft and added to repository.'
+  toast.value = 'Document saved as draft.'
 }
 
 function resetUploadForm() {
@@ -2424,57 +2509,216 @@ function resetUploadForm() {
     referenceNo: '',
     issuingAuthority: '',
     effectiveDate: '',
+    expiryDate: '',
+    departmentTag: '',
     type: 'Guideline',
-    category: 'Leave Policy'
+    category: 'Leave Policy',
+    access: 'Registered',
+    language: 'BM',
+    fileName: '',
+    fileSizeKb: 0,
+    fileObject: null
   }
+  if (fileInputRef.value) fileInputRef.value.value = ''
+  uploadStatus.value = null
 }
+
+// ─── MODULE 4.2: AI CLASSIFICATION FUNCTIONS ───
 
 function approveClassification(item) {
   item.status = 'Approved'
-  toast.value = `${item.title} classification approved.`
-  addLog('Approved AI classification', 'Document Classification', 'Success', 'Administrator')
+  item.editing = false
+  const doc = documents.value.find(d => d.title === item.title)
+  if (doc && doc.status === 'Pending Review') doc.status = 'Published'
+  addAuditEntry('classify', item.title, 'AI classification approved')
+  toast.value = `Classification approved for "${item.title}".`
+}
+
+function startModifyClassification(item) {
+  item.editing = true
+  item.modifiedCategory = item.suggestions[0]
+  item.modifiedDepartmentTag = item.tags[0]
+}
+
+function confirmModifyClassification(item) {
+  if (item.modifiedCategory) {
+    item.suggestions = [item.modifiedCategory, ...item.suggestions.filter(s => s !== item.modifiedCategory)]
+  }
+  if (item.modifiedDepartmentTag) {
+    item.tags = [item.modifiedDepartmentTag, ...item.tags.filter(t => t !== item.modifiedDepartmentTag)]
+  }
+  item.status = 'Approved'
+  item.editing = false
+  const doc = documents.value.find(d => d.title === item.title)
+  if (doc) {
+    if (item.modifiedCategory) doc.category = item.modifiedCategory
+    if (item.modifiedDepartmentTag) doc.departmentTag = item.modifiedDepartmentTag
+    if (doc.status === 'Pending Review') doc.status = 'Published'
+  }
+  addAuditEntry('classify', item.title, `Classification modified: ${item.modifiedCategory}`)
+  toast.value = `Classification modified and approved for "${item.title}".`
+}
+
+function rejectClassification(item) {
+  item.status = 'Rejected'
+  item.editing = false
+  addAuditEntry('classify', item.title, 'AI classification rejected')
+  toast.value = `Classification rejected for "${item.title}".`
 }
 
 function refreshClassification() {
-  toast.value = 'AI suggestions refreshed.'
+  classificationQueue.value.forEach(item => {
+    if (item.status !== 'Approved') {
+      item.confidence = Math.floor(Math.random() * 20) + 75
+    }
+  })
+  toast.value = 'AI classification suggestions refreshed.'
   addLog('Refreshed AI classification suggestions', 'Document Classification', 'Success', 'Administrator')
 }
+
+// ─── MODULE 4.3 + 4.4: REPOSITORY FUNCTIONS ───
 
 function previewRepositoryDoc(doc) {
   selectedDoc.value = doc
   screen.value = 'public'
+  doc.totalViews = (doc.totalViews || 0) + 1
   toast.value = `Preview opened for ${doc.referenceNo}.`
   addLog('Previewed repository document', 'Document Repository', 'Success', session.value)
 }
 
-function archiveDocument(doc) {
-  doc.status = 'Archived'
-  toast.value = `${doc.referenceNo} has been archived.`
-  addLog('Archived document', 'Document Archive', 'Success', 'Administrator')
-}
+// ─── MODULE 4.5: ARCHIVE FUNCTIONS ───
 
-function uploadNewVersion() {
-  if (!selectedDoc.value) {
-    toast.value = 'Please select a document first.'
+function openArchiveModal(doc) {
+  if (doc.status === 'Archived') {
+    toast.value = 'This document is already archived.'
     return
   }
+  archiveTarget.value = doc
+  archiveForm.value = { reason: '', successorReference: '', reasonDetails: '' }
+  showArchiveModal.value = true
+}
 
-  const currentVersion = Number(selectedDoc.value.version)
-  const nextVersion = Number.isNaN(currentVersion) ? '2.0' : (currentVersion + 0.1).toFixed(1)
-
-  selectedDoc.value.version = nextVersion
-  selectedDoc.value.status = 'Published'
-
+function confirmArchive() {
+  if (!archiveForm.value.reason) {
+    toast.value = 'Please select an archive reason.'
+    return
+  }
+  archiveTarget.value.status = 'Archived'
+  addAuditEntry('archive', archiveTarget.value.title,
+    `Archived: ${archiveForm.value.reason}${archiveForm.value.successorReference ? ' · Successor: ' + archiveForm.value.successorReference : ''}`)
   notifications.value.unshift({
     id: Date.now(),
-    title: 'Saved document updated',
-    message: `${selectedDoc.value.title} has a new version ${nextVersion}.`,
+    title: 'Document archived',
+    message: `${archiveTarget.value.title} has been archived.${archiveForm.value.successorReference ? ' Successor: ' + archiveForm.value.successorReference : ''}`,
     time: 'Just now',
     read: false
   })
+  toast.value = `"${archiveTarget.value.referenceNo}" archived successfully.`
+  showArchiveModal.value = false
+  archiveTarget.value = null
+}
 
-  toast.value = `${selectedDoc.value.title} updated to version ${nextVersion}.`
-  addLog('Uploaded new document version', 'Version Management', 'Success', 'Administrator')
+// ─── MODULE 4.5: VERSION MANAGEMENT FUNCTIONS ───
+
+function openNewVersionModal() {
+  versionForm.value = {
+    documentId: selectedDoc.value?.documentId || '',
+    changeSummary: '',
+    updateType: '',
+    newEffectiveDate: '',
+    fileName: '',
+    fileObject: null
+  }
+  showVersionModal.value = true
+}
+
+function selectDocForVersion(doc) {
+  selectedDoc.value = doc
+  openNewVersionModal()
+}
+
+function triggerVersionFileInput() {
+  versionFileInputRef.value?.click()
+}
+
+function handleVersionFileSelect(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  versionForm.value.fileName = file.name
+  versionForm.value.fileObject = file
+}
+
+function handleVersionFileDrop(event) {
+  const file = event.dataTransfer.files[0]
+  if (!file) return
+  versionForm.value.fileName = file.name
+  versionForm.value.fileObject = file
+}
+
+const nextVersionNumber = computed(() => {
+  if (!versionForm.value.documentId) return '2.0'
+  const doc = documents.value.find(d => d.documentId == versionForm.value.documentId)
+  if (!doc) return '2.0'
+  const current = parseFloat(doc.version) || 1.0
+  return (current + 1.0).toFixed(1)
+})
+
+function confirmUploadNewVersion() {
+  if (!versionForm.value.documentId) {
+    toast.value = 'Please select a document to update.'
+    return
+  }
+  if (!versionForm.value.updateType) {
+    toast.value = 'Please select an update type.'
+    return
+  }
+  if (!versionForm.value.changeSummary) {
+    toast.value = 'Please enter a change summary.'
+    return
+  }
+  if (!versionForm.value.fileName) {
+    toast.value = 'Please select the new PDF file.'
+    return
+  }
+  const doc = documents.value.find(d => d.documentId == versionForm.value.documentId)
+  if (!doc) return
+
+  const newVersion = nextVersionNumber.value
+  doc.version = newVersion
+  doc.status = 'Published'
+  if (versionForm.value.newEffectiveDate) doc.effectiveDate = versionForm.value.newEffectiveDate
+
+  addAuditEntry('version', doc.title, `v${newVersion} uploaded: ${versionForm.value.changeSummary}`)
+  notifications.value.unshift({
+    id: Date.now(),
+    title: 'Document updated',
+    message: `${doc.title} has a new version (v${newVersion}). ${versionForm.value.changeSummary}`,
+    time: 'Just now',
+    read: false
+  })
+  toast.value = `"${doc.title}" updated to version ${newVersion}.`
+  showVersionModal.value = false
+}
+
+// ─── AUDIT LOG HELPER ───
+
+function addAuditEntry(actionType, documentTitle, actionDetails) {
+  const labels = {
+    upload: 'Document Uploaded',
+    draft: 'Draft Saved',
+    classify: 'Classification Reviewed',
+    archive: 'Document Archived',
+    version: 'New Version Uploaded'
+  }
+  documentAuditLog.value.unshift({
+    id: Date.now(),
+    actionType,
+    actionLabel: labels[actionType] || actionType,
+    documentTitle,
+    actionDetails,
+    performedBy: session.value === 'Admin' ? 'Administrator' : session.value,
+    createdAt: new Date().toLocaleString('en-MY', { dateStyle: 'short', timeStyle: 'short' })
+  })
 }
 
 async function loadSearchSuggestions() {
