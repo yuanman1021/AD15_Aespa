@@ -1565,31 +1565,81 @@
         <StatCard label="Documents" :value="String(documents.length)" note="Repository records" />
         <StatCard label="Audit Events" :value="String(logs.length)" note="System activity logs" />
 
-        <div class="wide-card">
-          <div class="section-title">
-            <h3>Role and Permission Control</h3>
-            <button @click="createNewRole">
-              Create Role
-            </button>
-          </div>
+       <div class="wide-card">
+  <div class="section-title">
+    <h3>Role and Permission Control</h3>
+    <button @click="openCreateRoleForm">
+      Create Role
+    </button>
+  </div>
 
-          <div class="role-grid">
-            <article
-              v-for="role in roles"
-              :key="role.name"
-              class="role-card"
-            >
-              <h4>{{ role.name }}</h4>
-              <p>{{ role.description }}</p>
+  <div class="role-grid">
+    <article
+      v-for="(role, index) in roles"
+      :key="role.name"
+      class="role-card"
+    >
+      <h4>{{ role.name }}</h4>
+      <p>{{ role.description }}</p>
 
-              <div>
-                <span v-for="permission in role.permissions" :key="permission">
-                  {{ permission }}
-                </span>
-              </div>
-            </article>
-          </div>
-        </div>
+      <div>
+        <span v-for="permission in role.permissions" :key="permission">
+          {{ permission }}
+        </span>
+      </div>
+
+      <div class="button-row">
+        <button @click="openEditRoleForm(role, index)">
+          Edit Role
+        </button>
+      </div>
+    </article>
+  </div>
+</div>
+
+<div v-if="roleModalOpen" class="modal-overlay" @click.self="cancelRoleForm">
+  <div class="modal-card">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">Role Management</p>
+        <h3>{{ editingRoleIndex === null ? 'Create New Role' : 'Edit Role' }}</h3>
+      </div>
+
+      <button @click="cancelRoleForm">
+        Cancel
+      </button>
+    </div>
+
+    <InputField
+      v-model="roleForm.name"
+      label="Role Name"
+      placeholder="Example: Document Reviewer"
+    />
+
+    <label class="input-group">
+      <span>Role Description</span>
+      <textarea
+        v-model="roleForm.description"
+        class="feedback-textarea"
+        placeholder="Describe what this role can do..."
+      ></textarea>
+    </label>
+
+    <label class="input-group">
+      <span>Permissions</span>
+      <textarea
+        v-model="roleForm.permissions"
+        class="feedback-textarea"
+        placeholder="Enter permissions separated by comma"
+      ></textarea>
+    </label>
+
+    <button class="primary full" @click="saveRole">
+      {{ editingRoleIndex === null ? 'Create Role' : 'Save Changes' }}
+    </button>
+  </div>
+</div>
+        
 
         <div class="wide-card">
           <div class="section-title">
@@ -2068,6 +2118,14 @@ const categories = [
 const screen = ref('public')
 const query = ref('')
 const category = ref('All')
+const roleModalOpen = ref(false)
+const editingRoleIndex = ref(null)
+
+const roleForm = ref({
+  name: '',
+  description: '',
+  permissions: ''
+})
 //const selectedDoc = ref(documents.value[0])
 const authMode = ref('login')
 const session = ref('Guest')
@@ -3486,23 +3544,81 @@ function toggleUserStatus(user) {
     addLog('Reactivated user account', 'User Management', 'Success', 'Administrator')
   }
 }
+function openCreateRoleForm() {
+  editingRoleIndex.value = null
 
-function createNewRole() {
-  const roleExists = roles.value.some((role) => role.name === 'Document Reviewer')
+  roleForm.value = {
+    name: '',
+    description: '',
+    permissions: ''
+  }
 
-  if (roleExists) {
-    toast.value = 'Document Reviewer role already exists.'
+  roleModalOpen.value = true
+}
+
+function openEditRoleForm(role, index) {
+  editingRoleIndex.value = index
+
+  roleForm.value = {
+    name: role.name,
+    description: role.description,
+    permissions: role.permissions.join(', ')
+  }
+
+  roleModalOpen.value = true
+}
+
+function saveRole() {
+  const roleName = roleForm.value.name.trim()
+  const roleDescription = roleForm.value.description.trim()
+  const permissions = roleForm.value.permissions
+    .split(',')
+    .map((permission) => permission.trim())
+    .filter(Boolean)
+
+  if (!roleName || !roleDescription || permissions.length === 0) {
+    toast.value = 'Please enter role name, description and at least one permission.'
     return
   }
 
-  roles.value.push({
-    name: 'Document Reviewer',
-    description: 'Can review AI classification suggestions and approve document metadata.',
-    permissions: ['Review Classification', 'Edit Metadata', 'Approve Category']
+  const duplicateRole = roles.value.some((role, index) => {
+    return role.name.toLowerCase() === roleName.toLowerCase() &&
+      index !== editingRoleIndex.value
   })
 
-  toast.value = 'New role Document Reviewer created.'
-  addLog('Created new user role', 'Role Management', 'Success', 'Administrator')
+  if (duplicateRole) {
+    toast.value = `${roleName} role already exists.`
+    return
+  }
+
+  const roleData = {
+    name: roleName,
+    description: roleDescription,
+    permissions
+  }
+
+  if (editingRoleIndex.value === null) {
+    roles.value.push(roleData)
+    toast.value = `${roleName} role created successfully.`
+    addLog('Created new user role', 'Role Management', 'Success', 'Administrator')
+  } else {
+    roles.value[editingRoleIndex.value] = roleData
+    toast.value = `${roleName} role updated successfully.`
+    addLog('Edited user role', 'Role Management', 'Success', 'Administrator')
+  }
+
+  cancelRoleForm()
+}
+
+function cancelRoleForm() {
+  roleModalOpen.value = false
+  editingRoleIndex.value = null
+
+  roleForm.value = {
+    name: '',
+    description: '',
+    permissions: ''
+  }
 }
 
 function filterLogs() {
