@@ -883,39 +883,46 @@ VALUES
 -- =========================================================
 -- SAMPLE FAQS
 -- For FAQ and Knowledge Assistance Module
+-- More specific policy document questions
 -- =========================================================
 
 INSERT INTO faqs
 (question, answer, category, status)
 VALUES
 (
-  'How do I search for a HR document?',
-  'You can search by document title, reference number, category or keyword from the Public Portal or Smart Support page.',
-  'Search',
-  'Published'
-),
-(
-  'Why can I not access a restricted document?',
-  'Restricted documents require registered user access and suitable permission level before they can be viewed or downloaded.',
-  'Access Control',
-  'Published'
-),
-(
-  'How are document recommendations generated?',
-  'Recommendations are generated based on user activity, document category, recent searches and frequently accessed documents.',
-  'Recommendation',
-  'Published'
-),
-(
-  'How do I apply for TASKA subsidy?',
-  'You may refer to the TASKA subsidy guideline and complete the Borang Permohonan Subsidi TASKA with the required supporting documents.',
+  'What information must be prepared before submitting the TASKA subsidy application form?',
+  'Before submitting the TASKA subsidy application, the applicant should prepare officer information, spouse information, household income details, child information, TASKA confirmation, and required supporting documents. The Borang Permohonan Subsidi TASKA is used to record these details for the childcare fee subsidy application.',
   'Staff Benefits',
   'Published'
 ),
 (
-  'How do I find promotion guidelines?',
-  'Search for promotion, pangkat, TBK, or staff evaluation in the Smart Search module to view related promotion documents.',
+  'What is the difference between the TASKA application form and the TASKA guideline?',
+  'The Borang Permohonan Subsidi TASKA is the form used by officers to apply for childcare fee subsidy, while the Garis Panduan Permohonan Subsidi TASKA explains the application rules, eligibility, supporting documents, subsidy implementation, and responsibilities of the applicant and department.',
+  'Staff Benefits',
+  'Published'
+),
+(
+  'What are the main conditions explained in the TBK promotion guideline?',
+  'The TBK promotion guideline explains time-based promotion conditions such as TBK1 and TBK2, service period requirement, officer eligibility, performance condition, submission period, affected officer categories, and promotion date determination for Johor public service officers.',
   'Promotion',
+  'Published'
+),
+(
+  'What type of overseas travel applications are covered under the SPKN guideline?',
+  'The SPKN guideline covers several types of overseas travel applications, including official travel, personal travel, hajj, and umrah applications. It also explains supporting documents, department approval, and the application submission process through the SPKN system.',
+  'Overseas Travel',
+  'Published'
+),
+(
+  'What does the COS and CFS guideline explain about contract officers?',
+  'The COS and CFS guideline explains the management of contract officers under Contract of Service and Contract for Service. It covers contract officer categories, appointment management, salary adjustment, and implementation matters under SSPA for Johor public service.',
+  'Contract Service',
+  'Published'
+),
+(
+  'Why does the promotion and discipline reference document need special handling in the system?',
+  'The promotion and discipline reference document is related to promotion and disciplinary guideline references. Since the document is scanned, the system may need OCR before the full text can be searched accurately. Without OCR, the system can only rely on manually entered title, category, and summary information.',
+  'Promotion and Discipline',
   'Published'
 );
 
