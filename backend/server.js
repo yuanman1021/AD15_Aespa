@@ -618,7 +618,32 @@ app.get('/api/search', async (req, res) => {
       })
     }
 
-    const searchKeyword = `%${keyword}%`
+    const words = keyword
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((word) => word.length > 1)
+
+    let whereClause = ''
+    const params = []
+
+    words.forEach((word, index) => {
+      const condition = `
+        LOWER(d.title) LIKE ?
+        OR LOWER(d.category) LIKE ?
+        OR LOWER(d.referenceNo) LIKE ?
+        OR LOWER(d.summary) LIKE ?
+        OR LOWER(d.type) LIKE ?
+      `
+
+      if (index === 0) {
+        whereClause += `(${condition})`
+      } else {
+        whereClause += ` OR (${condition})`
+      }
+
+      const searchWord = `%${word}%`
+      params.push(searchWord, searchWord, searchWord, searchWord, searchWord)
+    })
 
     let orderBy = 'relevanceScore DESC'
 
@@ -633,39 +658,36 @@ app.get('/api/search', async (req, res) => {
     const [matchedDocuments] = await db.query(
       `SELECT 
         d.*,
+        (
+          CASE WHEN LOWER(d.title) LIKE ? THEN 40 ELSE 0 END +
+          CASE WHEN LOWER(d.category) LIKE ? THEN 25 ELSE 0 END +
+          CASE WHEN LOWER(d.summary) LIKE ? THEN 20 ELSE 0 END +
+          CASE WHEN LOWER(d.referenceNo) LIKE ? THEN 15 ELSE 0 END +
+          CASE WHEN LOWER(d.type) LIKE ? THEN 10 ELSE 0 END
+        ) AS relevanceScore,
         CASE
-          WHEN d.title LIKE ? THEN 95.00
-          WHEN d.category LIKE ? THEN 85.00
-          WHEN d.summary LIKE ? THEN 75.00
-          WHEN d.referenceNo LIKE ? THEN 70.00
-          ELSE 50.00
-        END AS relevanceScore,
-        CASE
-          WHEN d.title LIKE ? THEN 'title'
-          WHEN d.category LIKE ? THEN 'category'
-          WHEN d.summary LIKE ? THEN 'summary'
-          WHEN d.referenceNo LIKE ? THEN 'reference'
+          WHEN LOWER(d.title) LIKE ? THEN 'title'
+          WHEN LOWER(d.category) LIKE ? THEN 'category'
+          WHEN LOWER(d.summary) LIKE ? THEN 'summary'
+          WHEN LOWER(d.referenceNo) LIKE ? THEN 'reference'
+          WHEN LOWER(d.type) LIKE ? THEN 'type'
           ELSE 'general'
         END AS matchType
       FROM documents d
-      WHERE d.title LIKE ?
-      OR d.category LIKE ?
-      OR d.summary LIKE ?
-      OR d.referenceNo LIKE ?
+      WHERE ${whereClause}
       ORDER BY ${orderBy}`,
       [
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword,
-        searchKeyword
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        `%${words[0]}%`,
+        ...params
       ]
     )
 
@@ -676,7 +698,7 @@ app.get('/api/search', async (req, res) => {
       [
         userId,
         keyword,
-        'Semantic Search',
+        'Smart Search',
         matchedDocuments.length
       ]
     )
@@ -713,6 +735,8 @@ app.get('/api/search', async (req, res) => {
       results: matchedDocuments
     })
   } catch (error) {
+    console.error(error)
+
     res.status(500).json({
       message: 'Smart search failed',
       error: error.message

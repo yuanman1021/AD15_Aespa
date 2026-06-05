@@ -671,6 +671,13 @@
             Perform Smart Search
           </button>
 
+          <button
+            v-if="hasSearched"
+            @click="clearSearchResults"
+          >
+            Clear Search
+          </button>
+
           <div class="history-panel">
             <p class="eyebrow">Recent Search History</p>
 
@@ -709,7 +716,7 @@
               <button
                 v-for="question in suggestedQuestions"
                 :key="question"
-                @click="askSuggestedQuestion(question)"
+                @click="sendSuggestedQuestion(question)"
               >
                 {{ question }}
               </button>
@@ -771,6 +778,52 @@
           </div>
         </div>
 
+        <div v-if="hasSearched" class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Search Results</p>
+              <h3>Smart Search Result Documents</h3>
+            </div>
+
+            <button @click="clearSearchResults">
+              Clear
+            </button>
+          </div>
+
+          <div class="doc-grid">
+            <article
+              v-for="doc in searchResults"
+              :key="doc.documentId"
+              class="doc-card"
+            >
+              <span class="status-pill amber">Search Result</span>
+
+              <h4 v-html="highlightMatchedContent(doc.title)"></h4>
+
+              <p v-if="doc.summary">{{ doc.summary }}</p>
+
+              <div>
+                <span>{{ doc.category }}</span>
+                <span>{{ doc.type }}</span>
+              </div>
+
+              <div class="button-row">
+                <button class="primary" @click="saveDocument(doc)">
+                  Save Document
+                </button>
+
+                <button @click="generateDocumentSummary(doc)">
+                  Generate Summary
+                </button>
+              </div>
+            </article>
+
+            <div v-if="searchResults.length === 0" class="empty-state">
+              No matching document found. Try searching TASKA, TBK, SPKN, COS, CFS, promotion, or contract.
+            </div>
+          </div>
+        </div>
+
         <div class="wide-card">
           <div class="section-title">
             <div>
@@ -790,7 +843,7 @@
               class="doc-card"
             >
               <span class="status-pill green">Recommended</span>
-              <h4 v-html="highlightMatchedContent(doc.title)"></h4>
+              <h4>{{ doc.title }}</h4>
 
               <p v-if="doc.reason">
                 Reason: {{ doc.reason }}
@@ -821,6 +874,10 @@
                 </button>
               </div>
             </article>
+
+            <div v-if="smartResults.length === 0" class="empty-state">
+              No recommended documents available.
+            </div>
           </div>
 
           <div v-if="generatedSummary" class="summary-panel">
@@ -1347,7 +1404,10 @@ const selectedDoc = ref({
   summary: 'Please wait while documents are loaded from the database.'
 })
 
-const smartResults = ref([])
+const smartResults = ref([]) // recommended documents only
+const searchResults = ref([]) // smart search results only
+const hasSearched = ref(false)
+
 const reportDialogOpen = ref(false)
 const selectedRecommendation = ref(null)
 
@@ -1368,7 +1428,6 @@ async function loadDocuments() {
 
     if (documents.value.length > 0) {
       selectedDoc.value = documents.value[0]
-      smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
     }
   } catch (error) {
     console.error(error)
@@ -1631,16 +1690,11 @@ const savedDocuments = ref([])
 const faqs = ref([])
 
 const suggestedQuestions = [
-  'How do I reset my password?',
-  'How do I register an account?',
-  'Can guest users view restricted documents?',
-  'How do I search for leave policy?',
-  'How do I find promotion guidelines?',
-  'How do I upload a HR document?',
-  'How does AI classification work?',
-  'How do notifications work?',
-  'How do I save a document?',
-  'What salary guideline is available?'
+  'How do I apply for TASKA subsidy?',
+  'What is TBK promotion?',
+  'What is SPKN used for?',
+  'What is COS and CFS contract service?',
+  'What is the promotion and discipline document about?'
 ]
 
 const navItems = [
@@ -1762,8 +1816,7 @@ const ratingComment = ref('')
 const chatMessages = ref([
   {
     sender: 'bot',
-    text:
-      'Hi, I am the Johor HR assistant. You can ask me about login, registration, password reset, documents, policy search, uploads, recommendations, notifications, and saved documents.'
+    text: 'Hi, I am the Johor HR Knowledge Hub assistant. What can I help you?'
   }
 ])
 
@@ -2201,8 +2254,9 @@ async function loadFrequentlyUsedPolicies() {
 
 async function performSmartSearch() {
   if (!smartQuery.value.trim()) {
-    smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
-    toast.value = 'Showing general recommended documents.'
+    searchResults.value = []
+    hasSearched.value = false
+    toast.value = 'Please enter a keyword to search.'
     return
   }
 
@@ -2217,21 +2271,32 @@ async function performSmartSearch() {
 
     const data = await response.json()
 
-    smartResults.value = data.results.length > 0
-      ? data.results
-      : documents.value.filter((doc) => doc.access !== 'Restricted')
-
+    searchResults.value = data.results
+    hasSearched.value = true
     lastSearchKeyword.value = smartQuery.value
 
     await loadRecentSearchHistory()
     await loadSearchSuggestions()
 
-    toast.value = 'Smart search completed. Results ranked and saved to search history.'
+    if (data.results.length === 0) {
+      toast.value = 'No matching document found. Try another keyword such as TASKA, TBK, SPKN, COS, or CFS.'
+      return
+    }
+
+    toast.value = 'Smart search completed. Results are shown in the Search Results section.'
     addLog('Performed smart search', 'Smart Search', 'Success', session.value)
   } catch (error) {
     console.error(error)
     toast.value = 'Smart search failed.'
   }
+}
+
+function clearSearchResults() {
+  smartQuery.value = ''
+  searchResults.value = []
+  hasSearched.value = false
+  lastSearchKeyword.value = ''
+  toast.value = 'Search results cleared.'
 }
 
 function highlightMatchedContent(text) {
@@ -2387,6 +2452,11 @@ async function sendChatMessage() {
   addLog('Used HR chatbot assistance', 'AI Chatbot', 'Success', session.value)
 }
 
+function sendSuggestedQuestion(question) {
+  chatInput.value = question
+  sendChatMessage()
+}
+
 async function rateChatbotResponse(value) {
   if (!latestConversationId.value) {
     toast.value = 'Please ask the chatbot a question before rating.'
@@ -2494,94 +2564,55 @@ async function escalateLatestQuestion() {
 function generateChatbotAnswer(question) {
   const text = question.toLowerCase()
 
-  if (text.includes('login') || text.includes('log in')) {
-    return 'To log in, open Login / Register, enter your government email and password, then complete MFA if it is enabled.'
+  if (
+    text.includes('taska') ||
+    text.includes('childcare') ||
+    text.includes('subsidi') ||
+    text.includes('subsidy')
+  ) {
+    return 'To apply for TASKA subsidy, the user should refer to the Borang Permohonan Subsidi TASKA and TASKA subsidy guideline. The application is for eligible public officers who want to claim childcare fee subsidy. The user needs to complete the application form and prepare supporting details such as officer information, spouse information, child information, household income details, TASKA confirmation, and required supporting documents.'
   }
 
-  if (text.includes('register') || text.includes('registration') || text.includes('account')) {
-    return 'To register an account, open Login / Register and choose Register. Enter your full name, government email, department, designation level and password.'
+  if (
+    text.includes('tbk') ||
+    text.includes('promotion') ||
+    text.includes('pangkat') ||
+    text.includes('kenaikan pangkat')
+  ) {
+    return 'TBK promotion refers to time-based promotion for eligible Johor public service officers. The TBK guideline explains matters such as TBK1 and TBK2, service period requirements, performance conditions, eligible officer categories, submission period, and promotion date determination.'
   }
 
-  if (text.includes('reset') || text.includes('forgot') || text.includes('password')) {
-    return 'To reset your password, open Login / Register, choose Reset Password, enter your registered email, request a reset link, then enter the verification code and new password.'
+  if (
+    text.includes('spkn') ||
+    text.includes('travel') ||
+    text.includes('overseas') ||
+    text.includes('luar negara') ||
+    text.includes('hajj') ||
+    text.includes('umrah')
+  ) {
+    return 'SPKN is used to manage overseas travel applications for Johor public officers. The guideline covers official travel, personal travel, hajj and umrah applications, supporting documents, department approval, and application submission through the SPKN system.'
   }
 
-  if (text.includes('mfa') || text.includes('multi-factor') || text.includes('verification code')) {
-    return 'MFA adds extra login protection. You can enable or disable MFA from Profile & Security.'
+  if (
+    text.includes('cos') ||
+    text.includes('cfs') ||
+    text.includes('contract') ||
+    text.includes('kontrak') ||
+    text.includes('sspa')
+  ) {
+    return 'The COS and CFS guideline explains the management of contract officers under Contract of Service and Contract for Service in Johor public service. It includes contract officer categories, salary adjustment, appointment management, and implementation under SSPA.'
   }
 
-  if (text.includes('guest') || text.includes('public')) {
-    return 'Guest users can search and view public HR documents only. Registered or restricted documents require login.'
+  if (
+    text.includes('discipline') ||
+    text.includes('tatatertib') ||
+    text.includes('disciplinary') ||
+    text.includes('promotion and discipline')
+  ) {
+    return 'The promotion and discipline reference document is related to guidelines under the promotion and disciplinary section. It helps users refer to information connected with promotion matters and disciplinary procedures. Since the document is scanned, full detailed text may require OCR before the system can search every part accurately.'
   }
 
-  if (text.includes('restricted') || text.includes('access')) {
-    return 'Restricted documents require a registered account and the correct permission level.'
-  }
-
-  if (text.includes('download')) {
-    return 'Document download is available for registered users depending on the document access level. Public users can preview public details only.'
-  }
-
-  if (text.includes('upload') || text.includes('pdf')) {
-    return 'Administrators can upload HR documents from Document Management. The form requires title, reference number, issuing authority, effective date, document type and category.'
-  }
-
-  if (text.includes('metadata') || text.includes('extract')) {
-    return 'After upload, the system extracts document metadata such as title, reference number, issuing authority, effective date, type and category.'
-  }
-
-  if (text.includes('classify') || text.includes('classification') || text.includes('category')) {
-    return 'The AI classification section suggests document categories and tags. Administrators can review and approve them.'
-  }
-
-  if (text.includes('archive') || text.includes('version')) {
-    return 'Administrators can preview repository documents, archive old documents, and upload new versions when a document is amended.'
-  }
-
-  if (text.includes('notification') || text.includes('alert')) {
-    return 'Notifications inform users when relevant policies are added, saved documents are updated, or weekly recommendations are ready.'
-  }
-
-  if (text.includes('save') || text.includes('saved') || text.includes('bookmark')) {
-    return 'Users can save recommended documents into their personal collection and add personal notes.'
-  }
-
-  if (text.includes('recommend') || text.includes('recommendation')) {
-    return 'Recommendations are based on department, role, recent searches, viewed documents and related HR policy content.'
-  }
-
-  if (text.includes('leave') || text.includes('cuti') || text.includes('sick')) {
-    return findDocumentAnswer('Leave Policy')
-  }
-
-  if (text.includes('promotion') || text.includes('pangkat')) {
-    return findDocumentAnswer('Promotion')
-  }
-
-  if (text.includes('salary') || text.includes('gaji') || text.includes('allowance')) {
-    return findDocumentAnswer('Salary')
-  }
-
-  if (text.includes('loan') || text.includes('pinjaman')) {
-    return findDocumentAnswer('Loan')
-  }
-
-  if (text.includes('discipline') || text.includes('tatatertib')) {
-    return findDocumentAnswer('Discipline')
-  }
-
-  const matchedDocument = documents.value.find((doc) => {
-    const content = `${doc.title} ${doc.referenceNo} ${doc.category} ${doc.summary}`.toLowerCase()
-    return text
-      .split(' ')
-      .some((word) => word.length > 3 && content.includes(word))
-  })
-
-  if (matchedDocument) {
-    return `I found a related document: ${matchedDocument.title}. Reference number: ${matchedDocument.referenceNo}. Category: ${matchedDocument.category}. Access level: ${matchedDocument.access}.`
-  }
-
-  return 'I am not fully sure, but you can ask about login, registration, password reset, document upload, document search, leave policy, promotion, salary, notifications, or saved documents.'
+  return 'I can help with document-related questions about TASKA subsidy, TBK promotion, SPKN overseas travel, COS/CFS contract service, and promotion or discipline references. Please choose one of the suggested questions or type a related HR policy question.'
 }
 
 function findDocumentAnswer(categoryName) {

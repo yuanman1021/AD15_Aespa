@@ -13,6 +13,20 @@ USE johor_hr_knowledge_hub;
 -- You can comment these lines if you do not want to reset.
 -- =========================================================
 
+DROP TABLE IF EXISTS documentUpdateNotifications; 
+DROP TABLE IF EXISTS documentArchive;
+DROP TABLE IF EXISTS documentUpdateRequests;
+DROP TABLE IF EXISTS documentAuditLog;
+DROP TABLE IF EXISTS documentVersions;
+DROP TABLE IF EXISTS documentDownloads;
+DROP TABLE IF EXISTS documentViews;
+DROP TABLE IF EXISTS guestSearchLog;
+DROP TABLE IF EXISTS documentDepartmentTags;
+DROP TABLE IF EXISTS documentCategories;
+DROP TABLE IF EXISTS aiClassificationSuggestions;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS documentUploadLogs;
+
 DROP TABLE IF EXISTS searchResults;
 DROP TABLE IF EXISTS searchSuggestions;
 DROP TABLE IF EXISTS trendingDocuments;
@@ -418,6 +432,277 @@ CREATE TABLE personalNotes (
 );
 
 -- =========================================================
+-- SUBSYSTEM 2 TABLES
+-- =========================================================
+
+CREATE TABLE documentUploadLogs (
+  logId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NULL,
+  uploadedBy INT NOT NULL,
+  uploadStatus VARCHAR(50) DEFAULT 'pending_review',
+  failureReason TEXT NULL,
+  filePath VARCHAR(500) NOT NULL,
+  fileSizeKb INT NOT NULL,
+  uploadedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_uploadlog_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_uploadlog_user
+    FOREIGN KEY (uploadedBy) REFERENCES users(userId)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE categories (
+  categoryId INT AUTO_INCREMENT PRIMARY KEY,
+  categoryName VARCHAR(100) UNIQUE NOT NULL,
+  categoryCode VARCHAR(20) UNIQUE NOT NULL,
+  description TEXT,
+  isActive TINYINT(1) DEFAULT 1 NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE aiClassificationSuggestions (
+  suggestionId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  suggestedCategory VARCHAR(100) NOT NULL,
+  suggestedDepartmentTag VARCHAR(100),
+  confidenceScore DECIMAL(5,2) DEFAULT 0.00,
+  suggestionRank INT NOT NULL,
+  reviewStatus VARCHAR(50) DEFAULT 'pending',
+  modifiedCategory VARCHAR(100) NULL,
+  modifiedDepartmentTag VARCHAR(100) NULL,
+  reviewedBy INT NULL,
+  reviewedAt DATETIME NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_aisugg_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_aisugg_reviewer
+    FOREIGN KEY (reviewedBy) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+CREATE TABLE documentCategories (
+  docCategoryId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  categoryId INT NOT NULL,
+  isPrimary TINYINT(1) DEFAULT 0 NOT NULL,
+  assignedBy INT NOT NULL,
+  assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_doccategory_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_doccategory_category
+    FOREIGN KEY (categoryId) REFERENCES categories(categoryId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_doccategory_user
+    FOREIGN KEY (assignedBy) REFERENCES users(userId)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE documentDepartmentTags (
+  tagId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  departmentName VARCHAR(100) NOT NULL,
+  isPrimary TINYINT(1) DEFAULT 0 NOT NULL,
+  assignedBy INT NOT NULL,
+  assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_deptag_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_deptag_user
+    FOREIGN KEY (assignedBy) REFERENCES users(userId)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE documentVersions (
+  versionId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  versionNumber VARCHAR(20) NOT NULL,
+  filePath VARCHAR(500) NOT NULL,
+  fileName VARCHAR(255) NOT NULL,
+  fileSizeKb INT NOT NULL,
+  changeSummary TEXT NULL,
+  uploadedBy INT NOT NULL,
+  isCurrent TINYINT(1) DEFAULT 0 NOT NULL,
+  publishedAt DATETIME NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_docversion_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_docversion_user
+    FOREIGN KEY (uploadedBy) REFERENCES users(userId)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE documentAuditLog (
+  auditId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  actionType VARCHAR(50) NOT NULL,
+  performedBy INT NOT NULL,
+  previousStatus VARCHAR(50) NULL,
+  newStatus VARCHAR(50) NULL,
+  actionDetails TEXT NULL,
+  ipAddress VARCHAR(50) NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_audit_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_audit_user
+    FOREIGN KEY (performedBy) REFERENCES users(userId)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE guestSearchLog (
+  guestSearchId INT AUTO_INCREMENT PRIMARY KEY,
+  searchQuery VARCHAR(255) NOT NULL,
+  filterCategory VARCHAR(100) NULL,
+  filterDepartment VARCHAR(100) NULL,
+  filterDocType VARCHAR(30) NULL,
+  resultCount INT DEFAULT 0 NOT NULL,
+  searchedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE documentViews (
+  viewId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  userId INT NULL,
+  viewerRole VARCHAR(50) NOT NULL DEFAULT 'guest',
+  viewedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_docview_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_docview_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+CREATE TABLE documentDownloads (
+  downloadId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  userId INT NOT NULL,
+  versionId INT NULL,
+  downloadedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_download_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_download_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_download_version
+    FOREIGN KEY (versionId) REFERENCES documentVersions(versionId)
+    ON DELETE SET NULL
+);
+
+CREATE TABLE documentUpdateRequests (
+  updateRequestId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  requestedBy INT NOT NULL,
+  updateType VARCHAR(50) NOT NULL,
+  updateReason TEXT NOT NULL,
+  newFilePath VARCHAR(500) NOT NULL,
+  newFileName VARCHAR(255) NOT NULL,
+  newFileSizeKb INT NOT NULL,
+  newEffectiveDate DATE NULL,
+  reviewStatus VARCHAR(50) DEFAULT 'pending',
+  reviewedBy INT NULL,
+  reviewedAt DATETIME NULL,
+  rejectionReason TEXT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_updatereq_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_updatereq_requester
+    FOREIGN KEY (requestedBy) REFERENCES users(userId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_updatereq_reviewer
+    FOREIGN KEY (reviewedBy) REFERENCES users(userId)
+    ON DELETE SET NULL
+);
+
+CREATE TABLE documentArchive (
+  archiveId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  archivedBy INT NOT NULL,
+  archiveReason VARCHAR(50) NOT NULL,
+  reasonDetails TEXT NULL,
+  predecessorDocumentId INT NULL,
+  successorDocumentId INT NULL,
+  predecessorReference VARCHAR(100) NULL,
+  successorReference VARCHAR(100) NULL,
+  archivedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_archive_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_archive_user
+    FOREIGN KEY (archivedBy) REFERENCES users(userId)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE documentUpdateNotifications (
+  updateNotificationId INT AUTO_INCREMENT PRIMARY KEY,
+  documentId INT NOT NULL,
+  userId INT NOT NULL,
+  notificationType VARCHAR(50) NOT NULL,
+  notificationMessage TEXT NOT NULL,
+  newVersionId INT NULL,
+  isRead TINYINT(1) DEFAULT 0 NOT NULL,
+  readAt DATETIME NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_updnotif_document
+    FOREIGN KEY (documentId) REFERENCES documents(documentId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_updnotif_user
+    FOREIGN KEY (userId) REFERENCES users(userId)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_updnotif_version
+    FOREIGN KEY (newVersionId) REFERENCES documentVersions(versionId)
+    ON DELETE SET NULL
+);
+
+-- =========================================================
+-- SAMPLE CATEGORIES
+-- =========================================================
+
+INSERT INTO categories (categoryName, categoryCode, description, isActive) VALUES
+('Leave Policy', 'LEAVE', 'Policies related to annual leave, sick leave and special leave', 1),
+('Promotion', 'PROMO', 'Guidelines and circulars related to staff promotion', 1),
+('Discipline', 'DISC', 'Disciplinary procedures and tatatertib guidelines', 1),
+('Salary', 'SAL', 'Salary scales, allowances and pay-related policies', 1),
+('Staff Benefits', 'BEN', 'Benefits including TASKA subsidy, loans and welfare', 1),
+('Overseas Travel', 'TRAVEL', 'SPKN and overseas travel application procedures', 1),
+('Contract Service', 'CONTRACT', 'COS and CFS contract officer management guidelines', 1),
+('Promotion and Discipline', 'PROMODISC', 'Combined promotion and disciplinary reference documents', 1);
+
+-- =========================================================
 -- SAMPLE USERS
 -- Passwords are plain text only for prototype/testing.
 -- Later, backend should hash passwords.
@@ -598,39 +883,46 @@ VALUES
 -- =========================================================
 -- SAMPLE FAQS
 -- For FAQ and Knowledge Assistance Module
+-- More specific policy document questions
 -- =========================================================
 
 INSERT INTO faqs
 (question, answer, category, status)
 VALUES
 (
-  'How do I search for a HR document?',
-  'You can search by document title, reference number, category or keyword from the Public Portal or Smart Support page.',
-  'Search',
-  'Published'
-),
-(
-  'Why can I not access a restricted document?',
-  'Restricted documents require registered user access and suitable permission level before they can be viewed or downloaded.',
-  'Access Control',
-  'Published'
-),
-(
-  'How are document recommendations generated?',
-  'Recommendations are generated based on user activity, document category, recent searches and frequently accessed documents.',
-  'Recommendation',
-  'Published'
-),
-(
-  'How do I apply for TASKA subsidy?',
-  'You may refer to the TASKA subsidy guideline and complete the Borang Permohonan Subsidi TASKA with the required supporting documents.',
+  'What information must be prepared before submitting the TASKA subsidy application form?',
+  'Before submitting the TASKA subsidy application, the applicant should prepare officer information, spouse information, household income details, child information, TASKA confirmation, and required supporting documents. The Borang Permohonan Subsidi TASKA is used to record these details for the childcare fee subsidy application.',
   'Staff Benefits',
   'Published'
 ),
 (
-  'How do I find promotion guidelines?',
-  'Search for promotion, pangkat, TBK, or staff evaluation in the Smart Search module to view related promotion documents.',
+  'What is the difference between the TASKA application form and the TASKA guideline?',
+  'The Borang Permohonan Subsidi TASKA is the form used by officers to apply for childcare fee subsidy, while the Garis Panduan Permohonan Subsidi TASKA explains the application rules, eligibility, supporting documents, subsidy implementation, and responsibilities of the applicant and department.',
+  'Staff Benefits',
+  'Published'
+),
+(
+  'What are the main conditions explained in the TBK promotion guideline?',
+  'The TBK promotion guideline explains time-based promotion conditions such as TBK1 and TBK2, service period requirement, officer eligibility, performance condition, submission period, affected officer categories, and promotion date determination for Johor public service officers.',
   'Promotion',
+  'Published'
+),
+(
+  'What type of overseas travel applications are covered under the SPKN guideline?',
+  'The SPKN guideline covers several types of overseas travel applications, including official travel, personal travel, hajj, and umrah applications. It also explains supporting documents, department approval, and the application submission process through the SPKN system.',
+  'Overseas Travel',
+  'Published'
+),
+(
+  'What does the COS and CFS guideline explain about contract officers?',
+  'The COS and CFS guideline explains the management of contract officers under Contract of Service and Contract for Service. It covers contract officer categories, appointment management, salary adjustment, and implementation matters under SSPA for Johor public service.',
+  'Contract Service',
+  'Published'
+),
+(
+  'Why does the promotion and discipline reference document need special handling in the system?',
+  'The promotion and discipline reference document is related to promotion and disciplinary guideline references. Since the document is scanned, the system may need OCR before the full text can be searched accurately. Without OCR, the system can only rely on manually entered title, category, and summary information.',
+  'Promotion and Discipline',
   'Published'
 );
 
