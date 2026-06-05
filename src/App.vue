@@ -230,7 +230,7 @@
               Login as Registered User
             </button>
 
-            <button class="link-button" @click="authMode = 'reset'">
+            <button class="link-button" @click="resetModalOpen = true">
               Forgot password?
             </button>
           </div>
@@ -275,9 +275,51 @@
             </button>
           </div>
 
-          <div v-if="authMode === 'reset'" class="form-panel">
-            <h3>Reset Password</h3>
-            <p>Password reset through verified government email.</p>
+          <div v-if="authMode === 'admin'" class="form-panel">
+            <h3>Administrator Login Account</h3>
+            <p>Dedicated admin login for management functions.</p>
+
+            <InputField
+              v-model="adminLoginForm.email"
+              label="Admin Email"
+              placeholder="admin@johor.gov.my"
+            />
+
+            <InputField
+              v-model="adminLoginForm.password"
+              label="Password"
+              placeholder="Enter admin password"
+              type="password"
+            />
+
+            <InputField
+              v-model="adminLoginForm.mfa"
+              label="MFA Code"
+              placeholder="6-digit code"
+            />
+
+            <button class="primary full" @click="adminLogin">
+              Login as Administrator
+            </button>
+          </div>
+                </div>
+
+        <div v-if="resetModalOpen" class="modal-overlay" @click.self="resetModalOpen = false">
+          <div class="modal-card reset-form-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Account Recovery</p>
+                <h3>Reset Password</h3>
+              </div>
+
+              <button @click="resetModalOpen = false">
+                Cancel
+              </button>
+            </div>
+
+            <p class="muted">
+              Enter your registered government email, verification code and new password.
+            </p>
 
             <InputField
               v-model="resetForm.email"
@@ -306,37 +348,9 @@
               Update Password
             </button>
           </div>
-
-          <div v-if="authMode === 'admin'" class="form-panel">
-            <h3>Administrator Login Account</h3>
-            <p>Dedicated admin login for management functions.</p>
-
-            <InputField
-              v-model="adminLoginForm.email"
-              label="Admin Email"
-              placeholder="admin@johor.gov.my"
-            />
-
-            <InputField
-              v-model="adminLoginForm.password"
-              label="Password"
-              placeholder="Enter admin password"
-              type="password"
-            />
-
-            <InputField
-              v-model="adminLoginForm.mfa"
-              label="MFA Code"
-              placeholder="6-digit code"
-            />
-
-            <button class="primary full" @click="adminLogin">
-              Login as Administrator
-            </button>
-          </div>
         </div>
       </section>
-
+      
       <!-- PROFILE -->
       <section v-if="screen === 'profile'" class="grid-two">
         <div class="profile-card">
@@ -2101,7 +2115,6 @@ const navItems = [
 const authTabs = [
   { id: 'login', label: 'User Login' },
   { id: 'register', label: 'Register' },
-  { id: 'reset', label: 'Reset Password' },
   { id: 'admin', label: 'Admin Login' }
 ]
 
@@ -2128,6 +2141,7 @@ const roleForm = ref({
 })
 //const selectedDoc = ref(documents.value[0])
 const authMode = ref('login')
+const resetModalOpen = ref(false)
 const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
 
