@@ -1013,6 +1013,61 @@ app.delete('/api/personal-notes/:noteId', async (req, res) => {
   }
 })
 
+// Get all escalation requests
+// Get escalation requests for admin workspace
+app.get('/api/escalation-requests', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT
+        e.escalationId,
+        e.conversationId,
+        e.userId,
+        e.hrOfficerId,
+        e.escalationQuestion,
+        e.escalationDescription,
+        e.escalationStatus,
+        e.submittedAt,
+        e.resolvedAt,
+        u.fullName AS userName,
+        c.responseText AS chatbotResponse
+      FROM escalationRequests e
+      LEFT JOIN users u ON e.userId = u.userId
+      LEFT JOIN chatbotConversations c ON e.conversationId = c.conversationId
+      ORDER BY e.submittedAt DESC`
+    )
+
+    res.json(rows)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to load escalation requests',
+      error: error.message
+    })
+  }
+})
+
+// Mark escalation as resolved
+// Mark escalation request as resolved
+app.patch('/api/escalation-requests/:escalationId/resolve', async (req, res) => {
+  try {
+    await db.query(
+      `UPDATE escalationRequests
+       SET escalationStatus = 'Resolved',
+           resolvedAt = NOW()
+       WHERE escalationId = ?`,
+      [req.params.escalationId]
+    )
+
+    res.json({
+      message: 'Escalation request resolved successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to resolve escalation request',
+      error: error.message
+    })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Backend running at http://localhost:${PORT}`)
 })
