@@ -1775,12 +1775,6 @@ function useLocalStorage(key, defaultValue) {
     },
     { deep: true }
   )
-  
-  watch(session, () => {
-  if (session.value !== 'Admin' && screen.value === 'admin') {
-    screen.value = 'public'
-  }
-})
 
   return data
 }
@@ -2120,14 +2114,6 @@ const navItems = [
   { id: 'admin', label: 'Admin Workspace' }
 ]
 
-const visibleNavItems = computed(() => {
-  if (session.value === 'Admin') {
-    return navItems
-  }
-
-  return navItems.filter((item) => item.id !== 'admin')
-})
-
 const authTabs = [
   { id: 'login', label: 'User Login' },
   { id: 'register', label: 'Register' },
@@ -2160,6 +2146,14 @@ const authMode = ref('login')
 const resetModalOpen = ref(false)
 const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
+
+const visibleNavItems = computed(() => {
+  if (session.value === 'Admin') {
+    return navItems
+  }
+
+  return navItems.filter((item) => item.id !== 'admin')
+})
 
 const repoQuery = ref('')
 const repoType = ref('All Types')
