@@ -437,202 +437,543 @@
         </div>
       </section>
 
-      <!-- DOCUMENT MANAGEMENT -->
+     <!-- =====================================================
+           SUBSYSTEM 2 — KNOWLEDGE AND DOCUMENT MANAGEMENT
+           ===================================================== -->
       <section v-if="screen === 'documents'" class="dashboard-grid">
+
+        <!-- Welcome banner -->
         <div class="welcome-card">
           <p class="eyebrow">Document Management</p>
           <h3>Upload, classify, store, search and manage HR documents.</h3>
-          <p>Administrators can manage documents and review AI suggestions.</p>
+          <p>Administrators can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
         </div>
 
-        <StatCard label="Documents" :value="String(documents.length)" note="Total repository records" />
-        <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification waiting" />
+        <StatCard label="Total Documents" :value="String(documents.length)" note="Repository records" />
+        <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification queue" />
         <StatCard label="Archived" :value="String(archivedCount)" note="Old circular versions" />
 
+        <!-- ─── MODULE 4.1 DOCUMENT UPLOAD ─── -->
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Document Upload</p>
+              <p class="eyebrow">Module 4.1 — Document Upload</p>
               <h3>Upload HR Document</h3>
             </div>
-
-            <button @click="saveDocumentAsDraft">
-              Save as Draft
-            </button>
+            <div style="display:flex;gap:10px;">
+              <button @click="saveDocumentAsDraft">Save as Draft</button>
+              <button class="primary" @click="uploadDocument">Upload &amp; Submit for Review</button>
+            </div>
           </div>
 
+          <!-- Row 1: core metadata -->
           <div class="form-grid">
             <InputField
               v-model="uploadForm.title"
-              label="Document Title"
-              placeholder="Example: Cuti Sakit Pegawai Kerajaan Johor"
+              label="Document Title *"
+              placeholder="Cuti Sakit Pegawai Kerajaan Johor"
             />
-
             <InputField
               v-model="uploadForm.referenceNo"
-              label="Official Reference Number"
+              label="Official Reference Number *"
               placeholder="JHR/CUTI/2026/01"
             />
-
             <InputField
               v-model="uploadForm.issuingAuthority"
-              label="Issuing Authority"
+              label="Issuing Authority *"
               placeholder="Human Resource Management Division"
             />
-
             <InputField
               v-model="uploadForm.effectiveDate"
-              label="Effective Date"
+              label="Effective Date *"
               placeholder="2026-01-12"
             />
-
+            <InputField
+              v-model="uploadForm.expiryDate"
+              label="Expiry Date"
+              placeholder="2028-01-12 (optional)"
+            />
             <label class="input-group">
-              <span>Document Type</span>
+              <span>Department Tag</span>
+              <select v-model="uploadForm.departmentTag">
+                <option value="">— Select Department —</option>
+                <option>Human Resource Management Division</option>
+                <option>Finance Division</option>
+                <option>Administration Division</option>
+                <option>Legal Division</option>
+                <option>Public Works Department</option>
+                <option>Education Department</option>
+                <option>Health Department</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Row 2: type / category / access / language -->
+          <div class="form-grid">
+            <label class="input-group">
+              <span>Document Type *</span>
               <select v-model="uploadForm.type">
                 <option>Circular</option>
                 <option>Guideline</option>
                 <option>Policy</option>
                 <option>Memo</option>
+                <option>Form</option>
+                <option>Reference Document</option>
                 <option>Administrative Decision</option>
               </select>
             </label>
-
             <label class="input-group">
-              <span>Category</span>
+              <span>Category *</span>
               <select v-model="uploadForm.category">
                 <option>Leave Policy</option>
                 <option>Promotion</option>
                 <option>Discipline</option>
                 <option>Salary</option>
-                <option>Loan</option>
+                <option>Staff Benefits</option>
+                <option>Overseas Travel</option>
+                <option>Contract Service</option>
+                <option>Promotion and Discipline</option>
+              </select>
+            </label>
+            <label class="input-group">
+              <span>Access Level *</span>
+              <select v-model="uploadForm.access">
+                <option>Public</option>
+                <option>Registered</option>
+                <option>Restricted</option>
+              </select>
+            </label>
+            <label class="input-group">
+              <span>Language *</span>
+              <select v-model="uploadForm.language">
+                <option value="BM">Bahasa Malaysia</option>
+                <option value="EN">English</option>
+                <option value="BOTH">Both (BM &amp; EN)</option>
               </select>
             </label>
           </div>
 
-          <button class="primary" @click="uploadDocument">
-            Upload and Extract Metadata
-          </button>
+          <!-- File picker -->
+          <label class="input-group" style="margin-bottom:16px;">
+            <span>PDF File *</span>
+            <div class="file-upload-box" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleFileDrop">
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept=".pdf"
+                style="display:none;"
+                @change="handleFileSelect"
+              />
+              <div v-if="!uploadForm.fileName" class="file-upload-placeholder">
+                <strong>Click to choose PDF file</strong>
+                <span>or drag and drop here · PDF only · Max 20MB</span>
+              </div>
+              <div v-else class="file-upload-selected">
+                <span class="status-pill green">✓ File selected</span>
+                <strong>{{ uploadForm.fileName }}</strong>
+                <span>{{ uploadForm.fileSizeKb ? (uploadForm.fileSizeKb / 1024).toFixed(2) + ' MB' : '' }}</span>
+                <button @click.stop="clearFile" style="color:var(--johor-red);">Remove</button>
+              </div>
+            </div>
+          </label>
+
+          <!-- Upload status message -->
+          <div v-if="uploadStatus" :class="uploadStatus.type === 'success' ? 'upload-status success' : 'upload-status error'">
+            {{ uploadStatus.message }}
+          </div>
         </div>
 
+        <!-- ─── MODULE 4.2 AI CLASSIFICATION REVIEW ─── -->
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">AI Classification Review</p>
+              <p class="eyebrow">Module 4.2 — AI Classification Review</p>
               <h3>Suggested Document Categories</h3>
             </div>
+            <button @click="refreshClassification">Refresh Suggestions</button>
+          </div>
+          <p style="color:var(--muted);margin:0 0 18px;">Review and approve or modify the AI-suggested categories and department tags before each document is published.</p>
 
-            <button @click="refreshClassification">
-              Refresh Suggestions
-            </button>
+          <div v-if="classificationQueue.length === 0" class="empty-state">
+            <p>No documents waiting for classification review.</p>
           </div>
 
-          <div class="doc-grid">
+          <div class="doc-grid" v-else>
             <article
               v-for="item in classificationQueue"
               :key="item.id"
               class="doc-card"
             >
-              <span :class="item.status === 'Approved' ? 'status-pill green' : 'status-pill amber'">
-                {{ item.status }}
-              </span>
+              <span :class="{
+                'status-pill green': item.status === 'Approved',
+                'status-pill amber': item.status === 'Pending Review' || item.status === 'Needs Edit',
+                'status-pill red': item.status === 'Rejected'
+              }">{{ item.status }}</span>
 
               <h4>{{ item.title }}</h4>
-              <p>Suggested categories: {{ item.suggestions.join(', ') }}</p>
 
-              <div>
-                <span v-for="tag in item.tags" :key="tag">
-                  {{ tag }}
-                </span>
+              <!-- Confidence score bar -->
+              <div style="display:flex;align-items:center;gap:8px;margin:0;">
+                <span style="font-size:12px;color:var(--muted);font-weight:700;">AI Confidence</span>
+                <div class="confidence-bar">
+                  <div class="confidence-fill" :style="{ width: (item.confidence || 75) + '%' }"></div>
+                </div>
+                <span style="font-size:12px;font-weight:800;color:var(--johor-blue);">{{ item.confidence || 75 }}%</span>
               </div>
 
-              <button
-                class="primary"
-                :disabled="item.status === 'Approved'"
-                @click="approveClassification(item)"
-              >
-                {{ item.status === 'Approved' ? 'Approved' : 'Approve' }}
-              </button>
+              <!-- Suggested categories -->
+              <div>
+                <span style="font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">Suggested Categories</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <span v-for="s in item.suggestions" :key="s">{{ s }}</span>
+                </div>
+              </div>
+
+              <!-- Suggested department tags -->
+              <div>
+                <span style="font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">Department Tags</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <span v-for="tag in item.tags" :key="tag">{{ tag }}</span>
+                </div>
+              </div>
+
+              <!-- Modify fields shown when editing -->
+              <div v-if="item.editing" style="display:grid;gap:8px;margin-top:4px;">
+                <label class="input-group" style="margin:0;">
+                  <span>Modify Category</span>
+                  <select v-model="item.modifiedCategory">
+                    <option v-for="s in item.suggestions" :key="s" :value="s">{{ s }}</option>
+                    <option>Leave Policy</option>
+                    <option>Promotion</option>
+                    <option>Discipline</option>
+                    <option>Salary</option>
+                    <option>Staff Benefits</option>
+                    <option>Overseas Travel</option>
+                    <option>Contract Service</option>
+                  </select>
+                </label>
+                <label class="input-group" style="margin:0;">
+                  <span>Modify Department Tag</span>
+                  <select v-model="item.modifiedDepartmentTag">
+                    <option>Human Resource Management Division</option>
+                    <option>Finance Division</option>
+                    <option>Administration Division</option>
+                    <option>Legal Division</option>
+                  </select>
+                </label>
+                <div style="display:flex;gap:8px;">
+                  <button class="primary" style="flex:1;" @click="confirmModifyClassification(item)">Save Changes</button>
+                  <button style="flex:1;" @click="item.editing = false">Cancel</button>
+                </div>
+              </div>
+
+              <!-- Action buttons shown when not editing -->
+              <div v-else style="display:flex;gap:8px;margin-top:4px;">
+                <button
+                  class="primary"
+                  style="flex:1;"
+                  :disabled="item.status === 'Approved'"
+                  @click="approveClassification(item)"
+                >
+                  {{ item.status === 'Approved' ? '✓ Approved' : 'Approve' }}
+                </button>
+                <button
+                  style="flex:1;"
+                  :disabled="item.status === 'Approved'"
+                  @click="startModifyClassification(item)"
+                >
+                  Modify
+                </button>
+                <button
+                  class="secondary"
+                  :disabled="item.status === 'Approved'"
+                  @click="rejectClassification(item)"
+                >
+                  Reject
+                </button>
+              </div>
             </article>
           </div>
         </div>
 
+        <!-- ─── MODULE 4.3 + 4.4 DOCUMENT REPOSITORY & SEARCH ─── -->
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Document Repository</p>
+              <p class="eyebrow">Module 4.3 &amp; 4.4 — Repository &amp; Search</p>
               <h3>Search and Manage Documents</h3>
             </div>
-
-            <button @click="uploadNewVersion">
-              Upload New Version
-            </button>
+            <button class="primary" @click="openNewVersionModal">Upload New Version</button>
           </div>
 
-          <div class="toolbar-row">
+          <!-- 5-column filter toolbar -->
+          <div class="repo-filters">
             <input
               v-model="repoQuery"
-              placeholder="Search title or reference number..."
+              placeholder="Search by title, reference number or category..."
             />
-
             <select v-model="repoType">
-              <option>All Types</option>
+              <option value="">All Types</option>
               <option>Circular</option>
               <option>Guideline</option>
               <option>Policy</option>
               <option>Memo</option>
+              <option>Form</option>
+              <option>Reference Document</option>
               <option>Administrative Decision</option>
             </select>
+            <select v-model="repoCategory">
+              <option value="">All Categories</option>
+              <option>Leave Policy</option>
+              <option>Promotion</option>
+              <option>Discipline</option>
+              <option>Salary</option>
+              <option>Staff Benefits</option>
+              <option>Overseas Travel</option>
+              <option>Contract Service</option>
+              <option>Promotion and Discipline</option>
+            </select>
+            <select v-model="repoStatus">
+              <option value="">All Statuses</option>
+              <option>Published</option>
+              <option>Draft</option>
+              <option>Archived</option>
+              <option>Pending Review</option>
+            </select>
+            <select v-model="repoAccess">
+              <option value="">All Access Levels</option>
+              <option>Public</option>
+              <option>Registered</option>
+              <option>Restricted</option>
+            </select>
           </div>
+
+          <!-- Result count -->
+          <p style="color:var(--muted);font-size:13px;font-weight:700;margin:0 0 14px;">
+            Showing {{ repositoryDocs.length }} result{{ repositoryDocs.length !== 1 ? 's' : '' }}
+            <span v-if="repoQuery"> for "{{ repoQuery }}"</span>
+          </p>
 
           <div class="table-card">
             <table>
               <thead>
                 <tr>
                   <th>Document</th>
-                  <th>Reference</th>
+                  <th>Reference No.</th>
                   <th>Category</th>
+                  <th>Department</th>
                   <th>Access</th>
                   <th>Status</th>
-                  <th>Action</th>
+                  <th>Effective Date</th>
+                  <th>Views</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-
               <tbody>
+                <tr v-if="repositoryDocs.length === 0">
+                  <td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">
+                    No documents match your filters.
+                  </td>
+                </tr>
                 <tr v-for="doc in repositoryDocs" :key="doc.documentId">
                   <td>
                     <strong>{{ doc.title }}</strong>
-                    <span>{{ doc.type }} · Version {{ doc.version }}</span>
+                    <span>{{ doc.type }} · v{{ doc.version }}</span>
                   </td>
-
                   <td>{{ doc.referenceNo }}</td>
                   <td>{{ doc.category }}</td>
-
+                  <td>{{ doc.departmentTag || '—' }}</td>
                   <td>
-                    <span :class="doc.access === 'Public' ? 'status-pill green' : 'status-pill amber'">
-                      {{ doc.access }}
-                    </span>
+                    <span :class="{
+                      'status-pill green': doc.access === 'Public',
+                      'status-pill amber': doc.access === 'Registered',
+                      'status-pill red': doc.access === 'Restricted'
+                    }">{{ doc.access }}</span>
                   </td>
-
                   <td>
-                    <span :class="doc.status === 'Archived' ? 'status-pill amber' : 'status-pill green'">
-                      {{ doc.status }}
-                    </span>
+                    <span :class="{
+                      'status-pill green': doc.status === 'Published',
+                      'status-pill amber': doc.status === 'Draft' || doc.status === 'Pending Review',
+                      'status-pill red': doc.status === 'Archived'
+                    }">{{ doc.status }}</span>
                   </td>
-
+                  <td>{{ doc.effectiveDate || '—' }}</td>
+                  <td>{{ doc.totalViews || 0 }}</td>
                   <td>
-                    <button @click="previewRepositoryDoc(doc)">
-                      Preview
-                    </button>
-                    <button @click="archiveDocument(doc)">
-                      Archive
-                    </button>
+                    <button @click="previewRepositoryDoc(doc)">Preview</button>
+                    <button @click="openArchiveModal(doc)" :disabled="doc.status === 'Archived'">Archive</button>
+                    <button @click="selectDocForVersion(doc)">+ Version</button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-      </section>
+
+        <!-- ─── MODULE 4.5 ARCHIVE MODAL ─── -->
+        <div v-if="showArchiveModal" class="modal-overlay" @click.self="showArchiveModal = false">
+          <div class="modal-card">
+            <div class="section-title" style="margin-bottom:16px;">
+              <div>
+                <p class="eyebrow">Module 4.5 — Archive Document</p>
+                <h3>Archive: {{ archiveTarget?.referenceNo }}</h3>
+              </div>
+              <button @click="showArchiveModal = false">✕</button>
+            </div>
+
+            <p style="color:var(--muted);margin:0 0 18px;">
+              Archiving removes this document from active circulation. Users with saved copies will be notified.
+            </p>
+
+            <label class="input-group">
+              <span>Archive Reason *</span>
+              <select v-model="archiveForm.reason">
+                <option value="">— Select reason —</option>
+                <option value="superseded">Superseded by newer circular</option>
+                <option value="expired">Document has expired</option>
+                <option value="withdrawn">Officially withdrawn</option>
+                <option value="other">Other reason</option>
+              </select>
+            </label>
+
+            <label class="input-group">
+              <span>Successor Document Reference (if replaced)</span>
+              <input v-model="archiveForm.successorReference" placeholder="e.g. JHR/CUTI/2026/02" />
+            </label>
+
+            <label class="input-group">
+              <span>Additional Notes</span>
+              <textarea
+                v-model="archiveForm.reasonDetails"
+                placeholder="Provide any additional explanation..."
+                rows="3"
+                style="width:100%;border:1px solid var(--line);border-radius:16px;padding:14px 16px;font:inherit;resize:vertical;"
+              ></textarea>
+            </label>
+
+            <div style="display:flex;gap:10px;margin-top:8px;">
+              <button class="secondary" style="flex:1;" @click="confirmArchive">Confirm Archive</button>
+              <button style="flex:1;" @click="showArchiveModal = false">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── MODULE 4.5 UPLOAD NEW VERSION MODAL ─── -->
+        <div v-if="showVersionModal" class="modal-overlay" @click.self="showVersionModal = false">
+          <div class="modal-card">
+            <div class="section-title" style="margin-bottom:16px;">
+              <div>
+                <p class="eyebrow">Module 4.5 — Version Management</p>
+                <h3>Upload New Version</h3>
+              </div>
+              <button @click="showVersionModal = false">✕</button>
+            </div>
+
+            <label class="input-group">
+              <span>Document to Update *</span>
+              <select v-model="versionForm.documentId">
+                <option value="">— Select document —</option>
+                <option
+                  v-for="doc in documents.filter(d => d.status !== 'Archived')"
+                  :key="doc.documentId"
+                  :value="doc.documentId"
+                >
+                  {{ doc.referenceNo }} — {{ doc.title }}
+                </option>
+              </select>
+            </label>
+
+            <div v-if="versionForm.documentId" class="version-info-box">
+              <span class="status-pill">
+                Current: v{{ documents.find(d => d.documentId == versionForm.documentId)?.version || '1.0' }}
+              </span>
+              <span style="color:var(--muted);font-size:13px;">New version will be: v{{ nextVersionNumber }}</span>
+            </div>
+
+            <label class="input-group">
+              <span>Update Type *</span>
+              <select v-model="versionForm.updateType">
+                <option value="">— Select type —</option>
+                <option value="amendment">Amendment</option>
+                <option value="replacement">Replacement</option>
+                <option value="correction">Correction</option>
+                <option value="withdrawal">Withdrawal</option>
+              </select>
+            </label>
+
+            <label class="input-group">
+              <span>Change Summary *</span>
+              <textarea
+                v-model="versionForm.changeSummary"
+                placeholder="Describe what changed in this version..."
+                rows="3"
+                style="width:100%;border:1px solid var(--line);border-radius:16px;padding:14px 16px;font:inherit;resize:vertical;"
+              ></textarea>
+            </label>
+
+            <label class="input-group">
+              <span>New PDF File *</span>
+              <div class="file-upload-box" @click="triggerVersionFileInput" @dragover.prevent @drop.prevent="handleVersionFileDrop">
+                <input
+                  ref="versionFileInputRef"
+                  type="file"
+                  accept=".pdf"
+                  style="display:none;"
+                  @change="handleVersionFileSelect"
+                />
+                <div v-if="!versionForm.fileName" class="file-upload-placeholder">
+                  <strong>Click to choose PDF file</strong>
+                  <span>PDF only · Max 20MB</span>
+                </div>
+                <div v-else class="file-upload-selected">
+                  <span class="status-pill green">✓ File selected</span>
+                  <strong>{{ versionForm.fileName }}</strong>
+                </div>
+              </div>
+            </label>
+
+            <label class="input-group">
+              <span>New Effective Date (if changed)</span>
+              <input v-model="versionForm.newEffectiveDate" type="date" />
+            </label>
+
+            <div style="display:flex;gap:10px;margin-top:8px;">
+              <button class="primary" style="flex:1;" @click="confirmUploadNewVersion">Upload New Version</button>
+              <button style="flex:1;" @click="showVersionModal = false">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── AUDIT LOG ─── -->
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Document Audit Trail</p>
+              <h3>Recent Document Actions</h3>
+            </div>
+            <button @click="toast = 'Audit log exported.'">Export Log</button>
+          </div>
+
+          <div class="log-list">
+            <div v-if="documentAuditLog.length === 0" class="empty-state">
+              <p>No audit actions recorded yet. Actions will appear here after you upload, classify, archive or update documents.</p>
+            </div>
+            <div
+              v-for="entry in documentAuditLog"
+              :key="entry.id"
+              class="log-item"
+            >
+              <div :class="entry.actionType === 'archive' ? 'dot amber-dot' : 'dot green-dot'"></div>
+              <div>
+                <strong>{{ entry.actionLabel }}</strong>
+                <p>{{ entry.documentTitle }} · {{ entry.actionDetails }}</p>
+              </div>
+              <em>{{ entry.createdAt }}</em>
+            </div>
+          </div>
+        </div>
+
+      </section>  
 
       <!-- SMART SUPPORT -->
       <section v-if="screen === 'smart'" class="grid-two">
