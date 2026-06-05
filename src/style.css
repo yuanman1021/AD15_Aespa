@@ -1286,3 +1286,51 @@ mark {
 .reset-form-card .secondary.full {
   margin-bottom: 14px;
 }
+
+.escalation-panel {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 1rem;
+  background: #f8fafc;
+}
+
+mark {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.05rem 0.2rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
+}
+
+.smart-alert-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem;
+  margin-bottom: 0.85rem;
+  border: 1px solid rgba(217, 17, 45, 0.18);
+  border-left: 5px solid #d9112d;
+  border-radius: 1rem;
+  background: #fff7f8;
+}
+
+.smart-alert-item strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #0f172a;
+}
+
+.smart-alert-item p {
+  margin: 0 0 0.35rem;
+  color: #475569;
+}
+
+.smart-alert-item small {
+  color: #64748b;
+}
+
+.smart-alert-item button {
+  white-space: nowrap;
+}
