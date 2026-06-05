@@ -1098,7 +1098,7 @@
               👎 Not Helpful
             </button>
 
-            <button @click="escalateLatestQuestion">
+            <button @click="openEscalationPanel">
               Escalate to HR Officer
             </button>
           </div>
@@ -1108,6 +1108,37 @@
             class="feedback-input"
             placeholder="Optional chatbot feedback comment..."
           />
+
+          <div v-if="escalationPanelOpen" class="escalation-panel">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">HR Officer Support</p>
+                <h3>Escalate Question</h3>
+              </div>
+
+              <button @click="cancelEscalationPanel">
+                Cancel
+              </button>
+            </div>
+
+            <label class="field-label">Question</label>
+            <input
+              v-model="escalationForm.question"
+              class="feedback-input"
+              placeholder="Enter the question to escalate..."
+            />
+
+            <label class="field-label">Description</label>
+            <textarea
+              v-model="escalationForm.description"
+              class="feedback-textarea"
+              placeholder="Describe why this question needs HR officer support..."
+            ></textarea>
+
+            <button class="primary" @click="submitEscalationRequest">
+              Submit to HR Officer
+            </button>
+          </div>
 
           <div class="history-panel">
             <p class="eyebrow">Conversation History</p>
@@ -1129,6 +1160,32 @@
 
             <p v-if="conversationHistory.length === 0" class="muted">
               No conversation history yet.
+            </p>
+          </div>
+
+          <div class="history-panel">
+            <p class="eyebrow">Escalation Requests</p>
+
+            <div
+              v-for="request in escalationRequests.filter((item) => item.userId === currentUserId)"
+              :key="request.escalationId"
+              class="history-item"
+            >
+              <strong>{{ request.escalationQuestion }}</strong>
+              <p>{{ request.escalationDescription }}</p>
+              <small>
+                Status: {{ request.escalationStatus }}
+                <span v-if="request.submittedAt">
+                  | Submitted: {{ new Date(request.submittedAt).toLocaleString() }}
+                </span>
+              </small>
+            </div>
+
+            <p
+              v-if="escalationRequests.filter((item) => item.userId === currentUserId).length === 0"
+              class="muted"
+            >
+              No escalation request submitted yet.
             </p>
           </div>
         </div>
@@ -1155,7 +1212,10 @@
 
               <h4 v-html="highlightMatchedContent(doc.title)"></h4>
 
-              <p v-if="doc.summary">{{ doc.summary }}</p>
+              <p
+                v-if="doc.summary"
+                v-html="highlightMatchedContent(doc.summary)"
+              ></p>
 
               <div>
                 <span>{{ doc.category }}</span>
@@ -1294,7 +1354,7 @@
               <h3>Frequently Asked Questions</h3>
             </div>
 
-            <button @click="escalateLatestQuestion">
+            <button @click="openEscalationPanel">
               Escalate to HR Officer
             </button>
           </div>
@@ -1578,6 +1638,71 @@
         <StatCard label="Users" :value="String(users.length)" note="Registered accounts" />
         <StatCard label="Documents" :value="String(documents.length)" note="Repository records" />
         <StatCard label="Audit Events" :value="String(logs.length)" note="System activity logs" />
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">HR Escalation</p>
+              <h3>Escalation Requests from Users</h3>
+            </div>
+
+            <button @click="loadEscalationRequests">
+              Refresh
+            </button>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Question</th>
+                  <th>User</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Submitted At</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr
+                  v-for="request in escalationRequests"
+                  :key="request.escalationId"
+                >
+                  <td>{{ request.escalationQuestion }}</td>
+                  <td>{{ request.userName || 'User' }}</td>
+                  <td>{{ request.escalationDescription }}</td>
+                  <td>
+                    <span
+                      :class="request.escalationStatus === 'Resolved'
+                        ? 'status-pill green'
+                        : 'status-pill amber'"
+                    >
+                      {{ request.escalationStatus }}
+                    </span>
+                  </td>
+                  <td>{{ new Date(request.submittedAt).toLocaleString() }}</td>
+                  <td>
+                    <button
+                      v-if="request.escalationStatus !== 'Resolved'"
+                      @click="resolveEscalationRequest(request.escalationId)"
+                    >
+                      Mark Resolved
+                    </button>
+
+                    <span v-else class="muted">
+                      Completed
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p v-if="escalationRequests.length === 0" class="muted">
+            No escalation requests submitted yet.
+          </p>
+        </div>
 
        <div class="wide-card">
   <div class="section-title">
@@ -1889,6 +2014,43 @@ async function loadConversationHistory() {
   }
 }
 
+async function loadEscalationRequests() {
+  try {
+    const response = await fetch('http://localhost:3000/api/escalation-requests')
+
+    if (!response.ok) {
+      throw new Error('Failed to load escalation requests')
+    }
+
+    escalationRequests.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function resolveEscalationRequest(escalationId) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/escalation-requests/${escalationId}/resolve`,
+      {
+        method: 'PATCH'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to resolve escalation request')
+    }
+
+    await loadEscalationRequests()
+
+    toast.value = 'Escalation request marked as resolved.'
+    addLog('Resolved escalation request', 'Admin Workspace', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to resolve escalation request.'
+  }
+}
+
 async function loadNotifications() {
   try {
     const response = await fetch(`http://localhost:3000/api/notifications/${currentUserId}`)
@@ -1951,6 +2113,7 @@ onMounted(async () => {
   await loadTrendingDocuments()
   await loadFrequentlyUsedPolicies()
   await loadSavedDocuments()
+  await loadEscalationRequests()
 })
 
 const users = useLocalStorage('jhr_users', [
@@ -2255,6 +2418,14 @@ const latestConversationId = ref(null)
 const generatedSummary = ref('')
 const selectedSummaryDoc = ref(null)
 const ratingComment = ref('')
+const escalationPanelOpen = ref(false)
+const escalationRequests = ref([])
+
+const escalationForm = ref({
+  question: '',
+  description: ''
+})
+
 const chatMessages = ref([
   {
     sender: 'bot',
@@ -2948,14 +3119,6 @@ async function performSmartSearch() {
   }
 }
 
-function clearSearchResults() {
-  smartQuery.value = ''
-  searchResults.value = []
-  hasSearched.value = false
-  lastSearchKeyword.value = ''
-  toast.value = 'Search results cleared.'
-}
-
 function highlightMatchedContent(text) {
   if (!text) return ''
 
@@ -2965,10 +3128,32 @@ function highlightMatchedContent(text) {
     return text
   }
 
-  const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const regex = new RegExp(`(${escapedKeyword})`, 'gi')
+  const words = keyword
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word.length > 1)
 
-  return text.replace(regex, '<mark>$1</mark>')
+  if (words.length === 0) {
+    return text
+  }
+
+  let highlightedText = text
+
+  words.forEach((word) => {
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escapedWord})`, 'gi')
+    highlightedText = highlightedText.replace(regex, '<mark>$1</mark>')
+  })
+
+  return highlightedText
+}
+
+function clearSearchResults() {
+  smartQuery.value = ''
+  searchResults.value = []
+  hasSearched.value = false
+  lastSearchKeyword.value = ''
+  toast.value = 'Search results cleared.'
 }
 
 /*function refreshRecommendations() {
@@ -3181,15 +3366,26 @@ async function generateDocumentSummary(doc) {
   }
 }
 
-async function escalateLatestQuestion() {
-  if (!latestConversationId.value && chatMessages.value.length <= 1) {
-    toast.value = 'Please ask the chatbot a question before escalation.'
-    return
-  }
-
+function openEscalationPanel() {
   const latestUserMessage = [...chatMessages.value]
     .reverse()
     .find((message) => message.sender === 'user')
+
+  escalationForm.value = {
+    question: latestUserMessage ? latestUserMessage.text : '',
+    description: latestUserMessage
+      ? 'User requested HR officer support for this chatbot question.'
+      : 'User requested HR officer support from FAQ or chatbot panel.'
+  }
+
+  escalationPanelOpen.value = true
+}
+
+async function submitEscalationRequest() {
+  if (!escalationForm.value.question.trim()) {
+    toast.value = 'Please enter a question before escalating.'
+    return
+  }
 
   try {
     const response = await fetch('http://localhost:3000/api/escalation-requests', {
@@ -3200,8 +3396,8 @@ async function escalateLatestQuestion() {
       body: JSON.stringify({
         conversationId: latestConversationId.value,
         userId: currentUserId,
-        escalationQuestion: latestUserMessage ? latestUserMessage.text : 'General HR question',
-        escalationDescription: 'User requested HR officer support from chatbot panel.'
+        escalationQuestion: escalationForm.value.question,
+        escalationDescription: escalationForm.value.description
       })
     })
 
@@ -3209,13 +3405,27 @@ async function escalateLatestQuestion() {
       throw new Error('Failed to escalate question')
     }
 
-    toast.value = 'Question escalated to HR officer.'
+    escalationPanelOpen.value = false
+
+    escalationForm.value = {
+      question: '',
+      description: ''
+    }
+
+    toast.value = 'Question escalated to HR officer successfully.'
+
     await loadConversationHistory()
+    await loadEscalationRequests()
+
     addLog('Escalated question to HR officer', 'AI Chatbot', 'Success', session.value)
   } catch (error) {
     console.error(error)
     toast.value = 'Failed to escalate question.'
   }
+}
+
+function cancelEscalationPanel() {
+  escalationPanelOpen.value = false
 }
 
 function generateChatbotAnswer(question) {

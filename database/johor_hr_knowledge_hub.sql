@@ -13,14 +13,16 @@ USE johor_hr_knowledge_hub;
 -- You can comment these lines if you do not want to reset.
 -- =========================================================
 
-DROP TABLE IF EXISTS documentUpdateNotifications; 
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS documentUpdateNotifications;
 DROP TABLE IF EXISTS documentArchive;
 DROP TABLE IF EXISTS documentUpdateRequests;
-DROP TABLE IF EXISTS documentAuditLog;
-DROP TABLE IF EXISTS documentVersions;
 DROP TABLE IF EXISTS documentDownloads;
 DROP TABLE IF EXISTS documentViews;
 DROP TABLE IF EXISTS guestSearchLog;
+DROP TABLE IF EXISTS documentAuditLog;
+DROP TABLE IF EXISTS documentVersions;
 DROP TABLE IF EXISTS documentDepartmentTags;
 DROP TABLE IF EXISTS documentCategories;
 DROP TABLE IF EXISTS aiClassificationSuggestions;
@@ -31,10 +33,12 @@ DROP TABLE IF EXISTS searchResults;
 DROP TABLE IF EXISTS searchSuggestions;
 DROP TABLE IF EXISTS trendingDocuments;
 DROP TABLE IF EXISTS searchHistory;
+
 DROP TABLE IF EXISTS escalationRequests;
 DROP TABLE IF EXISTS documentSummaries;
 DROP TABLE IF EXISTS chatbotConversations;
 DROP TABLE IF EXISTS faqs;
+
 DROP TABLE IF EXISTS recommendationReports;
 DROP TABLE IF EXISTS personalNotes;
 DROP TABLE IF EXISTS savedDocuments;
@@ -42,8 +46,11 @@ DROP TABLE IF EXISTS userFeedback;
 DROP TABLE IF EXISTS notificationPreferences;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS recommendations;
+
 DROP TABLE IF EXISTS documents;
 DROP TABLE IF EXISTS users;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- =========================================================
 -- USERS TABLE
@@ -841,7 +848,7 @@ VALUES
   'Promotion and Discipline',
   'Reference Document',
   'Published',
-  'Restricted',
+  'Registered',
   '2025',
   '1.0',
   'Related to promotion and disciplinary guideline reference.',

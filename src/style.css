@@ -1286,3 +1286,19 @@ mark {
 .reset-form-card .secondary.full {
   margin-bottom: 14px;
 }
+
+.escalation-panel {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 1rem;
+  background: #f8fafc;
+}
+
+mark {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.05rem 0.2rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
+}
