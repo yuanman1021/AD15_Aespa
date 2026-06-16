@@ -73,9 +73,38 @@ The prototype includes the following main functions:
 * View system activity logs
 * Filter logs
 
+
 ---
 
-## 2. Technology Used
+## 2. GitHub Index Table: Module to Frontend Script Mapping
+
+This table helps lecturers, teammates and reviewers quickly locate the frontend implementation for each functional module in this repository. Because this prototype is built mainly in one Vue file, most module interfaces are implemented in `src/App.vue`, while reusable UI elements are stored in `src/components/`.
+
+| Subsystem / Developer | Module | Frontend Script |
+| --- | --- | --- |
+| Subsystem 1: User and Access Management / Lee May Yan | Guest Access Module | [`src/App.vue` public portal UI, search, browse and public document details](src/App.vue#L56-L171) |
+| Subsystem 1: User and Access Management / Lee May Yan | User Registration and Login Module | [`src/App.vue` login, register, reset password and MFA UI](src/App.vue#L172-L356) |
+| Subsystem 1: User and Access Management / Lee May Yan | Profile Management Module | [`src/App.vue` profile, preferences, MFA and deactivation UI](src/App.vue#L357-L458) |
+| Subsystem 1: User and Access Management / Lee May Yan | Role and Permission Control Module | [`src/App.vue` admin users, roles, permissions and activity logs UI](src/App.vue#L1679-L1912) |
+| Subsystem 1: User and Access Management / Lee May Yan | Administrator Authentication Module | [`src/App.vue` admin login tab and admin workspace access](src/App.vue#L172-L356) |
+| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Upload Module | [`src/App.vue` upload HR document form and draft/upload actions](src/App.vue#L459-L605) |
+| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Classification and Categorization Module | [`src/App.vue` AI classification review, approve, modify and reject UI](src/App.vue#L606-L718) |
+| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Storage Repository Module | [`src/App.vue` repository table, document preview and audit trail UI](src/App.vue#L719-L829) |
+| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Search and Filter Module | [`src/App.vue` repository search and filter controls](src/App.vue#L719-L829) |
+| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Update and Archive Module | [`src/App.vue` archive modal and upload new version modal](src/App.vue#L830-L984) |
+| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Personalized Recommendation Module | [`src/App.vue` recommended documents, refresh recommendation and report incorrect recommendation UI](src/App.vue#L1247-L1350) |
+| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | FAQ and Knowledge Assistance Module | [`src/App.vue` HR chatbot, suggested questions, FAQ, summary and escalation UI](src/App.vue#L1050-L1193) |
+| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Notification and Update Alert Module | [`src/App.vue` notification preferences, smart alerts and recent notifications UI](src/App.vue#L1426-L1597) |
+| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Smart Search Module | [`src/App.vue` semantic search, search suggestions, recent search history, result sorting and highlights](src/App.vue#L995-L1245) |
+| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Saved Documents and Personal Storage Module | [`src/App.vue` saved documents and personal notes UI](src/App.vue#L1598-L1678) |
+| Shared Components | Reusable Input Field | [`src/components/InputField.vue`](src/components/InputField.vue) |
+| Shared Components | Reusable Statistic Card | [`src/components/StatCard.vue`](src/components/StatCard.vue) |
+| Shared Components | Reusable Setting Card | [`src/components/SettingCard.vue`](src/components/SettingCard.vue) |
+| Shared App Files | Vue App Entry and Styling | [`src/main.js`](src/main.js), [`src/style.css`](src/style.css), [`index.html`](index.html) |
+
+---
+
+## 3. Technology Used
 
 | Component            | Technology        |
 | -------------------- | ----------------- |
@@ -89,7 +118,7 @@ The prototype includes the following main functions:
 
 ---
 
-## 3. Project Structure
+## 4. Project Structure
 
 ```text
 johor-hr-hub/
@@ -108,7 +137,7 @@ johor-hr-hub/
 
 ---
 
-## 4. Setup Instructions
+## 5. Setup Instructions
 
 ### Step 1: Install Node.js
 
@@ -169,7 +198,7 @@ Open the link in your browser.
 
 ---
 
-## 5. Important Note About Laragon
+## 6. Important Note About Laragon
 
 Laragon is **not required** for this prototype.
 
@@ -189,7 +218,7 @@ For the current UI prototype, do not start Laragon unless backend/database devel
 
 ---
 
-## 6. Required Files
+## 7. Required Files
 
 Make sure these files exist:
 
@@ -204,7 +233,7 @@ src/components/SettingCard.vue
 
 ---
 
-## 7. main.js
+## 8. main.js
 
 The `src/main.js` file should contain:
 
@@ -218,7 +247,7 @@ createApp(App).mount('#app')
 
 ---
 
-## 8. Component Files
+## 9. Component Files
 
 ### InputField.vue
 
@@ -314,7 +343,7 @@ defineProps({
 
 ---
 
-## 9. How to Use the Prototype
+## 10. How to Use the Prototype
 
 ### Public Portal
 
@@ -378,17 +407,6 @@ Example:
 4. Press Enter or click **Send**.
 5. Click suggested questions to automatically ask the chatbot.
 
-Example questions:
-
-* How do I reset my password?
-* How do I register an account?
-* Can guest users view restricted documents?
-* How do I search for leave policy?
-* How do I upload a HR document?
-* How does AI classification work?
-* How do notifications work?
-* How do I save a document?
-
 ---
 
 ### Notifications and Saved Documents
@@ -414,7 +432,7 @@ Example questions:
 
 ---
 
-## 10. Data Storage
+## 11. Data Storage
 
 This prototype uses `localStorage`.
 
@@ -440,102 +458,18 @@ Alternative method:
 
 ---
 
-## 11. Common Errors and Fixes
-
-### Error: At least one template or script is required
-
-This means one of the `.vue` files is empty.
-
-Check these files:
+## 12. Developer
 
 ```text
-src/components/InputField.vue
-src/components/StatCard.vue
-src/components/SettingCard.vue
-```
-
-Make sure each file has a `<template>` and `<script setup>` section.
-
----
-
-### Error: Failed to resolve component
-
-Check the import paths in `App.vue`:
-
-```js
-import InputField from './components/InputField.vue'
-import StatCard from './components/StatCard.vue'
-import SettingCard from './components/SettingCard.vue'
-```
-
-Also make sure the filenames are exactly:
-
-```text
-InputField.vue
-StatCard.vue
-SettingCard.vue
-```
-
----
-
-### Error: localhost cannot open
-
-Stop the server:
-
-```text
-Ctrl + C
-```
-
-Then run again:
-
-```bash
-npm run dev
-```
-
-Open the link shown in the terminal.
-
----
-
-## 12. Suggested Screenshots for Report
-
-The following screenshots can be used for the Progress 2 report:
-
-1. Public Portal Page
-2. Login and Registration Page
-3. Profile and Security Page
-4. Document Management Page
-5. AI Classification Review Section
-6. Document Repository Section
-7. Smart Support Page
-8. HR Chatbot with Suggested Questions
-9. Notifications and Saved Documents Page
-10. Admin Workspace Page
-
----
-
-## 13. Future Enhancement
-
-Future improvements may include:
-
-* Connect Vue frontend to PHP backend
-* Store real users in MySQL
-* Store real documents in MySQL
-* Add real login authentication
-* Add real file upload for PDF documents
-* Add real email verification
-* Add real password reset email
-* Add real AI chatbot integration
-* Add real document recommendation algorithm
-* Add role-based access control
-
----
-
-## 14. Developer
-
-```text
-Subsystem 1: User and Access Management
-Developer: May Yan
-
 Project: Johor HR Knowledge Hub
 Group: Aespa
+
+Subsystem 1: User and Access Management
+Developer: Lee May Yan
+
+Subsystem 2: Knowledge and Document Management
+Developer: Lee Tung Ern
+
+Subsystem 3: Intelligent Recommendation and Support
+Developer: Khoo Yuan Man
 ```
