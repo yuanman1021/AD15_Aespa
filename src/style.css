@@ -1393,3 +1393,21 @@ mark {
 .deactivation-form-card .secondary.full {
   margin-top: 10px;
 }
+
+.toast.info {
+  background: #e8f1ff;
+  border-color: #9ec5fe;
+  color: #084298;
+}
+
+.toast.success {
+  background: #e8f8ee;
+  border-color: #9be7b2;
+  color: #146c2e;
+}
+
+.toast.error {
+  background: #fde8e8;
+  border-color: #f5a3a3;
+  color: #b00020;
+}
