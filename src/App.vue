@@ -522,7 +522,7 @@
               title="Change Password"
               desc="Update password while logged in."
               action="Change"
-              @click="toast = 'Password change form opened.'"
+              @click="changePasswordModalOpen = true"
             />
 
             <SettingCard
@@ -578,12 +578,56 @@
               placeholder="DEACTIVATE"
             />
 
-            <button class="secondary full" @click="submitDeactivationRequest">
+            <button class="primary full danger-button" @click="submitDeactivationRequest">
               Submit Deactivation Request
             </button>
           </div>
         </div>
       </section>
+
+        <div
+          v-if="changePasswordModalOpen"
+          class="modal-overlay"
+          @click.self="cancelChangePassword"
+        >
+          <div class="modal-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Account Security</p>
+                <h3>Change Password</h3>
+              </div>
+
+              <button @click="cancelChangePassword">
+                Cancel
+              </button>
+            </div>
+
+            <InputField
+              v-model="changePasswordForm.currentPassword"
+              label="Current Password"
+              placeholder="Enter current password"
+              type="password"
+            />
+
+            <InputField
+              v-model="changePasswordForm.newPassword"
+              label="New Password"
+              placeholder="Enter new password"
+              type="password"
+            />
+
+            <InputField
+              v-model="changePasswordForm.confirmPassword"
+              label="Confirm New Password"
+              placeholder="Re-enter new password"
+              type="password"
+            />
+
+            <button class="primary full" @click="submitChangePassword">
+              Update Password
+            </button>
+          </div>
+        </div>
 
      <!-- =====================================================
            SUBSYSTEM 2 — KNOWLEDGE AND DOCUMENT MANAGEMENT
@@ -2554,6 +2598,43 @@ const deactivationForm = ref({
   reason: '',
   confirmText: ''
 })
+const changePasswordModalOpen = ref(false)
+
+const changePasswordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+function submitChangePassword() {
+  if (
+    !changePasswordForm.value.currentPassword ||
+    !changePasswordForm.value.newPassword ||
+    !changePasswordForm.value.confirmPassword
+  ) {
+    toast.value = 'Please complete all password fields.'
+    return
+  }
+
+  if (changePasswordForm.value.newPassword !== changePasswordForm.value.confirmPassword) {
+    toast.value = 'New password and confirm password do not match.'
+    return
+  }
+
+  toast.value = 'Password updated successfully.'
+  addLog('Changed password', 'Profile Management', 'Success', session.value)
+  cancelChangePassword()
+}
+
+function cancelChangePassword() {
+  changePasswordModalOpen.value = false
+
+  changePasswordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  }
+}
 
 const savedUpdateEnabled = ref(true)
 const notificationFrequency = ref('Daily')
@@ -2827,26 +2908,14 @@ function userLogin() {
 function adminLogin() {
   if (!adminLoginForm.value.email || !adminLoginForm.value.password) {
     toast.value = 'Please enter admin email and password.'
-    addLog('Failed admin login attempt', 'Admin Login', 'Warning', 'Unknown Admin')
     return
   }
 
-  const loggedInAdmin = users.value.find(
-    (user) =>
-      user.email.toLowerCase() === adminLoginForm.value.email.toLowerCase() &&
-      user.role === 'administrator'
-  )
-
-  if (!loggedInAdmin) {
-    toast.value = 'Administrator account not found.'
-    addLog('Failed admin login attempt - account not found', 'Admin Login', 'Warning', adminLoginForm.value.email)
-    return
-  }
-
-  if (loggedInAdmin.status !== 'Active') {
-    toast.value = 'This administrator account is not active.'
-    addLog('Failed admin login attempt - inactive account', 'Admin Login', 'Warning', loggedInAdmin.name)
-    return
+  const loggedInAdmin = {
+    name: 'May Yan',
+    email: adminLoginForm.value.email,
+    department: 'User and Access Management Unit',
+    designation: 'System Administrator'
   }
 
   profileForm.value = {
@@ -2861,6 +2930,7 @@ function adminLogin() {
   toast.value = `${loggedInAdmin.name} logged in successfully as administrator.`
   addLog('Admin login', 'Admin Authentication', 'Success', loggedInAdmin.name)
 }
+
 function registerUser() {
   if (!registerForm.value.name || !registerForm.value.email || !registerForm.value.password) {
     toast.value = 'Please complete name, email and password.'
