@@ -2883,7 +2883,9 @@ function userLogin() {
   }
 
   const loggedInUser = users.value.find(
-    (user) => user.email.toLowerCase() === loginForm.value.email.toLowerCase()
+  (user) =>
+    user.email.toLowerCase() === loginForm.value.email.toLowerCase() &&
+    user.role.toLowerCase().includes('registered')
   )
 
   if (!loggedInUser) {
@@ -2917,12 +2919,11 @@ function adminLogin() {
     return
   }
 
-  const loggedInAdmin = {
-    name: 'May Yan',
-    email: adminLoginForm.value.email,
-    department: 'User and Access Management Unit',
-    designation: 'System Administrator'
-  }
+  const loggedInAdmin = users.value.find(
+  (user) =>
+    user.email.toLowerCase() === adminLoginForm.value.email.toLowerCase() &&
+    user.role.toLowerCase().includes('administrator')
+  )
 
   profileForm.value = {
     name: loggedInAdmin.name,
