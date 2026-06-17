@@ -39,7 +39,7 @@
         </div>
 
         <div class="top-actions">
-          <button @click="fakeLogin('User')">User Login</button>
+         <button @click="screen = 'auth'; authMode = 'login'">User Login</button>
           <button class="primary" @click="screen = 'auth'; authMode = 'admin'">
             Admin Login
           </button>
