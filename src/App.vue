@@ -2795,19 +2795,72 @@ function userLogin() {
     return
   }
 
-  fakeLogin('User')
+  const loggedInUser = users.value.find(
+    (user) => user.email.toLowerCase() === loginForm.value.email.toLowerCase()
+  )
+
+  if (!loggedInUser) {
+    toast.value = 'User account not found.'
+    addLog('Failed login attempt - account not found', 'User Login', 'Warning', loginForm.value.email)
+    return
+  }
+
+  if (loggedInUser.status !== 'Active') {
+    toast.value = 'This account is not active.'
+    addLog('Failed login attempt - inactive account', 'User Login', 'Warning', loggedInUser.name)
+    return
+  }
+
+  profileForm.value = {
+    name: loggedInUser.name,
+    email: loggedInUser.email,
+    department: loggedInUser.department,
+    designation: loggedInUser.designation
+  }
+
+  session.value = 'User'
+  screen.value = 'profile'
+  toast.value = `${loggedInUser.name} logged in successfully.`
+  addLog('User login', 'Authentication', 'Success', loggedInUser.name)
 }
 
 function adminLogin() {
   if (!adminLoginForm.value.email || !adminLoginForm.value.password) {
     toast.value = 'Please enter admin email and password.'
-    addLog('Failed admin login attempt', 'Administrator Login', 'Warning', 'Unknown Admin')
+    addLog('Failed admin login attempt', 'Admin Login', 'Warning', 'Unknown Admin')
     return
   }
 
-  fakeLogin('Admin')
-}
+  const loggedInAdmin = users.value.find(
+    (user) =>
+      user.email.toLowerCase() === adminLoginForm.value.email.toLowerCase() &&
+      user.role === 'administrator'
+  )
 
+  if (!loggedInAdmin) {
+    toast.value = 'Administrator account not found.'
+    addLog('Failed admin login attempt - account not found', 'Admin Login', 'Warning', adminLoginForm.value.email)
+    return
+  }
+
+  if (loggedInAdmin.status !== 'Active') {
+    toast.value = 'This administrator account is not active.'
+    addLog('Failed admin login attempt - inactive account', 'Admin Login', 'Warning', loggedInAdmin.name)
+    return
+  }
+
+  profileForm.value = {
+    name: loggedInAdmin.name,
+    email: loggedInAdmin.email,
+    department: loggedInAdmin.department,
+    designation: loggedInAdmin.designation
+  }
+
+  session.value = 'Admin'
+  screen.value = 'admin'
+  toast.value = `${loggedInAdmin.name} logged in successfully as administrator.`
+  addLog('Admin login', 'Admin Authentication', 'Success', loggedInAdmin.name)
+}
 function registerUser() {
   if (!registerForm.value.name || !registerForm.value.email || !registerForm.value.password) {
     toast.value = 'Please complete name, email and password.'
