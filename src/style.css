@@ -1411,3 +1411,18 @@ mark {
   border-color: #f5a3a3;
   color: #b00020;
 }
+
+.toast.info span,
+.toast.info p {
+  color: #084298;
+}
+
+.toast.success span,
+.toast.success p {
+  color: #146c2e;
+}
+
+.toast.error span,
+.toast.error p {
+  color: #b00020;
+}
