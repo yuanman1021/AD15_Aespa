@@ -2,7 +2,7 @@
 
 Johor HR Knowledge Hub is a high-fidelity interactive frontend prototype for a centralized HR policy and document management platform. The system allows users to search public HR documents, register and log in, manage profiles, upload and classify documents, use smart search, ask the HR chatbot, receive notifications, and manage saved documents.
 
-This prototype is developed using **Vue.js with JavaScript** and **Vite**.
+This prototype is developed using **Vue.js with JavaScript** and **Vite** for the frontend, **Node.js / Express.js** for the backend, and **MySQL** for database storage.
 
 ---
 
@@ -116,6 +116,8 @@ This table helps lecturers, teammates and reviewers quickly locate the frontend 
 | Personalized Recommendation Module | • [Recommended Documents Interface](src/App.vue#L1423-L1478)<br>• [AI Document Summary Panel](src/App.vue#L1479-L1491)<br>• [Recommendation Report Interface](src/App.vue#L1494-L1530) |
 | Notification and Update Alert Module | • [Notification Preferences Interface](src/App.vue#L1616-L1657)<br>• [Smart Alerts Interface](src/App.vue#L1658-L1700)<br>• [Recent Notifications Panel](src/App.vue#L1701-L1743) |
 | Saved Documents and Personal Storage Module | • [Saved Documents Overview](src/App.vue#L1601-L1614)<br>• [Personal Storage Interface](src/App.vue#L1775-L1853)<br>• [Personal Notes Interface](src/App.vue#L1784-L1802) |
+
+---
 
 ## 3. Technology Used
 
@@ -321,7 +323,7 @@ Make sure Laragon MySQL is running before starting the backend server.
 
 ---
 
-## 11. Data Storage
+## 7. Data Storage
 
 This prototype uses both MySQL and browser localStorage.
 
@@ -361,7 +363,7 @@ mysql -u root johor_hr_knowledge_hub < database\johor_hr_knowledge_hub.sql
 ```
 
 
-## 12. Developer
+## 8. Developer
 
 ```text
 Project: Johor HR Knowledge Hub
