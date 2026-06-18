@@ -129,7 +129,13 @@
           </button>
         </div>
 
-        <div class="wide-card">
+       
+
+          <div
+            v-if="session === 'Admin'"
+              class="wide-card"
+          >
+
           <div class="section-title">
             <div>
               <p class="eyebrow">Search Results</p>
@@ -636,25 +642,56 @@
 
         <!-- Welcome banner -->
         <div class="welcome-card">
+  
           <p class="eyebrow">Document Management</p>
           <h3>Upload, classify, store, search and manage HR documents.</h3>
           <p>Administrators can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
         </div>
 
+              <div
+  v-if="session === 'Admin'"
+  class="stats-grid"
+>
         <StatCard label="Total Documents" :value="String(documents.length)" note="Repository records" />
         <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification queue" />
         <StatCard label="Archived" :value="String(archivedCount)" note="Old circular versions" />
 
+        <StatCard
+  label="Published"
+  :value="String(documents.filter(d => d.status === 'Published').length)"
+  note="Available documents"
+/>
+
+<StatCard
+  label="Restricted"
+  :value="String(documents.filter(d => d.access === 'Restricted').length)"
+  note="Protected documents"
+/>
+</div>
+
         <!-- ─── MODULE 4.1 DOCUMENT UPLOAD ─── -->
-        <div class="wide-card">
+        <div v-if="session === 'Admin'"
+        class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.1 — Document Upload</p>
+              <p class="eyebrow">Document Upload</p>
               <h3>Upload HR Document</h3>
             </div>
             <div style="display:flex;gap:10px;">
-              <button @click="saveDocumentAsDraft">Save as Draft</button>
-              <button class="primary" @click="uploadDocument">Upload &amp; Submit for Review</button>
+              <button
+                class="primary"
+                @click="uploadDocument"
+                :disabled="session !== 'Admin'"
+              >
+                Upload & Submit for Review
+              </button>
+
+              <button
+                 @click="saveDocumentAsDraft"
+                :disabled="session !== 'Admin'"
+                >
+                Save as Draft
+            </button>
             </div>
           </div>
 
@@ -776,10 +813,11 @@
         </div>
 
         <!-- ─── MODULE 4.2 AI CLASSIFICATION REVIEW ─── -->
-        <div class="wide-card">
+        <div v-if="session === 'Admin'"
+        class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.2 — AI Classification Review</p>
+              <p class="eyebrow">AI Classification Review</p>
               <h3>Suggested Document Categories</h3>
             </div>
             <button @click="refreshClassification">Refresh Suggestions</button>
@@ -892,7 +930,7 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.3 &amp; 4.4 — Repository &amp; Search</p>
+              <p class="eyebrow">Repository &amp; Search</p>
               <h3>Search and Manage Documents</h3>
             </div>
             <button class="primary" @click="openNewVersionModal">Upload New Version</button>
@@ -992,10 +1030,40 @@
                   <td>{{ doc.effectiveDate || '—' }}</td>
                   <td>{{ doc.totalViews || 0 }}</td>
                   <td>
-                    <button @click="previewRepositoryDoc(doc)">Preview</button>
-                    <button @click="openArchiveModal(doc)" :disabled="doc.status === 'Archived'">Archive</button>
-                    <button @click="selectDocForVersion(doc)">+ Version</button>
-                  </td>
+
+  <button
+    class="secondary"
+    @click="previewRepositoryDoc(doc)"
+  >
+    View Details
+  </button>
+
+  <button
+    v-if="session === 'User' || session === 'Admin'"
+    class="secondary"
+    @click="downloadDocument(doc)"
+  >
+    Download
+  </button>
+
+  <button
+    v-if="session === 'Admin'"
+    class="secondary"
+    @click="openVersionModal(doc)"
+  >
+    New Version
+  </button>
+
+  <button
+    v-if="session === 'Admin'"
+    class="secondary"
+    @click="archiveDocument(doc)"
+  >
+    Archive
+  </button>
+
+</td>
+
                 </tr>
               </tbody>
             </table>
@@ -1004,10 +1072,11 @@
 
         <!-- ─── MODULE 4.5 ARCHIVE MODAL ─── -->
         <div v-if="showArchiveModal" class="modal-overlay" @click.self="showArchiveModal = false">
-          <div class="modal-card">
+          <div v-if="session === 'Admin'"
+          class="modal-card">
             <div class="section-title" style="margin-bottom:16px;">
               <div>
-                <p class="eyebrow">Module 4.5 — Archive Document</p>
+                <p class="eyebrow">Archive Document </p>
                 <h3>Archive: {{ archiveTarget?.referenceNo }}</h3>
               </div>
               <button @click="showArchiveModal = false">✕</button>
@@ -1055,7 +1124,7 @@
           <div class="modal-card">
             <div class="section-title" style="margin-bottom:16px;">
               <div>
-                <p class="eyebrow">Module 4.5 — Version Management</p>
+                <p class="eyebrow">Version Management</p>
                 <h3>Upload New Version</h3>
               </div>
               <button @click="showVersionModal = false">✕</button>
@@ -1136,8 +1205,69 @@
           </div>
         </div>
 
+        <div
+  v-if="showPreviewModal"
+  class="modal-overlay"
+  @click.self="showPreviewModal = false"
+>
+  <div class="modal-card">
+    <h3>{{ previewDoc.title }}</h3>
+
+    <p>
+      <strong>Reference Number:</strong>
+      {{ previewDoc.referenceNo }}
+    </p>
+
+    <p>
+      <strong>Category:</strong>
+      {{ previewDoc.category }}
+    </p>
+
+    <p>
+      <strong>Document Type:</strong>
+      {{ previewDoc.type }}
+    </p>
+
+    <p>
+      <strong>Access Level:</strong>
+      {{ previewDoc.access }}
+    </p>
+
+    <p>
+      <strong>Status:</strong>
+      {{ previewDoc.status }}
+    </p>
+
+    <p>
+      <strong>Effective Date:</strong>
+      {{ previewDoc.effectiveDate }}
+    </p>
+
+    <p>
+      <strong>Department:</strong>
+      {{ previewDoc.departmentTag }}
+    </p>
+
+    <p>
+      <strong>Summary:</strong>
+      {{ previewDoc.summary }}
+    </p>
+
+    <button
+      class="primary"
+      @click="showPreviewModal = false"
+    >
+      Close
+    </button>
+  </div>
+</div>
+
         <!-- ─── AUDIT LOG ─── -->
-        <div class="wide-card">
+        <div
+            v-if="session === 'Admin'"
+            class="wide-card"
+        >
+
           <div class="section-title">
             <div>
               <p class="eyebrow">Document Audit Trail</p>
@@ -1204,13 +1334,6 @@
             Perform Smart Search
           </button>
 
-          <button
-            v-if="hasSearched"
-            @click="clearSearchResults"
-          >
-            Clear Search
-          </button>
-
           <div class="history-panel">
             <p class="eyebrow">Recent Search History</p>
 
@@ -1249,7 +1372,7 @@
               <button
                 v-for="question in suggestedQuestions"
                 :key="question"
-                @click="sendSuggestedQuestion(question)"
+                @click="askSuggestedQuestion(question)"
               >
                 {{ question }}
               </button>
@@ -1417,7 +1540,10 @@
           </div>
         </div>
 
-        <div class="wide-card">
+        <div
+            v-if="session === 'Admin'"
+            class="wide-card"
+        >
           <div class="section-title">
             <div>
               <p class="eyebrow">Recommendations</p>
@@ -1436,7 +1562,7 @@
               class="doc-card"
             >
               <span class="status-pill green">Recommended</span>
-              <h4>{{ doc.title }}</h4>
+              <h4 v-html="highlightMatchedContent(doc.title)"></h4>
 
               <p v-if="doc.reason">
                 Reason: {{ doc.reason }}
@@ -1467,10 +1593,6 @@
                 </button>
               </div>
             </article>
-
-            <div v-if="smartResults.length === 0" class="empty-state">
-              No recommended documents available.
-            </div>
           </div>
 
           <div v-if="generatedSummary" class="summary-panel">
@@ -2166,7 +2288,51 @@ onMounted(() => {
   loadDocuments()
 }) */
 
-const documents = ref([])
+const documents = ref([
+  {
+    documentId: 1,
+    referenceNo: 'JHR/LP/2026/001',
+    title: 'Employee Leave Policy 2026',
+    category: 'Leave Policy',
+    type: 'Policy',
+    status: 'Published',
+    access: 'Public',
+    version: '1.0',
+    effectiveDate: '2026-01-01',
+    departmentTag: 'Human Resource Management Division',
+    totalViews: 156,
+    summary: 'Guidelines regarding annual leave and medical leave.'
+  },
+  {
+    documentId: 2,
+    referenceNo: 'JHR/PR/2026/003',
+    title: 'Promotion Guidelines for Government Officers',
+    category: 'Promotion',
+    type: 'Guideline',
+    status: 'Published',
+    access: 'Registered',
+    version: '2.0',
+    effectiveDate: '2026-02-01',
+    departmentTag: 'Administration Division',
+    totalViews: 234,
+    summary: 'Promotion eligibility and assessment procedures.'
+  },
+  {
+    documentId: 3,
+    referenceNo: 'JHR/DP/2025/008',
+    title: 'Disciplinary Action Procedures',
+    category: 'Discipline',
+    type: 'Circular',
+    status: 'Archived',
+    access: 'Restricted',
+    version: '1.2',
+    effectiveDate: '2025-06-01',
+    departmentTag: 'Legal Division',
+    totalViews: 88,
+    summary: 'Official disciplinary handling procedures.'
+  }
+])
+
 const currentUserId = 2
 
 const selectedDoc = ref({
@@ -2183,6 +2349,7 @@ const selectedDoc = ref({
   summary: 'Please wait while documents are loaded from the database.'
 })
 
+const smartResults = ref([])
 const publicDetailsModalOpen = ref(false)
 
 const smartResults = ref([]) // recommended documents only
@@ -2191,6 +2358,9 @@ const hasSearched = ref(false)
 
 const reportDialogOpen = ref(false)
 const selectedRecommendation = ref(null)
+
+const showPreviewModal = ref(false)
+const previewDoc = ref(null)
 
 const recommendationReportForm = ref({
   reportReason: 'Irrelevant',
@@ -2209,6 +2379,7 @@ async function loadDocuments() {
 
     if (documents.value.length > 0) {
       selectedDoc.value = documents.value[0]
+      smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
     }
   } catch (error) {
     console.error(error)
@@ -2517,11 +2688,16 @@ const savedDocuments = ref([])
 const faqs = ref([])
 
 const suggestedQuestions = [
-  'How do I apply for TASKA subsidy?',
-  'What is TBK promotion?',
-  'What is SPKN used for?',
-  'What is COS and CFS contract service?',
-  'What is the promotion and discipline document about?'
+  'How do I reset my password?',
+  'How do I register an account?',
+  'Can guest users view restricted documents?',
+  'How do I search for leave policy?',
+  'How do I find promotion guidelines?',
+  'How do I upload a HR document?',
+  'How does AI classification work?',
+  'How do notifications work?',
+  'How do I save a document?',
+  'What salary guideline is available?'
 ]
 
 const navItems = [
@@ -2724,7 +2900,41 @@ const versionForm = ref({
   fileName: '',
   fileObject: null
 })
-const documentAuditLog = ref([])
+const documentAuditLog = ref([
+  {
+    id: 1,
+    actionType: 'upload',
+    actionLabel: 'Document Uploaded',
+    documentTitle: 'Employee Leave Policy 2026',
+    actionDetails: 'Uploaded by Administrator',
+    createdAt: '19 Jun 2026 10:00 AM'
+  },
+  {
+    id: 2,
+    actionType: 'classification',
+    actionLabel: 'AI Classification Approved',
+    documentTitle: 'Promotion Guidelines',
+    actionDetails: 'Category approved as Promotion',
+    createdAt: '19 Jun 2026 10:15 AM'
+  },
+  {
+    id: 3,
+    actionType: 'archive',
+    actionLabel: 'Document Archived',
+    documentTitle: 'Disciplinary Action Procedures',
+    actionDetails: 'Superseded by newer circular',
+    createdAt: '19 Jun 2026 10:30 AM'
+  },
+  {
+    id: 4,
+    actionType: 'version',
+    actionLabel: 'New Version Uploaded',
+    documentTitle: 'Promotion Guidelines',
+    actionDetails: 'Version 2.0 uploaded',
+    createdAt: '19 Jun 2026 11:00 AM'
+  }
+])
+
 const fileInputRef = ref(null)
 const versionFileInputRef = ref(null)
 
@@ -2746,7 +2956,8 @@ const escalationForm = ref({
 const chatMessages = ref([
   {
     sender: 'bot',
-    text: 'Hi, I am the Johor HR Knowledge Hub assistant. What can I help you?'
+    text:
+      'Hi, I am the Johor HR assistant. You can ask me about login, registration, password reset, documents, policy search, uploads, recommendations, notifications, and saved documents.'
   }
 ])
 
@@ -3235,12 +3446,16 @@ function refreshClassification() {
 // ─── MODULE 4.3 + 4.4: REPOSITORY FUNCTIONS ───
 
 function previewRepositoryDoc(doc) {
-  selectedDoc.value = doc
-  screen.value = 'public'
-  doc.totalViews = (doc.totalViews || 0) + 1
-  toast.value = `Preview opened for ${doc.referenceNo}.`
-  addLog('Previewed repository document', 'Document Repository', 'Success', session.value)
+  previewDoc.value = doc
+  showPreviewModal.value = true
+
+  addAuditEntry(
+    'view',
+    doc.title,
+    'Viewed document details'
+  )
 }
+
 
 // ─── MODULE 4.5: ARCHIVE FUNCTIONS ───
 
@@ -3442,9 +3657,8 @@ async function loadFrequentlyUsedPolicies() {
 
 async function performSmartSearch() {
   if (!smartQuery.value.trim()) {
-    searchResults.value = []
-    hasSearched.value = false
-    toast.value = 'Please enter a keyword to search.'
+    smartResults.value = documents.value.filter((doc) => doc.access !== 'Restricted')
+    toast.value = 'Showing general recommended documents.'
     return
   }
 
@@ -3459,19 +3673,16 @@ async function performSmartSearch() {
 
     const data = await response.json()
 
-    searchResults.value = data.results
-    hasSearched.value = true
+    smartResults.value = data.results.length > 0
+      ? data.results
+      : documents.value.filter((doc) => doc.access !== 'Restricted')
+
     lastSearchKeyword.value = smartQuery.value
 
     await loadRecentSearchHistory()
     await loadSearchSuggestions()
 
-    if (data.results.length === 0) {
-      toast.value = 'No matching document found. Try another keyword such as TASKA, TBK, SPKN, COS, or CFS.'
-      return
-    }
-
-    toast.value = 'Smart search completed. Results are shown in the Search Results section.'
+    toast.value = 'Smart search completed. Results ranked and saved to search history.'
     addLog('Performed smart search', 'Smart Search', 'Success', session.value)
   } catch (error) {
     console.error(error)
@@ -3654,11 +3865,6 @@ async function sendChatMessage() {
   addLog('Used HR chatbot assistance', 'AI Chatbot', 'Success', session.value)
 }
 
-function sendSuggestedQuestion(question) {
-  chatInput.value = question
-  sendChatMessage()
-}
-
 async function rateChatbotResponse(value) {
   if (!latestConversationId.value) {
     toast.value = 'Please ask the chatbot a question before rating.'
@@ -3791,55 +3997,94 @@ function cancelEscalationPanel() {
 function generateChatbotAnswer(question) {
   const text = question.toLowerCase()
 
-  if (
-    text.includes('taska') ||
-    text.includes('childcare') ||
-    text.includes('subsidi') ||
-    text.includes('subsidy')
-  ) {
-    return 'To apply for TASKA subsidy, the user should refer to the Borang Permohonan Subsidi TASKA and TASKA subsidy guideline. The application is for eligible public officers who want to claim childcare fee subsidy. The user needs to complete the application form and prepare supporting details such as officer information, spouse information, child information, household income details, TASKA confirmation, and required supporting documents.'
+  if (text.includes('login') || text.includes('log in')) {
+    return 'To log in, open Login / Register, enter your government email and password, then complete MFA if it is enabled.'
   }
 
-  if (
-    text.includes('tbk') ||
-    text.includes('promotion') ||
-    text.includes('pangkat') ||
-    text.includes('kenaikan pangkat')
-  ) {
-    return 'TBK promotion refers to time-based promotion for eligible Johor public service officers. The TBK guideline explains matters such as TBK1 and TBK2, service period requirements, performance conditions, eligible officer categories, submission period, and promotion date determination.'
+  if (text.includes('register') || text.includes('registration') || text.includes('account')) {
+    return 'To register an account, open Login / Register and choose Register. Enter your full name, government email, department, designation level and password.'
   }
 
-  if (
-    text.includes('spkn') ||
-    text.includes('travel') ||
-    text.includes('overseas') ||
-    text.includes('luar negara') ||
-    text.includes('hajj') ||
-    text.includes('umrah')
-  ) {
-    return 'SPKN is used to manage overseas travel applications for Johor public officers. The guideline covers official travel, personal travel, hajj and umrah applications, supporting documents, department approval, and application submission through the SPKN system.'
+  if (text.includes('reset') || text.includes('forgot') || text.includes('password')) {
+    return 'To reset your password, open Login / Register, choose Reset Password, enter your registered email, request a reset link, then enter the verification code and new password.'
   }
 
-  if (
-    text.includes('cos') ||
-    text.includes('cfs') ||
-    text.includes('contract') ||
-    text.includes('kontrak') ||
-    text.includes('sspa')
-  ) {
-    return 'The COS and CFS guideline explains the management of contract officers under Contract of Service and Contract for Service in Johor public service. It includes contract officer categories, salary adjustment, appointment management, and implementation under SSPA.'
+  if (text.includes('mfa') || text.includes('multi-factor') || text.includes('verification code')) {
+    return 'MFA adds extra login protection. You can enable or disable MFA from Profile & Security.'
   }
 
-  if (
-    text.includes('discipline') ||
-    text.includes('tatatertib') ||
-    text.includes('disciplinary') ||
-    text.includes('promotion and discipline')
-  ) {
-    return 'The promotion and discipline reference document is related to guidelines under the promotion and disciplinary section. It helps users refer to information connected with promotion matters and disciplinary procedures. Since the document is scanned, full detailed text may require OCR before the system can search every part accurately.'
+  if (text.includes('guest') || text.includes('public')) {
+    return 'Guest users can search and view public HR documents only. Registered or restricted documents require login.'
   }
 
-  return 'I can help with document-related questions about TASKA subsidy, TBK promotion, SPKN overseas travel, COS/CFS contract service, and promotion or discipline references. Please choose one of the suggested questions or type a related HR policy question.'
+  if (text.includes('restricted') || text.includes('access')) {
+    return 'Restricted documents require a registered account and the correct permission level.'
+  }
+
+  if (text.includes('download')) {
+    return 'Document download is available for registered users depending on the document access level. Public users can preview public details only.'
+  }
+
+  if (text.includes('upload') || text.includes('pdf')) {
+    return 'Administrators can upload HR documents from Document Management. The form requires title, reference number, issuing authority, effective date, document type and category.'
+  }
+
+  if (text.includes('metadata') || text.includes('extract')) {
+    return 'After upload, the system extracts document metadata such as title, reference number, issuing authority, effective date, type and category.'
+  }
+
+  if (text.includes('classify') || text.includes('classification') || text.includes('category')) {
+    return 'The AI classification section suggests document categories and tags. Administrators can review and approve them.'
+  }
+
+  if (text.includes('archive') || text.includes('version')) {
+    return 'Administrators can preview repository documents, archive old documents, and upload new versions when a document is amended.'
+  }
+
+  if (text.includes('notification') || text.includes('alert')) {
+    return 'Notifications inform users when relevant policies are added, saved documents are updated, or weekly recommendations are ready.'
+  }
+
+  if (text.includes('save') || text.includes('saved') || text.includes('bookmark')) {
+    return 'Users can save recommended documents into their personal collection and add personal notes.'
+  }
+
+  if (text.includes('recommend') || text.includes('recommendation')) {
+    return 'Recommendations are based on department, role, recent searches, viewed documents and related HR policy content.'
+  }
+
+  if (text.includes('leave') || text.includes('cuti') || text.includes('sick')) {
+    return findDocumentAnswer('Leave Policy')
+  }
+
+  if (text.includes('promotion') || text.includes('pangkat')) {
+    return findDocumentAnswer('Promotion')
+  }
+
+  if (text.includes('salary') || text.includes('gaji') || text.includes('allowance')) {
+    return findDocumentAnswer('Salary')
+  }
+
+  if (text.includes('loan') || text.includes('pinjaman')) {
+    return findDocumentAnswer('Loan')
+  }
+
+  if (text.includes('discipline') || text.includes('tatatertib')) {
+    return findDocumentAnswer('Discipline')
+  }
+
+  const matchedDocument = documents.value.find((doc) => {
+    const content = `${doc.title} ${doc.referenceNo} ${doc.category} ${doc.summary}`.toLowerCase()
+    return text
+      .split(' ')
+      .some((word) => word.length > 3 && content.includes(word))
+  })
+
+  if (matchedDocument) {
+    return `I found a related document: ${matchedDocument.title}. Reference number: ${matchedDocument.referenceNo}. Category: ${matchedDocument.category}. Access level: ${matchedDocument.access}.`
+  }
+
+  return 'I am not fully sure, but you can ask about login, registration, password reset, document upload, document search, leave policy, promotion, salary, notifications, or saved documents.'
 }
 
 function findDocumentAnswer(categoryName) {
