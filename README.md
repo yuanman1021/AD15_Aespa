@@ -79,9 +79,8 @@ The prototype includes the following main functions:
 ## 2. GitHub Index Table: Module to Frontend Script Mapping
 
 This table helps lecturers, teammates and reviewers quickly locate the frontend implementation for each functional module in this repository. Because this prototype is built mainly in one Vue file, most module interfaces are implemented in `src/App.vue`, while reusable UI elements are stored in `src/components/`.
-# AD15_AESPA MEMBER
-# AD15_AESPA MEMBER
 
+# AD15_AESPA MEMBER
 ## Subsystem 1: Lee May Yan
 
 | Module | FrontEnd |
