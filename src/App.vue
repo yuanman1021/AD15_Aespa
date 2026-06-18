@@ -2523,6 +2523,17 @@ async function loadSavedDocuments() {
   }
 }
 
+function downloadDocument(doc) {
+  addAuditEntry(
+    'download',
+    doc.title,
+    'Document downloaded'
+  )
+
+  toast.value = `${doc.title} downloaded successfully`
+}
+
+
 onMounted(async () => {
   await loadDocuments()
   await loadRecommendations()
@@ -3455,6 +3466,7 @@ function previewRepositoryDoc(doc) {
     'Viewed document details'
   )
 }
+
 
 
 // ─── MODULE 4.5: ARCHIVE FUNCTIONS ───
