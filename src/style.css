@@ -1268,6 +1268,12 @@ mark {
   }
 }
 
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* RESET PASSWORD MODAL */
 
 .reset-form-card {

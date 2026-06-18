@@ -645,7 +645,11 @@
   
           <p class="eyebrow">Document Management</p>
           <h3>Upload, classify, store, search and manage HR documents.</h3>
-          <p>Administrators can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
+          <h2>Administrators </h2>
+          <p>Can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
+          <h2>Guest & User</h2>
+          <p>Browse, search and view HR documents available to your access level.</p>
+        
         </div>
 
               <div
@@ -1029,39 +1033,51 @@
                   </td>
                   <td>{{ doc.effectiveDate || '—' }}</td>
                   <td>{{ doc.totalViews || 0 }}</td>
-                  <td>
+                  
 
-  <button
-    class="secondary"
-    @click="previewRepositoryDoc(doc)"
-  >
-    View Details
-  </button>
+  <td>
+  <div class="action-group">
 
-  <button
-    v-if="session === 'User' || session === 'Admin'"
-    class="secondary"
-    @click="downloadDocument(doc)"
-  >
-    Download
-  </button>
+    <button
+      class="secondary"
+      @click="previewRepositoryDoc(doc)"
+    >
+      View Details
+    </button>
 
-  <button
-    v-if="session === 'Admin'"
-    class="secondary"
-    @click="openVersionModal(doc)"
-  >
-    New Version
-  </button>
+    <button
+      v-if="session === 'User' || session === 'Admin'"
+      class="secondary"
+      @click="downloadDocument(doc)"
+    >
+      Download
+    </button>
 
-  <button
-    v-if="session === 'Admin'"
-    class="secondary"
-    @click="archiveDocument(doc)"
-  >
-    Archive
-  </button>
+    <button
+      v-if="session === 'Admin'"
+      class="secondary"
+      @click="openVersionModal(doc)"
+    >
+      New Version
+    </button>
 
+    <button
+      v-if="session === 'Admin'"
+      class="secondary"
+      @click="archiveDocument(doc)"
+    >
+      Archive
+    </button>
+
+    <button
+      v-if="session === 'Admin' && doc.status === 'Archived'"
+      class="secondary"
+      @click="restoreDocument(doc)"
+    >
+      Restore
+    </button>
+
+  </div>
 </td>
 
                 </tr>
@@ -2349,7 +2365,7 @@ const selectedDoc = ref({
   summary: 'Please wait while documents are loaded from the database.'
 })
 
-const smartResults = ref([])
+
 const publicDetailsModalOpen = ref(false)
 
 const smartResults = ref([]) // recommended documents only
@@ -3501,6 +3517,19 @@ function confirmArchive() {
   archiveTarget.value = null
 }
 
+function restoreDocument(doc) {
+  doc.status = 'Published'
+
+  addAuditEntry(
+    'restore',
+    doc.title,
+    'Archived document restored'
+  )
+
+  toast.value = 'Document restored successfully.'
+}
+
+
 // ─── MODULE 4.5: VERSION MANAGEMENT FUNCTIONS ───
 
 function openNewVersionModal() {
@@ -3591,7 +3620,10 @@ function addAuditEntry(actionType, documentTitle, actionDetails) {
     draft: 'Draft Saved',
     classify: 'Classification Reviewed',
     archive: 'Document Archived',
-    version: 'New Version Uploaded'
+    version: 'New Version Uploaded',
+    download: 'Document Downloaded',
+    view: 'Document Viewed',
+    restore: 'Document Restored'
   }
   documentAuditLog.value.unshift({
     id: Date.now(),
