@@ -244,34 +244,36 @@ td button:hover,
 }
 
 /* TOAST */
-
 .toast {
-  background: var(--johor-red-light);
-  border: 1px solid #ffc7cf;
-  border-left: 6px solid var(--johor-red);
-  padding: 14px 18px;
-  border-radius: 20px;
-  margin-bottom: 18px;
   display: grid;
-  grid-template-columns: 150px 1fr 30px;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: 18px;
+  background: #e8f8ef;
+  border: 1px solid #b7ebc8;
+  border-left: 6px solid #16a34a;
+  color: #166534;
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 22px;
 }
 
 .toast span {
-  color: var(--johor-red-dark);
   font-weight: 900;
+  color: #166534;
 }
 
 .toast p {
   margin: 0;
-  color: var(--johor-red-dark);
+  color: #166534;
 }
 
 .toast button {
   background: transparent;
+  border: none;
+  color: #166534;
   font-size: 22px;
-  color: var(--johor-red-dark);
+  cursor: pointer;
 }
 
 /* CARDS */
@@ -1333,4 +1335,94 @@ mark {
 
 .smart-alert-item button {
   white-space: nowrap;
+}
+
+/* PUBLIC DOCUMENT DETAILS MODAL */
+
+.public-detail-modal {
+  max-width: 760px;
+  border-top: 6px solid var(--johor-blue);
+}
+
+.public-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 18px;
+}
+
+.public-summary-box {
+  background: var(--johor-blue-light);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  margin-top: 14px;
+}
+
+.public-summary-box h4 {
+  margin: 0 0 8px;
+  color: var(--johor-blue-dark);
+}
+
+.public-summary-box p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ACCOUNT DEACTIVATION MODAL */
+
+.deactivation-form-card {
+  max-width: 620px;
+  border-top: 6px solid var(--johor-red);
+  background:
+    radial-gradient(circle at top right, rgba(206, 17, 38, 0.12), transparent 34%),
+    linear-gradient(145deg, var(--white) 0%, #fffafb 100%);
+}
+
+.deactivation-form-card .section-title {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.deactivation-form-card .section-title h3 {
+  color: var(--johor-red-dark);
+}
+
+.deactivation-form-card .secondary.full {
+  margin-top: 10px;
+}
+
+.toast.info {
+  background: #e8f1ff;
+  border-color: #9ec5fe;
+  color: #084298;
+}
+
+.toast.success {
+  background: #e8f8ee;
+  border-color: #9be7b2;
+  color: #146c2e;
+}
+
+.toast.error {
+  background: #fde8e8;
+  border-color: #f5a3a3;
+  color: #b00020;
+}
+
+.toast.info span,
+.toast.info p {
+  color: #084298;
+}
+
+.toast.success span,
+.toast.success p {
+  color: #146c2e;
+}
+
+.toast.error span,
+.toast.error p {
+  color: #b00020;
 }
