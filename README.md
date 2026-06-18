@@ -79,30 +79,42 @@ The prototype includes the following main functions:
 ## 2. GitHub Index Table: Module to Frontend Script Mapping
 
 This table helps lecturers, teammates and reviewers quickly locate the frontend implementation for each functional module in this repository. Because this prototype is built mainly in one Vue file, most module interfaces are implemented in `src/App.vue`, while reusable UI elements are stored in `src/components/`.
+# AD15_AESPA MEMBER
+# AD15_AESPA MEMBER
 
-| Subsystem / Developer | Module | Frontend Script |
-| --- | --- | --- |
-| Subsystem 1: User and Access Management / Lee May Yan | Guest Access Module | [`src/App.vue` public portal UI, search, browse and public document details](src/App.vue#L56-L171) |
-| Subsystem 1: User and Access Management / Lee May Yan | User Registration and Login Module | [`src/App.vue` login, register, reset password and MFA UI](src/App.vue#L172-L356) |
-| Subsystem 1: User and Access Management / Lee May Yan | Profile Management Module | [`src/App.vue` profile, preferences, MFA and deactivation UI](src/App.vue#L357-L458) |
-| Subsystem 1: User and Access Management / Lee May Yan | Role and Permission Control Module | [`src/App.vue` admin users, roles, permissions and activity logs UI](src/App.vue#L1679-L1912) |
-| Subsystem 1: User and Access Management / Lee May Yan | Administrator Authentication Module | [`src/App.vue` admin login tab and admin workspace access](src/App.vue#L172-L356) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Upload Module | [`src/App.vue` upload HR document form and draft/upload actions](src/App.vue#L459-L605) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Classification and Categorization Module | [`src/App.vue` AI classification review, approve, modify and reject UI](src/App.vue#L606-L718) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Storage Repository Module | [`src/App.vue` repository table, document preview and audit trail UI](src/App.vue#L719-L829) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Search and Filter Module | [`src/App.vue` repository search and filter controls](src/App.vue#L719-L829) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Update and Archive Module | [`src/App.vue` archive modal and upload new version modal](src/App.vue#L830-L984) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Personalized Recommendation Module | [`src/App.vue` recommended documents, refresh recommendation and report incorrect recommendation UI](src/App.vue#L1247-L1350) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | FAQ and Knowledge Assistance Module | [`src/App.vue` HR chatbot, suggested questions, FAQ, summary and escalation UI](src/App.vue#L1050-L1193) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Notification and Update Alert Module | [`src/App.vue` notification preferences, smart alerts and recent notifications UI](src/App.vue#L1426-L1597) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Smart Search Module | [`src/App.vue` semantic search, search suggestions, recent search history, result sorting and highlights](src/App.vue#L995-L1245) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Saved Documents and Personal Storage Module | [`src/App.vue` saved documents and personal notes UI](src/App.vue#L1598-L1678) |
-| Shared Components | Reusable Input Field | [`src/components/InputField.vue`](src/components/InputField.vue) |
-| Shared Components | Reusable Statistic Card | [`src/components/StatCard.vue`](src/components/StatCard.vue) |
-| Shared Components | Reusable Setting Card | [`src/components/SettingCard.vue`](src/components/SettingCard.vue) |
-| Shared App Files | Vue App Entry and Styling | [`src/main.js`](src/main.js), [`src/style.css`](src/style.css), [`index.html`](index.html) |
+## Subsystem 1: Lee May Yan
+
+| Module | FrontEnd |
+|---|---|
+| Guest Access Module | [Public Portal Page](src/App.vue#L55-L245), [Public Document Search](src/App.vue#L55-L245), [Public Document Details](src/App.vue#L146-L234) |
+| User Registration and Login Module | [User Login Page](src/App.vue#L246-L445), [User Registration Page](src/App.vue#L246-L445), [Password Reset Form](src/App.vue#L364-L443), [MFA Verification Interface](src/App.vue#L246-L445) |
+| Profile Management Module | [User Profile Page](src/App.vue#L446-L569), [Edit Profile Form](src/App.vue#L480-L540), [Notification Preference Settings](src/App.vue#L526-L540) |
+| Role and Permission Control Module | [Role Management Interface](src/App.vue#L1933-L2008), [User Account Management Table](src/App.vue#L2009-L2076), [System Activity Logs](src/App.vue#L2078-L2101) |
+| Administrator Authentication Module | [Administrator Login Page](src/App.vue#L246-L445), [Administrator Workspace](src/App.vue#L1854-L2101) |
 
 ---
+
+## Subsystem 2: Lee Tung Ern
+
+| Module | FrontEnd |
+|---|---|
+| Document Upload Module | [Document Upload Form](src/App.vue#L648-L777), [Upload Document Interface](src/App.vue#L648-L777) |
+| Document Classification and Categorization Module | [AI Classification Review Interface](src/App.vue#L778-L890), [Classification Approval Interface](src/App.vue#L778-L890) |
+| Document Storage Repository Module | [Document Repository Table](src/App.vue#L891-L1004), [Document Preview Interface](src/App.vue#L891-L1004) |
+| Document Search and Filter Module | [Repository Search Interface](src/App.vue#L891-L1004), [Filter Controls](src/App.vue#L891-L1004) |
+| Document Update and Archive Module | [Archive Document Modal](src/App.vue#L1005-L1052), [Upload New Version Modal](src/App.vue#L1053-L1138) |
+
+---
+
+## Subsystem 3: Khoo Yuan Man
+
+| Module | FrontEnd |
+|---|---|
+| Personalized Recommendation Module | [Recommended Documents Interface](src/App.vue#L1170-L1600), [Refresh Recommendation Function](src/App.vue#L1170-L1600) |
+| FAQ and Knowledge Assistance Module | [HR Chatbot Interface](src/App.vue#L1170-L1600), [FAQ Section](src/App.vue#L1170-L1600), [Suggested Questions Interface](src/App.vue#L1170-L1600) |
+| Notification and Update Alert Module | [Smart Alerts Interface](src/App.vue#L1601-L1853), [Recent Notifications Panel](src/App.vue#L1601-L1853), [Notification Preferences](src/App.vue#L1601-L1853) |
+| Smart Search Module | [Smart Search Interface](src/App.vue#L1170-L1600), [Search Suggestions](src/App.vue#L1170-L1600), [Recent Search History](src/App.vue#L1170-L1600) |
+| Saved Documents and Personal Storage Module | [Saved Documents Interface](src/App.vue#L1601-L1853), [Personal Notes Interface](src/App.vue#L1601-L1853) |
 
 ## 3. Technology Used
 
