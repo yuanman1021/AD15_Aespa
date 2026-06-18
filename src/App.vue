@@ -17,7 +17,7 @@
 
       <nav class="nav-list">
         <button
-          v-for="item in navItems"
+          v-for="item in visibleNavItems"
           :key="item.id"
           :class="{ active: screen === item.id }"
           @click="screen = item.id"
@@ -27,7 +27,7 @@
       </nav>
 
       <button class="ghost-button" @click="logoutPrototype">
-        Logout Prototype
+        Logout 
       </button>
     </aside>
 
@@ -39,12 +39,14 @@
         </div>
 
         <div class="top-actions">
-          <button @click="fakeLogin('User')">Demo User Login</button>
-          <button class="primary" @click="fakeLogin('Admin')">Demo Admin Login</button>
+         <button @click="screen = 'auth'; authMode = 'login'">User Login</button>
+          <button class="primary" @click="screen = 'auth'; authMode = 'admin'">
+            Admin Login
+          </button>
         </div>
       </header>
 
-      <div v-if="toast" class="toast">
+      <div v-if="toast" :class="['toast', toastType]">
         <span>System message</span>
         <p>{{ toast }}</p>
         <button @click="toast = ''">×</button>
@@ -164,6 +166,81 @@
             </div>
           </div>
         </div>
+       <div
+    v-if="publicDetailsModalOpen"
+    class="modal-overlay"
+    @click.self="publicDetailsModalOpen = false"
+  >
+    <div class="modal-card public-detail-modal">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Public Document Details</p>
+          <h3>{{ selectedDoc.title }}</h3>
+        </div>
+
+        <button @click="publicDetailsModalOpen = false">
+          Close
+        </button>
+      </div>
+
+      <div class="public-detail-header">
+        <span class="status-pill green">{{ selectedDoc.access }}</span>
+        <span class="status-pill">{{ selectedDoc.status }}</span>
+              <span class="status-pill">Version {{ selectedDoc.version }}</span>
+            </div>
+
+            <dl>
+              <div>
+                <dt>Reference Number</dt>
+                <dd>{{ selectedDoc.referenceNo }}</dd>
+              </div>
+              <div>
+                <dt>Category</dt>
+                <dd>{{ selectedDoc.category }}</dd>
+              </div>
+              <div>
+                <dt>Document Type</dt>
+                <dd>{{ selectedDoc.type }}</dd>
+              </div>
+              <div>
+                <dt>Effective Date</dt>
+                <dd>{{ selectedDoc.effectiveDate }}</dd>
+              </div>
+              <div>
+                <dt>Issuing Department</dt>
+                <dd>Johor Human Resource Management Division</dd>
+              </div>
+              <div>
+                <dt>Document Purpose</dt>
+                <dd>Provides official guidance for HR-related procedures.</dd>
+              </div>
+            </dl>
+
+            <div class="public-summary-box">
+              <h4>Document Summary</h4>
+              <p>{{ selectedDoc.summary }}</p>
+            </div>
+
+            <div class="public-summary-box">
+              <h4>Prototype Note</h4>
+              <p>
+                This page shows the public document information available to guest users.
+                Additional actions such as download, bookmark, AI chatbot, recommendations
+                and notification subscription require login.
+              </p>
+            </div>
+
+            <div class="button-row">
+              <button class="primary" @click="publicDetailsModalOpen = false">
+                Back to Public Portal
+              </button>
+
+              <button @click="screen = 'auth'; authMode = 'register'; publicDetailsModalOpen = false">
+                Request Account Registration
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- LOGIN / REGISTER -->
@@ -230,7 +307,10 @@
               Login as Registered User
             </button>
 
-            <button class="link-button" @click="authMode = 'reset'">
+            <button
+              class="link-button"
+              @click="resetAccountType = 'user'; resetModalOpen = true"
+            >
               Forgot password?
             </button>
           </div>
@@ -275,38 +355,6 @@
             </button>
           </div>
 
-          <div v-if="authMode === 'reset'" class="form-panel">
-            <h3>Reset Password</h3>
-            <p>Password reset through verified government email.</p>
-
-            <InputField
-              v-model="resetForm.email"
-              label="Registered Email"
-              placeholder="user@johor.gov.my"
-            />
-
-            <button class="primary full" @click="sendResetLink">
-              Send Reset Link
-            </button>
-
-            <InputField
-              v-model="resetForm.code"
-              label="Verification Code"
-              placeholder="Enter code"
-            />
-
-            <InputField
-              v-model="resetForm.newPassword"
-              label="New Password"
-              placeholder="Enter new password"
-              type="password"
-            />
-
-            <button class="secondary full" @click="updatePassword">
-              Update Password
-            </button>
-          </div>
-
           <div v-if="authMode === 'admin'" class="form-panel">
             <h3>Administrator Login Account</h3>
             <p>Dedicated admin login for management functions.</p>
@@ -332,6 +380,64 @@
 
             <button class="primary full" @click="adminLogin">
               Login as Administrator
+            </button>
+            <button
+              class="link-button"
+              @click="resetAccountType = 'admin'; resetModalOpen = true"
+            >
+              Forgot password?
+            </button>
+          </div>
+                </div>
+
+        <div v-if="resetModalOpen" class="modal-overlay" @click.self="resetModalOpen = false">
+          <div class="modal-card reset-form-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Account Recovery</p>
+                <h3>
+                  {{ resetAccountType === 'admin' ? 'Reset Admin Password' : 'Reset User Password' }}
+                </h3>
+              </div>
+
+              <button @click="resetModalOpen = false">
+                Cancel
+              </button>
+            </div>
+
+            <p class="muted">
+              {{
+                resetAccountType === 'admin'
+                  ? 'Enter your administrator email, verification code and new password.'
+                  : 'Enter your registered government email, verification code and new password.'
+              }}
+            </p>
+
+            <InputField
+              v-model="resetForm.email"
+              :label="resetAccountType === 'admin' ? 'Admin Email' : 'Registered Email'"
+              :placeholder="resetAccountType === 'admin' ? 'admin@johor.gov.my' : 'user@johor.gov.my'"
+            />
+
+            <button class="primary full" @click="sendResetLink">
+              Send Reset Link
+            </button>
+
+            <InputField
+              v-model="resetForm.code"
+              label="Verification Code"
+              placeholder="Enter code"
+            />
+
+            <InputField
+              v-model="resetForm.newPassword"
+              label="New Password"
+              placeholder="Enter new password"
+              type="password"
+            />
+
+            <button class="secondary full" @click="updatePassword">
+              Update Password
             </button>
           </div>
         </div>
@@ -416,7 +522,7 @@
               title="Change Password"
               desc="Update password while logged in."
               action="Change"
-              @click="toast = 'Password change form opened.'"
+              @click="changePasswordModalOpen = true"
             />
 
             <SettingCard
@@ -431,11 +537,97 @@
               desc="Request own account deactivation."
               action="Request"
               danger
-              @click="toast = 'Account deactivation request submitted.'"
+              @click="deactivationModalOpen = true"
             />
           </div>
         </div>
+
+        <div
+          v-if="deactivationModalOpen"
+          class="modal-overlay"
+          @click.self="deactivationModalOpen = false"
+        >
+          <div class="modal-card deactivation-form-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Account Deactivation</p>
+                <h3>Request Account Deactivation</h3>
+              </div>
+
+              <button @click="cancelDeactivationRequest">
+                Cancel
+              </button>
+            </div>
+
+            <p class="muted">
+              Submit a request to deactivate your account. The request will be reviewed by an administrator before the account is deactivated.
+            </p>
+
+            <label class="input-group">
+              <span>Reason for Deactivation</span>
+              <textarea
+                v-model="deactivationForm.reason"
+                class="feedback-textarea"
+                placeholder="Example: I no longer need access to the Johor HR Knowledge Hub."
+              ></textarea>
+            </label>
+
+            <InputField
+              v-model="deactivationForm.confirmText"
+              label="Type DEACTIVATE to confirm"
+              placeholder="DEACTIVATE"
+            />
+
+            <button class="primary full danger-button" @click="submitDeactivationRequest">
+              Submit Deactivation Request
+            </button>
+          </div>
+        </div>
       </section>
+
+        <div
+          v-if="changePasswordModalOpen"
+          class="modal-overlay"
+          @click.self="cancelChangePassword"
+        >
+          <div class="modal-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Account Security</p>
+                <h3>Change Password</h3>
+              </div>
+
+              <button @click="cancelChangePassword">
+                Cancel
+              </button>
+            </div>
+
+            <InputField
+              v-model="changePasswordForm.currentPassword"
+              label="Current Password"
+              placeholder="Enter current password"
+              type="password"
+            />
+
+            <InputField
+              v-model="changePasswordForm.newPassword"
+              label="New Password"
+              placeholder="Enter new password"
+              type="password"
+            />
+
+            <InputField
+              v-model="changePasswordForm.confirmPassword"
+              label="Confirm New Password"
+              placeholder="Re-enter new password"
+              type="password"
+            />
+
+            <button class="primary full" @click="submitChangePassword">
+              Update Password
+            </button>
+          </div>
+        </div>
 
      <!-- =====================================================
            SUBSYSTEM 2 — KNOWLEDGE AND DOCUMENT MANAGEMENT
@@ -1084,7 +1276,7 @@
               👎 Not Helpful
             </button>
 
-            <button @click="escalateLatestQuestion">
+            <button @click="openEscalationPanel">
               Escalate to HR Officer
             </button>
           </div>
@@ -1094,6 +1286,37 @@
             class="feedback-input"
             placeholder="Optional chatbot feedback comment..."
           />
+
+          <div v-if="escalationPanelOpen" class="escalation-panel">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">HR Officer Support</p>
+                <h3>Escalate Question</h3>
+              </div>
+
+              <button @click="cancelEscalationPanel">
+                Cancel
+              </button>
+            </div>
+
+            <label class="field-label">Question</label>
+            <input
+              v-model="escalationForm.question"
+              class="feedback-input"
+              placeholder="Enter the question to escalate..."
+            />
+
+            <label class="field-label">Description</label>
+            <textarea
+              v-model="escalationForm.description"
+              class="feedback-textarea"
+              placeholder="Describe why this question needs HR officer support..."
+            ></textarea>
+
+            <button class="primary" @click="submitEscalationRequest">
+              Submit to HR Officer
+            </button>
+          </div>
 
           <div class="history-panel">
             <p class="eyebrow">Conversation History</p>
@@ -1115,6 +1338,32 @@
 
             <p v-if="conversationHistory.length === 0" class="muted">
               No conversation history yet.
+            </p>
+          </div>
+
+          <div class="history-panel">
+            <p class="eyebrow">Escalation Requests</p>
+
+            <div
+              v-for="request in escalationRequests.filter((item) => item.userId === currentUserId)"
+              :key="request.escalationId"
+              class="history-item"
+            >
+              <strong>{{ request.escalationQuestion }}</strong>
+              <p>{{ request.escalationDescription }}</p>
+              <small>
+                Status: {{ request.escalationStatus }}
+                <span v-if="request.submittedAt">
+                  | Submitted: {{ new Date(request.submittedAt).toLocaleString() }}
+                </span>
+              </small>
+            </div>
+
+            <p
+              v-if="escalationRequests.filter((item) => item.userId === currentUserId).length === 0"
+              class="muted"
+            >
+              No escalation request submitted yet.
             </p>
           </div>
         </div>
@@ -1141,7 +1390,10 @@
 
               <h4 v-html="highlightMatchedContent(doc.title)"></h4>
 
-              <p v-if="doc.summary">{{ doc.summary }}</p>
+              <p
+                v-if="doc.summary"
+                v-html="highlightMatchedContent(doc.summary)"
+              ></p>
 
               <div>
                 <span>{{ doc.category }}</span>
@@ -1280,7 +1532,7 @@
               <h3>Frequently Asked Questions</h3>
             </div>
 
-            <button @click="escalateLatestQuestion">
+            <button @click="openEscalationPanel">
               Escalate to HR Officer
             </button>
           </div>
@@ -1403,7 +1655,53 @@
 
         <div class="wide-card">
           <div class="section-title">
-            <h3>Recent Notifications</h3>
+            <div>
+              <p class="eyebrow">Smart Alerts</p>
+              <h3>Recommended Alerts Based on User Activity</h3>
+            </div>
+
+            <button @click="loadNotifications">
+              Refresh Alerts
+            </button>
+          </div>
+
+          <div
+            v-for="alert in smartAlerts"
+            :key="alert.id"
+            class="smart-alert-item"
+          >
+            <span :class="alert.read ? 'dot green-dot' : 'dot amber-dot'"></span>
+
+            <div>
+              <strong>{{ alert.title }}</strong>
+              <p>{{ alert.message }}</p>
+              <small>
+                Type: {{ alert.type }}
+                <span v-if="alert.time">
+                  | {{ new Date(alert.time).toLocaleString() }}
+                </span>
+              </small>
+            </div>
+
+            <button
+              v-if="!alert.read"
+              @click="markNotificationRead(alert.id)"
+            >
+              Mark as Read
+            </button>
+          </div>
+
+          <p v-if="smartAlerts.length === 0" class="muted">
+            No smart alerts available.
+          </p>
+        </div>
+
+        <div class="wide-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Recent Notifications</p>
+              <h3>Policy Updates and Alerts</h3>
+            </div>
             <button @click="markAllNotificationsRead">
               Mark All as Read
             </button>
@@ -1411,7 +1709,7 @@
 
           <div class="log-list">
             <div
-              v-for="notice in notifications"
+              v-for="notice in policyNotifications"
               :key="notice.id"
               class="log-item"
             >
@@ -1435,7 +1733,7 @@
               </div>
             </div>
 
-            <p v-if="notifications.length === 0" class="muted">
+            <p v-if="policyNotifications.length === 0" class="muted">
               No notifications available.
             </p>
           </div>
@@ -1554,7 +1852,7 @@
       </section>
 
       <!-- ADMIN WORKSPACE -->
-      <section v-if="screen === 'admin'" class="dashboard-grid">
+      <section v-if="screen === 'admin' && session === 'Admin'" class="dashboard-grid">
         <div class="welcome-card admin-theme">
           <p class="eyebrow">Administrator Workspace</p>
           <h3>Manage users, permissions, documents, AI suggestions and audit logs.</h3>
@@ -1567,29 +1865,144 @@
 
         <div class="wide-card">
           <div class="section-title">
-            <h3>Role and Permission Control</h3>
-            <button @click="createNewRole">
-              Create Role
+            <div>
+              <p class="eyebrow">HR Escalation</p>
+              <h3>Escalation Requests from Users</h3>
+            </div>
+
+            <button @click="loadEscalationRequests">
+              Refresh
             </button>
           </div>
 
-          <div class="role-grid">
-            <article
-              v-for="role in roles"
-              :key="role.name"
-              class="role-card"
-            >
-              <h4>{{ role.name }}</h4>
-              <p>{{ role.description }}</p>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Question</th>
+                  <th>User</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Submitted At</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
 
-              <div>
-                <span v-for="permission in role.permissions" :key="permission">
-                  {{ permission }}
-                </span>
-              </div>
-            </article>
+              <tbody>
+                <tr
+                  v-for="request in escalationRequests"
+                  :key="request.escalationId"
+                >
+                  <td>{{ request.escalationQuestion }}</td>
+                  <td>{{ request.userName || 'User' }}</td>
+                  <td>{{ request.escalationDescription }}</td>
+                  <td>
+                    <span
+                      :class="request.escalationStatus === 'Resolved'
+                        ? 'status-pill green'
+                        : 'status-pill amber'"
+                    >
+                      {{ request.escalationStatus }}
+                    </span>
+                  </td>
+                  <td>{{ new Date(request.submittedAt).toLocaleString() }}</td>
+                  <td>
+                    <button
+                      v-if="request.escalationStatus !== 'Resolved'"
+                      @click="resolveEscalationRequest(request.escalationId)"
+                    >
+                      Mark Resolved
+                    </button>
+
+                    <span v-else class="muted">
+                      Completed
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+
+          <p v-if="escalationRequests.length === 0" class="muted">
+            No escalation requests submitted yet.
+          </p>
         </div>
+
+       <div class="wide-card">
+        <div class="section-title">
+          <h3>Role and Permission Control</h3>
+          <button @click="openCreateRoleForm">
+            Create Role
+          </button>
+        </div>
+
+  <div class="role-grid">
+    <article
+      v-for="(role, index) in roles"
+      :key="role.name"
+      class="role-card"
+    >
+      <h4>{{ role.name }}</h4>
+      <p>{{ role.description }}</p>
+
+      <div>
+        <span v-for="permission in role.permissions" :key="permission">
+          {{ permission }}
+        </span>
+      </div>
+
+      <div class="button-row">
+        <button @click="openEditRoleForm(role, index)">
+          Edit Role
+        </button>
+      </div>
+    </article>
+  </div>
+</div>
+
+<div v-if="roleModalOpen" class="modal-overlay" @click.self="cancelRoleForm">
+  <div class="modal-card">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">Role Management</p>
+        <h3>{{ editingRoleIndex === null ? 'Create New Role' : 'Edit Role' }}</h3>
+      </div>
+
+      <button @click="cancelRoleForm">
+        Cancel
+      </button>
+    </div>
+
+    <InputField
+      v-model="roleForm.name"
+      label="Role Name"
+      placeholder="Example: Document Reviewer"
+    />
+
+    <label class="input-group">
+      <span>Role Description</span>
+      <textarea
+        v-model="roleForm.description"
+        class="feedback-textarea"
+        placeholder="Describe what this role can do..."
+      ></textarea>
+    </label>
+
+    <label class="input-group">
+      <span>Permissions</span>
+      <textarea
+        v-model="roleForm.permissions"
+        class="feedback-textarea"
+        placeholder="Enter permissions separated by comma"
+      ></textarea>
+    </label>
+
+    <button class="primary full" @click="saveRole">
+      {{ editingRoleIndex === null ? 'Create Role' : 'Save Changes' }}
+    </button>
+  </div>
+</div>
+        
 
         <div class="wide-card">
           <div class="section-title">
@@ -1713,6 +2126,31 @@ function useLocalStorage(key, defaultValue) {
   return data
 }
 
+  function submitDeactivationRequest() {
+    if (!deactivationForm.value.reason.trim()) {
+     showToast('Please enter a reason for account deactivation.', 'info')
+      return
+    }
+
+    if (deactivationForm.value.confirmText !== 'DEACTIVATE') {
+      showToast('Please type DEACTIVATE to confirm the request.', 'info')
+      return
+    }
+
+    showToast('Account deactivation request submitted for administrator review.', 'success')
+    addLog('Submitted account deactivation request', 'Profile Management', 'Warning', session.value)
+    cancelDeactivationRequest()
+  }
+
+  function cancelDeactivationRequest() {
+    deactivationModalOpen.value = false
+
+    deactivationForm.value = {
+      reason: '',
+      confirmText: ''
+    }
+  }
+
 /* const documents = ref([])
 
 async function loadDocuments() {
@@ -1744,6 +2182,8 @@ const selectedDoc = ref({
   reason: '',
   summary: 'Please wait while documents are loaded from the database.'
 })
+
+const publicDetailsModalOpen = ref(false)
 
 const smartResults = ref([]) // recommended documents only
 const searchResults = ref([]) // smart search results only
@@ -1825,6 +2265,43 @@ async function loadConversationHistory() {
   }
 }
 
+async function loadEscalationRequests() {
+  try {
+    const response = await fetch('http://localhost:3000/api/escalation-requests')
+
+    if (!response.ok) {
+      throw new Error('Failed to load escalation requests')
+    }
+
+    escalationRequests.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function resolveEscalationRequest(escalationId) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/escalation-requests/${escalationId}/resolve`,
+      {
+        method: 'PATCH'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to resolve escalation request')
+    }
+
+    await loadEscalationRequests()
+
+    toast.value = 'Escalation request marked as resolved.'
+    addLog('Resolved escalation request', 'Admin Workspace', 'Success', session.value)
+  } catch (error) {
+    console.error(error)
+    toast.value = 'Failed to resolve escalation request.'
+  }
+}
+
 async function loadNotifications() {
   try {
     const response = await fetch(`http://localhost:3000/api/notifications/${currentUserId}`)
@@ -1887,6 +2364,7 @@ onMounted(async () => {
   await loadTrendingDocuments()
   await loadFrequentlyUsedPolicies()
   await loadSavedDocuments()
+  await loadEscalationRequests()
 })
 
 const users = useLocalStorage('jhr_users', [
@@ -2026,6 +2504,14 @@ const classificationQueue = useLocalStorage('jhr_classification_queue', [
 
 const notifications = ref([])
 
+const smartAlerts = computed(() => {
+  return notifications.value.filter((notice) => notice.type === 'smart_alert')
+})
+
+const policyNotifications = computed(() => {
+  return notifications.value.filter((notice) => notice.type !== 'smart_alert')
+})
+
 const savedDocuments = ref([])
 
 const faqs = ref([])
@@ -2051,7 +2537,6 @@ const navItems = [
 const authTabs = [
   { id: 'login', label: 'User Login' },
   { id: 'register', label: 'Register' },
-  { id: 'reset', label: 'Reset Password' },
   { id: 'admin', label: 'Admin Login' }
 ]
 
@@ -2068,10 +2553,34 @@ const categories = [
 const screen = ref('public')
 const query = ref('')
 const category = ref('All')
+const roleModalOpen = ref(false)
+const editingRoleIndex = ref(null)
+
+const roleForm = ref({
+  name: '',
+  description: '',
+  permissions: ''
+})
 //const selectedDoc = ref(documents.value[0])
 const authMode = ref('login')
+const resetModalOpen = ref(false)
+const resetAccountType = ref('user')
 const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
+const toastType = ref('success')
+
+function showToast(message, type = 'success') {
+  toast.value = message
+  toastType.value = type
+}
+
+const visibleNavItems = computed(() => {
+  if (session.value === 'Admin') {
+    return navItems
+  }
+
+  return navItems.filter((item) => item.id !== 'admin')
+})
 
 const repoQuery = ref('')
 const repoType = ref('All Types')
@@ -2090,6 +2599,49 @@ watch(smartQuery, () => {
 
 const mfaEnabled = ref(true)
 const policyUpdateEnabled = ref(true)
+const deactivationModalOpen = ref(false)
+const deactivationForm = ref({
+  reason: '',
+  confirmText: ''
+})
+const changePasswordModalOpen = ref(false)
+
+const changePasswordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+function submitChangePassword() {
+  if (
+    !changePasswordForm.value.currentPassword ||
+    !changePasswordForm.value.newPassword ||
+    !changePasswordForm.value.confirmPassword
+  ) {
+    showToast('Please complete all password fields.', 'info')
+    return
+  }
+
+  if (changePasswordForm.value.newPassword !== changePasswordForm.value.confirmPassword) {
+    showToast('New password and confirm password do not match.', 'error')
+    return
+  }
+
+  showToast('Password updated successfully.', 'success')
+  addLog('Changed password', 'Profile Management', 'Success', session.value)
+  cancelChangePassword()
+}
+
+function cancelChangePassword() {
+  changePasswordModalOpen.value = false
+
+  changePasswordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  }
+}
+
 const savedUpdateEnabled = ref(true)
 const notificationFrequency = ref('Daily')
 const deliveryChannel = ref('In-System')
@@ -2183,6 +2735,14 @@ const latestConversationId = ref(null)
 const generatedSummary = ref('')
 const selectedSummaryDoc = ref(null)
 const ratingComment = ref('')
+const escalationPanelOpen = ref(false)
+const escalationRequests = ref([])
+
+const escalationForm = ref({
+  question: '',
+  description: ''
+})
+
 const chatMessages = ref([
   {
     sender: 'bot',
@@ -2317,27 +2877,70 @@ function fakeLogin(type) {
 
 function userLogin() {
   if (!loginForm.value.email || !loginForm.value.password) {
-    toast.value = 'Please enter email and password.'
+    showToast('Please enter email and password.', 'info')
     addLog('Failed login attempt', 'User Login', 'Warning', 'Unknown User')
     return
   }
 
-  fakeLogin('User')
+  const loggedInUser = users.value.find(
+  (user) =>
+    user.email.toLowerCase() === loginForm.value.email.toLowerCase() &&
+    user.role.toLowerCase().includes('registered')
+  )
+
+  if (!loggedInUser) {
+    showToast('User account not found.', 'error')
+    addLog('Failed login attempt - account not found', 'User Login', 'Warning', loginForm.value.email)
+    return
+  }
+
+  if (loggedInUser.status !== 'Active') {
+    showToast('This account is not active.', 'error')
+    addLog('Failed login attempt - inactive account', 'User Login', 'Warning', loggedInUser.name)
+    return
+  }
+
+  profileForm.value = {
+    name: loggedInUser.name,
+    email: loggedInUser.email,
+    department: loggedInUser.department,
+    designation: loggedInUser.designation
+  }
+
+  session.value = 'User'
+  screen.value = 'profile'
+  showToast(`${loggedInUser.name} logged in successfully.`, 'success')
+  addLog('User login', 'Authentication', 'Success', loggedInUser.name)
 }
 
 function adminLogin() {
   if (!adminLoginForm.value.email || !adminLoginForm.value.password) {
-    toast.value = 'Please enter admin email and password.'
-    addLog('Failed admin login attempt', 'Administrator Login', 'Warning', 'Unknown Admin')
+    showToast('Please enter admin email and password.', 'info')
     return
   }
 
-  fakeLogin('Admin')
+  const loggedInAdmin = users.value.find(
+  (user) =>
+    user.email.toLowerCase() === adminLoginForm.value.email.toLowerCase() &&
+    user.role.toLowerCase().includes('administrator')
+  )
+
+  profileForm.value = {
+    name: loggedInAdmin.name,
+    email: loggedInAdmin.email,
+    department: loggedInAdmin.department,
+    designation: loggedInAdmin.designation
+  }
+
+  session.value = 'Admin'
+  screen.value = 'admin'
+  showToast(`${loggedInAdmin.name} logged in successfully as administrator.`, 'success')
+  addLog('Admin login', 'Admin Authentication', 'Success', loggedInAdmin.name)
 }
 
 function registerUser() {
   if (!registerForm.value.name || !registerForm.value.email || !registerForm.value.password) {
-    toast.value = 'Please complete name, email and password.'
+    showToast('Please complete name, email and password.', 'info')
     return
   }
 
@@ -2364,27 +2967,27 @@ function registerUser() {
     password: ''
   }
 
-  toast.value = 'Registration submitted successfully. New user is added to admin table.'
+  showToast('Registration submitted successfully. New user is added to admin table.', 'success')
   addLog('Registered new account', 'Registration', 'Success', newUser.name)
 }
 
 function sendResetLink() {
   if (!resetForm.value.email) {
-    toast.value = 'Please enter registered email first.'
+    showToast('Please enter registered email first.', 'info')
     return
   }
 
-  toast.value = 'Password reset link sent to verified government email.'
+  showToast('Password reset link sent to verified government email.', 'success')
   addLog('Requested password reset link', 'Password Reset', 'Success', resetForm.value.email)
 }
 
 function updatePassword() {
   if (!resetForm.value.code || !resetForm.value.newPassword) {
-    toast.value = 'Please enter verification code and new password.'
+    showToast('Please enter verification code and new password.', 'info')
     return
   }
 
-  toast.value = 'Password updated successfully.'
+  showToast('Password updated successfully.', 'success')
   addLog('Updated password', 'Password Reset', 'Success', resetForm.value.email)
 
   resetForm.value = {
@@ -2397,13 +3000,13 @@ function updatePassword() {
 function logoutPrototype() {
   session.value = 'Guest'
   screen.value = 'public'
-  toast.value = 'Session ended. You are back to guest access.'
+  showToast('Logged out successfully. You are now a guest.', 'success')
   addLog('User logged out', 'Logout', 'Success', 'Current User')
 }
 
 function openDocumentDetails(doc) {
   selectedDoc.value = doc
-  toast.value = `Opened public document details for ${doc.referenceNo}.`
+  publicDetailsModalOpen.value = true
   addLog('Viewed public document details', 'Public Search', 'Success', session.value)
 }
 
@@ -2420,13 +3023,13 @@ function saveProfile() {
     currentUser.updated_at = now
   }
 
-  toast.value = 'Profile updated successfully.'
+  showToast('Profile updated successfully.', 'success')
   addLog('Updated profile information', 'Profile Management', 'Success', profileForm.value.name)
 }
 
 function toggleMfa() {
   mfaEnabled.value = !mfaEnabled.value
-  toast.value = mfaEnabled.value ? 'MFA has been enabled.' : 'MFA has been disabled.'
+  showToast(mfaEnabled.value ? 'MFA has been enabled.' : 'MFA has been disabled.', 'success')
   addLog('Changed MFA setting', 'Account Security', 'Success', profileForm.value.name)
 }
 
@@ -2876,14 +3479,6 @@ async function performSmartSearch() {
   }
 }
 
-function clearSearchResults() {
-  smartQuery.value = ''
-  searchResults.value = []
-  hasSearched.value = false
-  lastSearchKeyword.value = ''
-  toast.value = 'Search results cleared.'
-}
-
 function highlightMatchedContent(text) {
   if (!text) return ''
 
@@ -2893,10 +3488,32 @@ function highlightMatchedContent(text) {
     return text
   }
 
-  const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const regex = new RegExp(`(${escapedKeyword})`, 'gi')
+  const words = keyword
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word.length > 1)
 
-  return text.replace(regex, '<mark>$1</mark>')
+  if (words.length === 0) {
+    return text
+  }
+
+  let highlightedText = text
+
+  words.forEach((word) => {
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escapedWord})`, 'gi')
+    highlightedText = highlightedText.replace(regex, '<mark>$1</mark>')
+  })
+
+  return highlightedText
+}
+
+function clearSearchResults() {
+  smartQuery.value = ''
+  searchResults.value = []
+  hasSearched.value = false
+  lastSearchKeyword.value = ''
+  toast.value = 'Search results cleared.'
 }
 
 /*function refreshRecommendations() {
@@ -3109,15 +3726,26 @@ async function generateDocumentSummary(doc) {
   }
 }
 
-async function escalateLatestQuestion() {
-  if (!latestConversationId.value && chatMessages.value.length <= 1) {
-    toast.value = 'Please ask the chatbot a question before escalation.'
-    return
-  }
-
+function openEscalationPanel() {
   const latestUserMessage = [...chatMessages.value]
     .reverse()
     .find((message) => message.sender === 'user')
+
+  escalationForm.value = {
+    question: latestUserMessage ? latestUserMessage.text : '',
+    description: latestUserMessage
+      ? 'User requested HR officer support for this chatbot question.'
+      : 'User requested HR officer support from FAQ or chatbot panel.'
+  }
+
+  escalationPanelOpen.value = true
+}
+
+async function submitEscalationRequest() {
+  if (!escalationForm.value.question.trim()) {
+    toast.value = 'Please enter a question before escalating.'
+    return
+  }
 
   try {
     const response = await fetch('http://localhost:3000/api/escalation-requests', {
@@ -3128,8 +3756,8 @@ async function escalateLatestQuestion() {
       body: JSON.stringify({
         conversationId: latestConversationId.value,
         userId: currentUserId,
-        escalationQuestion: latestUserMessage ? latestUserMessage.text : 'General HR question',
-        escalationDescription: 'User requested HR officer support from chatbot panel.'
+        escalationQuestion: escalationForm.value.question,
+        escalationDescription: escalationForm.value.description
       })
     })
 
@@ -3137,13 +3765,27 @@ async function escalateLatestQuestion() {
       throw new Error('Failed to escalate question')
     }
 
-    toast.value = 'Question escalated to HR officer.'
+    escalationPanelOpen.value = false
+
+    escalationForm.value = {
+      question: '',
+      description: ''
+    }
+
+    toast.value = 'Question escalated to HR officer successfully.'
+
     await loadConversationHistory()
+    await loadEscalationRequests()
+
     addLog('Escalated question to HR officer', 'AI Chatbot', 'Success', session.value)
   } catch (error) {
     console.error(error)
     toast.value = 'Failed to escalate question.'
   }
+}
+
+function cancelEscalationPanel() {
+  escalationPanelOpen.value = false
 }
 
 function generateChatbotAnswer(question) {
@@ -3486,23 +4128,81 @@ function toggleUserStatus(user) {
     addLog('Reactivated user account', 'User Management', 'Success', 'Administrator')
   }
 }
+function openCreateRoleForm() {
+  editingRoleIndex.value = null
 
-function createNewRole() {
-  const roleExists = roles.value.some((role) => role.name === 'Document Reviewer')
+  roleForm.value = {
+    name: '',
+    description: '',
+    permissions: ''
+  }
 
-  if (roleExists) {
-    toast.value = 'Document Reviewer role already exists.'
+  roleModalOpen.value = true
+}
+
+function openEditRoleForm(role, index) {
+  editingRoleIndex.value = index
+
+  roleForm.value = {
+    name: role.name,
+    description: role.description,
+    permissions: role.permissions.join(', ')
+  }
+
+  roleModalOpen.value = true
+}
+
+function saveRole() {
+  const roleName = roleForm.value.name.trim()
+  const roleDescription = roleForm.value.description.trim()
+  const permissions = roleForm.value.permissions
+    .split(',')
+    .map((permission) => permission.trim())
+    .filter(Boolean)
+
+  if (!roleName || !roleDescription || permissions.length === 0) {
+    toast.value = 'Please enter role name, description and at least one permission.'
     return
   }
 
-  roles.value.push({
-    name: 'Document Reviewer',
-    description: 'Can review AI classification suggestions and approve document metadata.',
-    permissions: ['Review Classification', 'Edit Metadata', 'Approve Category']
+  const duplicateRole = roles.value.some((role, index) => {
+    return role.name.toLowerCase() === roleName.toLowerCase() &&
+      index !== editingRoleIndex.value
   })
 
-  toast.value = 'New role Document Reviewer created.'
-  addLog('Created new user role', 'Role Management', 'Success', 'Administrator')
+  if (duplicateRole) {
+    toast.value = `${roleName} role already exists.`
+    return
+  }
+
+  const roleData = {
+    name: roleName,
+    description: roleDescription,
+    permissions
+  }
+
+  if (editingRoleIndex.value === null) {
+    roles.value.push(roleData)
+    toast.value = `${roleName} role created successfully.`
+    addLog('Created new user role', 'Role Management', 'Success', 'Administrator')
+  } else {
+    roles.value[editingRoleIndex.value] = roleData
+    toast.value = `${roleName} role updated successfully.`
+    addLog('Edited user role', 'Role Management', 'Success', 'Administrator')
+  }
+
+  cancelRoleForm()
+}
+
+function cancelRoleForm() {
+  roleModalOpen.value = false
+  editingRoleIndex.value = null
+
+  roleForm.value = {
+    name: '',
+    description: '',
+    permissions: ''
+  }
 }
 
 function filterLogs() {
