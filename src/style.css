@@ -51,6 +51,12 @@ button:disabled {
   overflow: hidden;
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
 /* SIDEBAR */
 
 .sidebar {
@@ -620,8 +626,8 @@ dd {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1.2fr repeat(3, 0.6fr);
-  gap: 18px;
+  grid-template-columns: 1.2fr 1.3fr;
+  gap: 24px;
 }
 
 .welcome-card {
@@ -638,6 +644,8 @@ dd {
 
 .stat-card {
   border-top: 5px solid var(--johor-red);
+  padding: 12px;
+  min-height: 90px;
 }
 
 .stat-card span {
@@ -648,7 +656,7 @@ dd {
 .stat-card strong {
   display: block;
   font-size: 32px;
-  margin-top: 14px;
+  margin-top: 8px;
   color: var(--johor-blue);
 }
 
