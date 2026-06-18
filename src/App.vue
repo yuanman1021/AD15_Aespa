@@ -39,14 +39,14 @@
         </div>
 
         <div class="top-actions">
-          <button @click="fakeLogin('User')">User Login</button>
+         <button @click="screen = 'auth'; authMode = 'login'">User Login</button>
           <button class="primary" @click="screen = 'auth'; authMode = 'admin'">
             Admin Login
           </button>
         </div>
       </header>
 
-      <div v-if="toast" class="toast">
+      <div v-if="toast" :class="['toast', toastType]">
         <span>System message</span>
         <p>{{ toast }}</p>
         <button @click="toast = ''">×</button>
@@ -172,6 +172,81 @@
             </div>
           </div>
         </div>
+       <div
+    v-if="publicDetailsModalOpen"
+    class="modal-overlay"
+    @click.self="publicDetailsModalOpen = false"
+  >
+    <div class="modal-card public-detail-modal">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Public Document Details</p>
+          <h3>{{ selectedDoc.title }}</h3>
+        </div>
+
+        <button @click="publicDetailsModalOpen = false">
+          Close
+        </button>
+      </div>
+
+      <div class="public-detail-header">
+        <span class="status-pill green">{{ selectedDoc.access }}</span>
+        <span class="status-pill">{{ selectedDoc.status }}</span>
+              <span class="status-pill">Version {{ selectedDoc.version }}</span>
+            </div>
+
+            <dl>
+              <div>
+                <dt>Reference Number</dt>
+                <dd>{{ selectedDoc.referenceNo }}</dd>
+              </div>
+              <div>
+                <dt>Category</dt>
+                <dd>{{ selectedDoc.category }}</dd>
+              </div>
+              <div>
+                <dt>Document Type</dt>
+                <dd>{{ selectedDoc.type }}</dd>
+              </div>
+              <div>
+                <dt>Effective Date</dt>
+                <dd>{{ selectedDoc.effectiveDate }}</dd>
+              </div>
+              <div>
+                <dt>Issuing Department</dt>
+                <dd>Johor Human Resource Management Division</dd>
+              </div>
+              <div>
+                <dt>Document Purpose</dt>
+                <dd>Provides official guidance for HR-related procedures.</dd>
+              </div>
+            </dl>
+
+            <div class="public-summary-box">
+              <h4>Document Summary</h4>
+              <p>{{ selectedDoc.summary }}</p>
+            </div>
+
+            <div class="public-summary-box">
+              <h4>Prototype Note</h4>
+              <p>
+                This page shows the public document information available to guest users.
+                Additional actions such as download, bookmark, AI chatbot, recommendations
+                and notification subscription require login.
+              </p>
+            </div>
+
+            <div class="button-row">
+              <button class="primary" @click="publicDetailsModalOpen = false">
+                Back to Public Portal
+              </button>
+
+              <button @click="screen = 'auth'; authMode = 'register'; publicDetailsModalOpen = false">
+                Request Account Registration
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- LOGIN / REGISTER -->
@@ -238,7 +313,10 @@
               Login as Registered User
             </button>
 
-            <button class="link-button" @click="resetModalOpen = true">
+            <button
+              class="link-button"
+              @click="resetAccountType = 'user'; resetModalOpen = true"
+            >
               Forgot password?
             </button>
           </div>
@@ -309,6 +387,12 @@
             <button class="primary full" @click="adminLogin">
               Login as Administrator
             </button>
+            <button
+              class="link-button"
+              @click="resetAccountType = 'admin'; resetModalOpen = true"
+            >
+              Forgot password?
+            </button>
           </div>
                 </div>
 
@@ -317,7 +401,9 @@
             <div class="section-title">
               <div>
                 <p class="eyebrow">Account Recovery</p>
-                <h3>Reset Password</h3>
+                <h3>
+                  {{ resetAccountType === 'admin' ? 'Reset Admin Password' : 'Reset User Password' }}
+                </h3>
               </div>
 
               <button @click="resetModalOpen = false">
@@ -326,13 +412,17 @@
             </div>
 
             <p class="muted">
-              Enter your registered government email, verification code and new password.
+              {{
+                resetAccountType === 'admin'
+                  ? 'Enter your administrator email, verification code and new password.'
+                  : 'Enter your registered government email, verification code and new password.'
+              }}
             </p>
 
             <InputField
               v-model="resetForm.email"
-              label="Registered Email"
-              placeholder="user@johor.gov.my"
+              :label="resetAccountType === 'admin' ? 'Admin Email' : 'Registered Email'"
+              :placeholder="resetAccountType === 'admin' ? 'admin@johor.gov.my' : 'user@johor.gov.my'"
             />
 
             <button class="primary full" @click="sendResetLink">
@@ -438,7 +528,7 @@
               title="Change Password"
               desc="Update password while logged in."
               action="Change"
-              @click="toast = 'Password change form opened.'"
+              @click="changePasswordModalOpen = true"
             />
 
             <SettingCard
@@ -453,11 +543,97 @@
               desc="Request own account deactivation."
               action="Request"
               danger
-              @click="toast = 'Account deactivation request submitted.'"
+              @click="deactivationModalOpen = true"
             />
           </div>
         </div>
+
+        <div
+          v-if="deactivationModalOpen"
+          class="modal-overlay"
+          @click.self="deactivationModalOpen = false"
+        >
+          <div class="modal-card deactivation-form-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Account Deactivation</p>
+                <h3>Request Account Deactivation</h3>
+              </div>
+
+              <button @click="cancelDeactivationRequest">
+                Cancel
+              </button>
+            </div>
+
+            <p class="muted">
+              Submit a request to deactivate your account. The request will be reviewed by an administrator before the account is deactivated.
+            </p>
+
+            <label class="input-group">
+              <span>Reason for Deactivation</span>
+              <textarea
+                v-model="deactivationForm.reason"
+                class="feedback-textarea"
+                placeholder="Example: I no longer need access to the Johor HR Knowledge Hub."
+              ></textarea>
+            </label>
+
+            <InputField
+              v-model="deactivationForm.confirmText"
+              label="Type DEACTIVATE to confirm"
+              placeholder="DEACTIVATE"
+            />
+
+            <button class="primary full danger-button" @click="submitDeactivationRequest">
+              Submit Deactivation Request
+            </button>
+          </div>
+        </div>
       </section>
+
+        <div
+          v-if="changePasswordModalOpen"
+          class="modal-overlay"
+          @click.self="cancelChangePassword"
+        >
+          <div class="modal-card">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">Account Security</p>
+                <h3>Change Password</h3>
+              </div>
+
+              <button @click="cancelChangePassword">
+                Cancel
+              </button>
+            </div>
+
+            <InputField
+              v-model="changePasswordForm.currentPassword"
+              label="Current Password"
+              placeholder="Enter current password"
+              type="password"
+            />
+
+            <InputField
+              v-model="changePasswordForm.newPassword"
+              label="New Password"
+              placeholder="Enter new password"
+              type="password"
+            />
+
+            <InputField
+              v-model="changePasswordForm.confirmPassword"
+              label="Confirm New Password"
+              placeholder="Re-enter new password"
+              type="password"
+            />
+
+            <button class="primary full" @click="submitChangePassword">
+              Update Password
+            </button>
+          </div>
+        </div>
 
      <!-- =====================================================
            SUBSYSTEM 2 — KNOWLEDGE AND DOCUMENT MANAGEMENT
@@ -1875,12 +2051,12 @@
         </div>
 
        <div class="wide-card">
-  <div class="section-title">
-    <h3>Role and Permission Control</h3>
-    <button @click="openCreateRoleForm">
-      Create Role
-    </button>
-  </div>
+        <div class="section-title">
+          <h3>Role and Permission Control</h3>
+          <button @click="openCreateRoleForm">
+            Create Role
+          </button>
+        </div>
 
   <div class="role-grid">
     <article
@@ -2072,6 +2248,31 @@ function useLocalStorage(key, defaultValue) {
   return data
 }
 
+  function submitDeactivationRequest() {
+    if (!deactivationForm.value.reason.trim()) {
+     showToast('Please enter a reason for account deactivation.', 'info')
+      return
+    }
+
+    if (deactivationForm.value.confirmText !== 'DEACTIVATE') {
+      showToast('Please type DEACTIVATE to confirm the request.', 'info')
+      return
+    }
+
+    showToast('Account deactivation request submitted for administrator review.', 'success')
+    addLog('Submitted account deactivation request', 'Profile Management', 'Warning', session.value)
+    cancelDeactivationRequest()
+  }
+
+  function cancelDeactivationRequest() {
+    deactivationModalOpen.value = false
+
+    deactivationForm.value = {
+      reason: '',
+      confirmText: ''
+    }
+  }
+
 /* const documents = ref([])
 
 async function loadDocuments() {
@@ -2149,6 +2350,12 @@ const selectedDoc = ref({
 })
 
 const smartResults = ref([])
+const publicDetailsModalOpen = ref(false)
+
+const smartResults = ref([]) // recommended documents only
+const searchResults = ref([]) // smart search results only
+const hasSearched = ref(false)
+
 const reportDialogOpen = ref(false)
 const selectedRecommendation = ref(null)
 
@@ -2533,8 +2740,15 @@ const roleForm = ref({
 //const selectedDoc = ref(documents.value[0])
 const authMode = ref('login')
 const resetModalOpen = ref(false)
+const resetAccountType = ref('user')
 const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
+const toastType = ref('success')
+
+function showToast(message, type = 'success') {
+  toast.value = message
+  toastType.value = type
+}
 
 const visibleNavItems = computed(() => {
   if (session.value === 'Admin') {
@@ -2561,6 +2775,49 @@ watch(smartQuery, () => {
 
 const mfaEnabled = ref(true)
 const policyUpdateEnabled = ref(true)
+const deactivationModalOpen = ref(false)
+const deactivationForm = ref({
+  reason: '',
+  confirmText: ''
+})
+const changePasswordModalOpen = ref(false)
+
+const changePasswordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+function submitChangePassword() {
+  if (
+    !changePasswordForm.value.currentPassword ||
+    !changePasswordForm.value.newPassword ||
+    !changePasswordForm.value.confirmPassword
+  ) {
+    showToast('Please complete all password fields.', 'info')
+    return
+  }
+
+  if (changePasswordForm.value.newPassword !== changePasswordForm.value.confirmPassword) {
+    showToast('New password and confirm password do not match.', 'error')
+    return
+  }
+
+  showToast('Password updated successfully.', 'success')
+  addLog('Changed password', 'Profile Management', 'Success', session.value)
+  cancelChangePassword()
+}
+
+function cancelChangePassword() {
+  changePasswordModalOpen.value = false
+
+  changePasswordForm.value = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  }
+}
+
 const savedUpdateEnabled = ref(true)
 const notificationFrequency = ref('Daily')
 const deliveryChannel = ref('In-System')
@@ -2831,27 +3088,70 @@ function fakeLogin(type) {
 
 function userLogin() {
   if (!loginForm.value.email || !loginForm.value.password) {
-    toast.value = 'Please enter email and password.'
+    showToast('Please enter email and password.', 'info')
     addLog('Failed login attempt', 'User Login', 'Warning', 'Unknown User')
     return
   }
 
-  fakeLogin('User')
+  const loggedInUser = users.value.find(
+  (user) =>
+    user.email.toLowerCase() === loginForm.value.email.toLowerCase() &&
+    user.role.toLowerCase().includes('registered')
+  )
+
+  if (!loggedInUser) {
+    showToast('User account not found.', 'error')
+    addLog('Failed login attempt - account not found', 'User Login', 'Warning', loginForm.value.email)
+    return
+  }
+
+  if (loggedInUser.status !== 'Active') {
+    showToast('This account is not active.', 'error')
+    addLog('Failed login attempt - inactive account', 'User Login', 'Warning', loggedInUser.name)
+    return
+  }
+
+  profileForm.value = {
+    name: loggedInUser.name,
+    email: loggedInUser.email,
+    department: loggedInUser.department,
+    designation: loggedInUser.designation
+  }
+
+  session.value = 'User'
+  screen.value = 'profile'
+  showToast(`${loggedInUser.name} logged in successfully.`, 'success')
+  addLog('User login', 'Authentication', 'Success', loggedInUser.name)
 }
 
 function adminLogin() {
   if (!adminLoginForm.value.email || !adminLoginForm.value.password) {
-    toast.value = 'Please enter admin email and password.'
-    addLog('Failed admin login attempt', 'Administrator Login', 'Warning', 'Unknown Admin')
+    showToast('Please enter admin email and password.', 'info')
     return
   }
 
-  fakeLogin('Admin')
+  const loggedInAdmin = users.value.find(
+  (user) =>
+    user.email.toLowerCase() === adminLoginForm.value.email.toLowerCase() &&
+    user.role.toLowerCase().includes('administrator')
+  )
+
+  profileForm.value = {
+    name: loggedInAdmin.name,
+    email: loggedInAdmin.email,
+    department: loggedInAdmin.department,
+    designation: loggedInAdmin.designation
+  }
+
+  session.value = 'Admin'
+  screen.value = 'admin'
+  showToast(`${loggedInAdmin.name} logged in successfully as administrator.`, 'success')
+  addLog('Admin login', 'Admin Authentication', 'Success', loggedInAdmin.name)
 }
 
 function registerUser() {
   if (!registerForm.value.name || !registerForm.value.email || !registerForm.value.password) {
-    toast.value = 'Please complete name, email and password.'
+    showToast('Please complete name, email and password.', 'info')
     return
   }
 
@@ -2878,27 +3178,27 @@ function registerUser() {
     password: ''
   }
 
-  toast.value = 'Registration submitted successfully. New user is added to admin table.'
+  showToast('Registration submitted successfully. New user is added to admin table.', 'success')
   addLog('Registered new account', 'Registration', 'Success', newUser.name)
 }
 
 function sendResetLink() {
   if (!resetForm.value.email) {
-    toast.value = 'Please enter registered email first.'
+    showToast('Please enter registered email first.', 'info')
     return
   }
 
-  toast.value = 'Password reset link sent to verified government email.'
+  showToast('Password reset link sent to verified government email.', 'success')
   addLog('Requested password reset link', 'Password Reset', 'Success', resetForm.value.email)
 }
 
 function updatePassword() {
   if (!resetForm.value.code || !resetForm.value.newPassword) {
-    toast.value = 'Please enter verification code and new password.'
+    showToast('Please enter verification code and new password.', 'info')
     return
   }
 
-  toast.value = 'Password updated successfully.'
+  showToast('Password updated successfully.', 'success')
   addLog('Updated password', 'Password Reset', 'Success', resetForm.value.email)
 
   resetForm.value = {
@@ -2911,13 +3211,13 @@ function updatePassword() {
 function logoutPrototype() {
   session.value = 'Guest'
   screen.value = 'public'
-  toast.value = 'Session ended. You are back to guest access.'
+  showToast('Logged out successfully. You are now a guest.', 'success')
   addLog('User logged out', 'Logout', 'Success', 'Current User')
 }
 
 function openDocumentDetails(doc) {
   selectedDoc.value = doc
-  toast.value = `Opened public document details for ${doc.referenceNo}.`
+  publicDetailsModalOpen.value = true
   addLog('Viewed public document details', 'Public Search', 'Success', session.value)
 }
 
@@ -2934,13 +3234,13 @@ function saveProfile() {
     currentUser.updated_at = now
   }
 
-  toast.value = 'Profile updated successfully.'
+  showToast('Profile updated successfully.', 'success')
   addLog('Updated profile information', 'Profile Management', 'Success', profileForm.value.name)
 }
 
 function toggleMfa() {
   mfaEnabled.value = !mfaEnabled.value
-  toast.value = mfaEnabled.value ? 'MFA has been enabled.' : 'MFA has been disabled.'
+  showToast(mfaEnabled.value ? 'MFA has been enabled.' : 'MFA has been disabled.', 'success')
   addLog('Changed MFA setting', 'Account Security', 'Success', profileForm.value.name)
 }
 
