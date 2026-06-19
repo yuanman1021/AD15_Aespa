@@ -644,38 +644,27 @@
           <p>Browse, search and view HR documents available to your access level.</p>
         </div>
 
+         <div
+  v-if="session === 'Admin'"
+  class="stats-grid"
+>
         <StatCard label="Total Documents" :value="String(documents.length)" note="Repository records" />
         <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification queue" />
         <StatCard label="Archived" :value="String(archivedCount)" note="Old circular versions" />
 
-<div class="wide-card">
-  <div class="section-title">
-    <div>
-      <p class="eyebrow">Repository Analytics</p>
-      <h3>Document Statistics</h3>
-    </div>
-  </div>
+        <StatCard
+  label="Published"
+  :value="String(documents.filter(d => d.status === 'Published').length)"
+  note="Available documents"
+/>
 
-  <div class="stats-grid">
-    <StatCard
-      label="Public Documents"
-      :value="String(publicDocumentCount)"
-      note="Accessible by everyone"
-    />
-
-    <StatCard
-      label="Restricted Documents"
-      :value="String(restrictedDocumentCount)"
-      note="Admin approval required"
-    />
-
-    <StatCard
-      label="Draft Documents"
-      :value="String(draftDocumentCount)"
-      note="Not yet published"
-    />
-  </div>
+<StatCard
+  label="Restricted"
+  :value="String(documents.filter(d => d.access === 'Restricted').length)"
+  note="Protected documents"
+/>
 </div>
+
 
         <!-- ─── MODULE 4.1 DOCUMENT UPLOAD ─── -->
         <div class="wide-card">
