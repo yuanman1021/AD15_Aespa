@@ -1021,9 +1021,49 @@
                   <td>{{ doc.effectiveDate || '—' }}</td>
                   <td>{{ doc.totalViews || 0 }}</td>
                   <td>
-                    <button @click="previewRepositoryDoc(doc)">Preview</button>
-                    <button @click="openArchiveModal(doc)" :disabled="doc.status === 'Archived'">Archive</button>
-                    <button @click="selectDocForVersion(doc)">+ Version</button>
+      <div class="action-group">
+
+    <button
+      class="secondary"
+      @click="previewRepositoryDoc(doc)"
+    >
+      View Details
+    </button>
+
+    <button
+      v-if="session === 'User' || session === 'Admin'"
+      class="secondary"
+      @click="downloadDocument(doc)"
+    >
+      Download
+    </button>
+
+    <button
+      v-if="session === 'Admin'"
+      class="secondary"
+      @click="openVersionModal(doc)"
+    >
+      New Version
+    </button>
+
+    <button
+      v-if="session === 'Admin'"
+      class="secondary"
+      @click="archiveDocument(doc)"
+    >
+      Archive
+    </button>
+
+    <button
+      v-if="session === 'Admin' && doc.status === 'Archived'"
+      class="secondary"
+      @click="restoreDocument(doc)"
+    >
+      Restore
+    </button>
+
+  </div>
+
                   </td>
                 </tr>
               </tbody>
