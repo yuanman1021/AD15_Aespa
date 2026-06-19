@@ -638,7 +638,10 @@
         <div class="welcome-card">
           <p class="eyebrow">Document Management</p>
           <h3>Upload, classify, store, search and manage HR documents.</h3>
-          <p>Administrators can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
+          <h2>Administrators </h2>
+          <p>Can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
+          <h2>Guest & User</h2>
+          <p>Browse, search and view HR documents available to your access level.</p>
         </div>
 
         <StatCard label="Total Documents" :value="String(documents.length)" note="Repository records" />
