@@ -1083,7 +1083,9 @@
 
         <!-- ─── MODULE 4.5 ARCHIVE MODAL ─── -->
         <div v-if="showArchiveModal" class="modal-overlay" @click.self="showArchiveModal = false">
-          <div class="modal-card">
+          <div v-if="session === 'Admin'"
+          class="modal-card">
+
             <div class="section-title" style="margin-bottom:16px;">
               <div>
                 <p class="eyebrow">Archive Document</p>
@@ -1134,7 +1136,7 @@
           <div class="modal-card">
             <div class="section-title" style="margin-bottom:16px;">
               <div>
-                <p class="eyebrow">Module 4.5 — Version Management</p>
+                <p class="eyebrow">Version Management</p>
                 <h3>Upload New Version</h3>
               </div>
               <button @click="showVersionModal = false">✕</button>
@@ -1216,25 +1218,51 @@
         </div>
 
         <div
-  v-if="showPreviewModal"
+         v-if="showPreviewModal"
   class="modal-overlay"
   @click.self="showPreviewModal = false"
 >
   <div class="modal-card">
-    <h3>{{ previewDocument?.title }}</h3>
+    <h3>{{ previewDoc.title }}</h3>
 
     <p>
-      {{ previewDocument?.summary }}
+      <strong>Reference Number:</strong>
+      {{ previewDoc.referenceNo }}
     </p>
 
     <p>
-      Reference:
-      {{ previewDocument?.referenceNo }}
+      <strong>Category:</strong>
+      {{ previewDoc.category }}
     </p>
 
     <p>
-      Category:
-      {{ previewDocument?.category }}
+      <strong>Document Type:</strong>
+      {{ previewDoc.type }}
+    </p>
+
+    <p>
+      <strong>Access Level:</strong>
+      {{ previewDoc.access }}
+    </p>
+
+    <p>
+      <strong>Status:</strong>
+      {{ previewDoc.status }}
+    </p>
+
+    <p>
+      <strong>Effective Date:</strong>
+      {{ previewDoc.effectiveDate }}
+    </p>
+
+    <p>
+      <strong>Department:</strong>
+      {{ previewDoc.departmentTag }}
+    </p>
+
+    <p>
+      <strong>Summary:</strong>
+      {{ previewDoc.summary }}
     </p>
 
     <button
