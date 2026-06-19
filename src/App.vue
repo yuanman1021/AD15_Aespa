@@ -638,23 +638,59 @@
         <div class="welcome-card">
           <p class="eyebrow">Document Management</p>
           <h3>Upload, classify, store, search and manage HR documents.</h3>
-          <p>Administrators can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
+          <h2>Administrators </h2>
+          <p>Can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
+          <h2>Guest & User</h2>
+          <p>Browse, search and view HR documents available to your access level.</p>
         </div>
 
+         <div
+  v-if="session === 'Admin'"
+  class="stats-grid"
+>
         <StatCard label="Total Documents" :value="String(documents.length)" note="Repository records" />
         <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification queue" />
         <StatCard label="Archived" :value="String(archivedCount)" note="Old circular versions" />
 
+        <StatCard
+  label="Published"
+  :value="String(documents.filter(d => d.status === 'Published').length)"
+  note="Available documents"
+/>
+
+<StatCard
+  label="Restricted"
+  :value="String(documents.filter(d => d.access === 'Restricted').length)"
+  note="Protected documents"
+/>
+</div>
+
+
         <!-- ─── MODULE 4.1 DOCUMENT UPLOAD ─── -->
-        <div class="wide-card">
+        <div v-if="session === 'Admin'"
+        class="wide-card">
+
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.1 — Document Upload</p>
+              <p class="eyebrow">Document Upload</p>
               <h3>Upload HR Document</h3>
             </div>
             <div style="display:flex;gap:10px;">
-              <button @click="saveDocumentAsDraft">Save as Draft</button>
-              <button class="primary" @click="uploadDocument">Upload &amp; Submit for Review</button>
+              <button
+                class="primary"
+                @click="uploadDocument"
+                :disabled="session !== 'Admin'"
+              >
+                Upload & Submit for Review
+              </button>
+
+              <button
+                 @click="saveDocumentAsDraft"
+                :disabled="session !== 'Admin'"
+                >
+                Save as Draft
+            </button>
+
             </div>
           </div>
 
@@ -776,10 +812,12 @@
         </div>
 
         <!-- ─── MODULE 4.2 AI CLASSIFICATION REVIEW ─── -->
-        <div class="wide-card">
+        <div v-if="session === 'Admin'"
+        class="wide-card">
+
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.2 — AI Classification Review</p>
+              <p class="eyebrow">AI Classification Review</p>
               <h3>Suggested Document Categories</h3>
             </div>
             <button @click="refreshClassification">Refresh Suggestions</button>
@@ -892,10 +930,16 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.3 &amp; 4.4 — Repository &amp; Search</p>
+              <p class="eyebrow">Repository &amp; Search</p>
               <h3>Search and Manage Documents</h3>
             </div>
-            <button class="primary" @click="openNewVersionModal">Upload New Version</button>
+            <button
+              v-if="session === 'Admin'"
+              class="primary"
+              @click="openNewVersionModal"
+            >
+             Upload New Version
+            </button>
           </div>
 
           <!-- 5-column filter toolbar -->
@@ -953,7 +997,7 @@
                   <th>Document</th>
                   <th>Reference No.</th>
                   <th>Category</th>
-                  <th>Department</th>
+                 
                   <th>Access</th>
                   <th>Status</th>
                   <th>Effective Date</th>
@@ -974,7 +1018,7 @@
                   </td>
                   <td>{{ doc.referenceNo }}</td>
                   <td>{{ doc.category }}</td>
-                  <td>{{ doc.departmentTag || '—' }}</td>
+              
                   <td>
                     <span :class="{
                       'status-pill green': doc.access === 'Public',
@@ -991,10 +1035,49 @@
                   </td>
                   <td>{{ doc.effectiveDate || '—' }}</td>
                   <td>{{ doc.totalViews || 0 }}</td>
-                  <td>
-                    <button @click="previewRepositoryDoc(doc)">Preview</button>
-                    <button @click="openArchiveModal(doc)" :disabled="doc.status === 'Archived'">Archive</button>
-                    <button @click="selectDocForVersion(doc)">+ Version</button>
+                    <td>
+
+  <div class="action-group">
+
+    <button @click="openPreview(doc)">
+  View Details
+</button>
+
+    <button
+      v-if="session === 'User' || session === 'Admin'"
+      class="secondary"
+      @click="downloadDocument(doc)"
+    >
+      Download
+    </button>
+
+    <button
+      v-if="session === 'Admin'"
+      class="secondary"
+      @click="openVersionModal(doc)"
+    >
+      New Version
+    </button>
+
+    <button
+      v-if="session === 'Admin'"
+      class="secondary"
+      @click="archiveDocument(doc)"
+    >
+      Archive
+    </button>
+
+    <button
+      v-if="session === 'Admin' && doc.status === 'Archived'"
+      class="secondary"
+      @click="restoreDocument(doc)"
+    >
+      Restore
+    </button>
+
+  
+  </div>
+
                   </td>
                 </tr>
               </tbody>
@@ -1004,10 +1087,12 @@
 
         <!-- ─── MODULE 4.5 ARCHIVE MODAL ─── -->
         <div v-if="showArchiveModal" class="modal-overlay" @click.self="showArchiveModal = false">
-          <div class="modal-card">
+          <div v-if="session === 'Admin'"
+          class="modal-card">
+
             <div class="section-title" style="margin-bottom:16px;">
               <div>
-                <p class="eyebrow">Module 4.5 — Archive Document</p>
+                <p class="eyebrow">Archive Document</p>
                 <h3>Archive: {{ archiveTarget?.referenceNo }}</h3>
               </div>
               <button @click="showArchiveModal = false">✕</button>
@@ -1055,7 +1140,7 @@
           <div class="modal-card">
             <div class="section-title" style="margin-bottom:16px;">
               <div>
-                <p class="eyebrow">Module 4.5 — Version Management</p>
+                <p class="eyebrow">Version Management</p>
                 <h3>Upload New Version</h3>
               </div>
               <button @click="showVersionModal = false">✕</button>
@@ -1136,8 +1221,93 @@
           </div>
         </div>
 
+       <div
+  v-if="showPreviewModal && previewDocument"
+  class="modal-overlay"
+  @click.self="closePreview"
+>
+  <div class="modal-card preview-modal">
+
+    <div class="preview-header">
+      <div>
+        <p class="eyebrow">Document Details</p>
+        <h2>{{ previewDocument.title }}</h2>
+      </div>
+
+  
+    </div>
+
+    <div class="preview-badges">
+      <span class="status-pill green">
+        {{ previewDocument.access }}
+      </span>
+
+      <span class="status-pill">
+        {{ previewDocument.status }}
+      </span>
+
+      <span class="status-pill">
+        Version {{ previewDocument.version }}
+      </span>
+    </div>
+
+    <div class="preview-grid">
+
+      <div class="info-card">
+        <span>Reference Number</span>
+        <strong>{{ previewDocument.referenceNo }}</strong>
+      </div>
+
+      <div class="info-card">
+        <span>Category</span>
+        <strong>{{ previewDocument.category }}</strong>
+      </div>
+
+      <div class="info-card">
+        <span>Document Type</span>
+        <strong>{{ previewDocument.type }}</strong>
+      </div>
+
+      <div class="info-card">
+        <span>Department</span>
+        <strong>{{ previewDocument.departmentTag }}</strong>
+      </div>
+
+      <div class="info-card">
+        <span>Effective Date</span>
+        <strong>{{ previewDocument.effectiveDate }}</strong>
+      </div>
+
+      <div class="info-card">
+        <span>Total Views</span>
+        <strong>{{ previewDocument.totalViews || 0 }}</strong>
+      </div>
+
+    </div>
+
+    <div class="summary-card">
+      <h4>Document Summary</h4>
+      <p>{{ previewDocument.summary }}</p>
+    </div>
+
+    <div class="button-row">
+
+      <button @click="closePreview">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+
         <!-- ─── AUDIT LOG ─── -->
-        <div class="wide-card">
+        <div
+            v-if="session === 'Admin'"
+            class="wide-card"
+        >
+
           <div class="section-title">
             <div>
               <p class="eyebrow">Document Audit Trail</p>
@@ -1165,7 +1335,11 @@
           </div>
         </div>
 
+        
+
       </section>  
+
+      
 
       <!-- SMART SUPPORT -->
       <section v-if="screen === 'smart'" class="grid-two">
@@ -2352,6 +2526,26 @@ async function loadSavedDocuments() {
   }
 }
 
+function downloadDocument(doc) {
+  addAuditEntry(
+    'download',
+    doc.title,
+    'Document downloaded'
+  )
+
+  toast.value = `${doc.title} downloaded successfully`
+}
+
+function openPreview(doc) {
+  previewDocument.value = doc
+  showPreviewModal.value = true
+}
+
+function closePreview() {
+  showPreviewModal.value = false
+  previewDocument.value = null
+}
+
 onMounted(async () => {
   await loadDocuments()
   await loadRecommendations()
@@ -2708,6 +2902,10 @@ const uploadForm = ref({
 })
 
 // ── Subsystem 2 new reactive state ──
+
+const showPreviewModal = ref(false)
+const previewDocument = ref(null)
+
 const repoCategory = ref('')
 const repoStatus = ref('')
 const repoAccess = ref('')
@@ -2724,7 +2922,43 @@ const versionForm = ref({
   fileName: '',
   fileObject: null
 })
-const documentAuditLog = ref([])
+const documentAuditLog = ref([
+  {
+     id: 1,
+    actionType: 'upload',
+    actionLabel: 'Document Uploaded',
+    documentTitle: 'Employee Leave Policy 2026',
+    actionDetails: 'Uploaded by Administrator',
+    createdAt: '19 Jun 2026 10:00 AM'
+  },
+  {
+    id: 2,
+    actionType: 'classification',
+    actionLabel: 'AI Classification Approved',
+    documentTitle: 'Promotion Guidelines',
+    actionDetails: 'Category approved as Promotion',
+    createdAt: '19 Jun 2026 10:15 AM'
+  },
+  {
+    id: 3,
+    actionType: 'archive',
+    actionLabel: 'Document Archived',
+    documentTitle: 'Disciplinary Action Procedures',
+    actionDetails: 'Superseded by newer circular',
+    createdAt: '19 Jun 2026 10:30 AM'
+  },
+  {
+    id: 4,
+    actionType: 'version',
+    actionLabel: 'New Version Uploaded',
+    documentTitle: 'Promotion Guidelines',
+    actionDetails: 'Version 2.0 uploaded',
+    createdAt: '19 Jun 2026 11:00 AM'
+
+  }
+])
+
+
 const fileInputRef = ref(null)
 const versionFileInputRef = ref(null)
 
@@ -3235,12 +3469,16 @@ function refreshClassification() {
 // ─── MODULE 4.3 + 4.4: REPOSITORY FUNCTIONS ───
 
 function previewRepositoryDoc(doc) {
-  selectedDoc.value = doc
-  screen.value = 'public'
-  doc.totalViews = (doc.totalViews || 0) + 1
-  toast.value = `Preview opened for ${doc.referenceNo}.`
-  addLog('Previewed repository document', 'Document Repository', 'Success', session.value)
+  previewDoc.value = doc
+  showPreviewModal.value = true
+
+  addAuditEntry(
+    'view',
+    doc.title,
+    'Viewed document details'
+  )
 }
+
 
 // ─── MODULE 4.5: ARCHIVE FUNCTIONS ───
 

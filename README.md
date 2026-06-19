@@ -2,7 +2,7 @@
 
 Johor HR Knowledge Hub is a high-fidelity interactive frontend prototype for a centralized HR policy and document management platform. The system allows users to search public HR documents, register and log in, manage profiles, upload and classify documents, use smart search, ask the HR chatbot, receive notifications, and manage saved documents.
 
-This prototype is developed using **Vue.js with JavaScript** and **Vite**. It uses mock data and localStorage, so it can run without Laragon, PHP, or MySQL.
+This prototype is developed using **Vue.js with JavaScript** and **Vite** for the frontend, **Node.js / Express.js** for the backend, and **MySQL** for database storage.
 
 ---
 
@@ -75,46 +75,70 @@ The prototype includes the following main functions:
 
 
 ---
-
 ## 2. GitHub Index Table: Module to Frontend Script Mapping
 
-This table helps lecturers, teammates and reviewers quickly locate the frontend implementation for each functional module in this repository. Because this prototype is built mainly in one Vue file, most module interfaces are implemented in `src/App.vue`, while reusable UI elements are stored in `src/components/`.
+This index table provides a quick reference for locating the frontend implementation of each functional module in the repository. Since most frontend interfaces are implemented in one main Vue file, the main module links point to `src/App.vue`, while reusable UI components are stored in `src/components/`.
 
-| Subsystem / Developer | Module | Frontend Script |
-| --- | --- | --- |
-| Subsystem 1: User and Access Management / Lee May Yan | Guest Access Module | [`src/App.vue` public portal UI, search, browse and public document details](src/App.vue#L56-L171) |
-| Subsystem 1: User and Access Management / Lee May Yan | User Registration and Login Module | [`src/App.vue` login, register, reset password and MFA UI](src/App.vue#L172-L356) |
-| Subsystem 1: User and Access Management / Lee May Yan | Profile Management Module | [`src/App.vue` profile, preferences, MFA and deactivation UI](src/App.vue#L357-L458) |
-| Subsystem 1: User and Access Management / Lee May Yan | Role and Permission Control Module | [`src/App.vue` admin users, roles, permissions and activity logs UI](src/App.vue#L1679-L1912) |
-| Subsystem 1: User and Access Management / Lee May Yan | Administrator Authentication Module | [`src/App.vue` admin login tab and admin workspace access](src/App.vue#L172-L356) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Upload Module | [`src/App.vue` upload HR document form and draft/upload actions](src/App.vue#L459-L605) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Classification and Categorization Module | [`src/App.vue` AI classification review, approve, modify and reject UI](src/App.vue#L606-L718) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Storage Repository Module | [`src/App.vue` repository table, document preview and audit trail UI](src/App.vue#L719-L829) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Search and Filter Module | [`src/App.vue` repository search and filter controls](src/App.vue#L719-L829) |
-| Subsystem 2: Knowledge and Document Management / Lee Tung Ern | Document Update and Archive Module | [`src/App.vue` archive modal and upload new version modal](src/App.vue#L830-L984) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Personalized Recommendation Module | [`src/App.vue` recommended documents, refresh recommendation and report incorrect recommendation UI](src/App.vue#L1247-L1350) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | FAQ and Knowledge Assistance Module | [`src/App.vue` HR chatbot, suggested questions, FAQ, summary and escalation UI](src/App.vue#L1050-L1193) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Notification and Update Alert Module | [`src/App.vue` notification preferences, smart alerts and recent notifications UI](src/App.vue#L1426-L1597) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Smart Search Module | [`src/App.vue` semantic search, search suggestions, recent search history, result sorting and highlights](src/App.vue#L995-L1245) |
-| Subsystem 3: Intelligent Recommendation and Support / Khoo Yuan Man | Saved Documents and Personal Storage Module | [`src/App.vue` saved documents and personal notes UI](src/App.vue#L1598-L1678) |
-| Shared Components | Reusable Input Field | [`src/components/InputField.vue`](src/components/InputField.vue) |
-| Shared Components | Reusable Statistic Card | [`src/components/StatCard.vue`](src/components/StatCard.vue) |
-| Shared Components | Reusable Setting Card | [`src/components/SettingCard.vue`](src/components/SettingCard.vue) |
-| Shared App Files | Vue App Entry and Styling | [`src/main.js`](src/main.js), [`src/style.css`](src/style.css), [`index.html`](index.html) |
+## Subsystem 1: User and Access Management
+**Developer:** Lee May Yan
 
+| Module | Frontend Script |
+|---|---|
+| Guest Access Module | • [Public Portal Interface](src/App.vue#L55-L134)<br>• [Search Results Interface](src/App.vue#L135-L175)<br>• [Public Document Details Modal](src/App.vue#L176-L244) |
+| User Registration and Login Module | • [User Login Interface](src/App.vue#L284-L317)<br>• [User Registration Interface](src/App.vue#L318-L356)<br>• [Password Reset Interface](src/App.vue#L395-L444)<br>• [MFA Verification Interface](src/App.vue#L303-L311) |
+| Profile Management Module | • [User Profile Interface](src/App.vue#L446-L470)<br>• [Edit Profile Form](src/App.vue#L471-L512)<br>• [Notification Preference Settings](src/App.vue#L502-L512)<br>• [Account Deactivation Interface](src/App.vue#L545-L585)<br>• [Change Password Interface](src/App.vue#L588-L630) |
+| Role and Permission Control Module | • [Role Management Interface](src/App.vue#L1933-L2007)<br>• [User Account Management Table](src/App.vue#L2009-L2059)<br>• [System Activity Logs Interface](src/App.vue#L2062-L2084) |
+| Administrator Authentication Module | • [Administrator Login Interface](src/App.vue#L358-L391)<br>• [Administrator Workspace](src/App.vue#L1854-L1931) |
+
+---
+
+## Subsystem 2: Knowledge and Document Management
+**Developer:** Lee Tung Ern
+
+| Module | Frontend Script |
+|---|---|
+| Document Upload Module | • [Document Upload Interface](src/App.vue#L648-L777) |
+| Document Classification and Categorization Module | • [AI Classification Review Interface](src/App.vue#L778-L890)<br>• [Classification Approval Interface](src/App.vue#L842-L887) |
+| Document Storage Repository Module | • [Document Repository Table](src/App.vue#L891-L1004)<br>• [Document Audit Trail](src/App.vue#L1139-L1167) |
+| Document Search and Filter Module | • [Repository Search Interface](src/App.vue#L891-L1004)<br>• [Repository Filter Controls](src/App.vue#L901-L942)<br>• [Repository Result Table](src/App.vue#L943-L1004) |
+| Document Update and Archive Module | • [Archive Document Modal](src/App.vue#L1005-L1052)<br>• [Upload New Version Modal](src/App.vue#L1053-L1138) |
+
+---
+
+## Subsystem 3: Intelligent Recommendation and Support
+**Developer:** Khoo Yuan Man
+
+| Module | Frontend Script |
+|---|---|
+| Smart Search Module | • [Smart Search Interface](src/App.vue#L1344-L1404)<br>• [Smart Search Results Interface](src/App.vue#L1545-L1592)<br>• [Trending Documents Interface](src/App.vue#L1722-L1746)<br>• [Frequently Used Policies Interface](src/App.vue#L1748-L1772) |
+| FAQ and Knowledge Assistance Module | • [HR Chatbot Interface](src/App.vue#L1406-L1463)<br>• [Escalation Request Interface](src/App.vue#L1464-L1493)<br>• [Chatbot Conversation History Interface](src/App.vue#L1495-L1516)<br>• [FAQ Section Interface](src/App.vue#L1702-L1720)<br>• [Document Summary Generation Interface](src/App.vue#L1650-L1663) |
+| Personalized Recommendation Module | • [Recommended Documents Interface](src/App.vue#L1594-L1648)<br>• [AI Document Summary Panel](src/App.vue#L1650-L1663)<br>• [Recommendation Report Interface](src/App.vue#L1665-L1699) |
+| Notification and Update Alert Module | • [Notification Preferences Interface](src/App.vue#L1787-L1828)<br>• [Smart Alerts Interface](src/App.vue#L1830-L1871)<br>• [Recent Notifications Panel](src/App.vue#L1873-L1914)<br>• [User Feedback Interface](src/App.vue#L1916-L1944) |
+| Saved Documents and Personal Storage Module | • [Save Favourite Documents from Search Results](src/App.vue#L1577-L1580)<br>• [Save Favourite Documents from Recommendations](src/App.vue#L1630-L1633)<br>• [Personal Storage Interface](src/App.vue#L1946-L2025)<br>• [Personal Notes Interface](src/App.vue#L1954-L1979)<br>• [Remove Favourite Document Interface](src/App.vue#L2015-L2017) |
+
+---
+
+## Shared Components
+
+| Component | Frontend Script |
+|---|---|
+| Reusable Input Field | • [InputField Component](src/components/InputField.vue) |
+| Reusable Statistic Card | • [StatCard Component](src/components/StatCard.vue) |
+| Reusable Setting Card | • [SettingCard Component](src/components/SettingCard.vue) |
 ---
 
 ## 3. Technology Used
 
-| Component            | Technology        |
-| -------------------- | ----------------- |
-| Frontend Framework   | Vue.js            |
-| Programming Language | JavaScript        |
-| Build Tool           | Vite              |
-| Styling              | CSS               |
-| Data Storage         | localStorage      |
-| Backend              | Not connected yet |
-| Database             | Not connected yet |
+| Component               | Technology                                       |
+| ----------------------- | ------------------------------------------------ |
+| Frontend Framework      | Vue.js                                           |
+| Programming Language    | JavaScript                                       |
+| Build Tool              | Vite                                             |
+| Styling                 | CSS                                              |
+| Backend                 | Node.js / Express.js                             |
+| Database                | MySQL                                            |
+| Local Storage           | Browser localStorage for selected prototype data |
+| Development Environment | Laragon, VS Code, GitHub                         |
 
 ---
 
@@ -122,343 +146,232 @@ This table helps lecturers, teammates and reviewers quickly locate the frontend 
 
 ```text
 johor-hr-hub/
+├── backend/
+│   ├── db.js
+│   ├── server.js
+│   ├── package.json
+│   └── package-lock.json
+├── database/
+│   └── johor_hr_knowledge_hub.sql
 ├── index.html
 ├── package.json
+├── package-lock.json
 ├── README.md
-├── src/
-│   ├── main.js
-│   ├── App.vue
-│   ├── style.css
-│   └── components/
-│       ├── InputField.vue
-│       ├── StatCard.vue
-│       └── SettingCard.vue
+├── vite.config.js
+├── public/
+│   ├── favicon.svg
+│   └── icons.svg
+└── src/
+    ├── main.js
+    ├── App.vue
+    ├── style.css
+    └── components/
+        ├── InputField.vue
+        ├── StatCard.vue
+        └── SettingCard.vue
 ```
 
 ---
 
 ## 5. Setup Instructions
 
-### Step 1: Install Node.js
+### Step 1: Install Required Software
 
-Make sure Node.js is installed on your computer.
+Make sure the following software is installed:
 
-Check using:
+```text
+Node.js
+npm
+Git
+Laragon
+MySQL
+VS Code
+```
+
+Check Node.js and npm using:
 
 ```bash
 node -v
 npm -v
 ```
 
-If both commands show version numbers, Node.js and npm are installed.
+---
+
+### Step 2: Clone the Repository
+
+Open Laragon Terminal or Command Prompt and go to the Laragon `www` folder:
+
+```bash
+cd C:\laragon\www
+```
+
+Clone the repository:
+
+```bash
+git clone https://github.com/yuanman1021/AD15_Aespa.git
+```
+
+Open the project folder:
+
+```bash
+cd AD15_Aespa
+```
 
 ---
 
-### Step 2: Open the Project Folder
+### Step 3: Start Laragon and MySQL
 
-Open the project folder in VS Code.
-
-Example project location:
+Open Laragon and click:
 
 ```text
-C:\Users\leema\y2s2\adp 1\progress 2\AD15_Aespa\johor-hr-hub
+Start All
 ```
 
-Open terminal in VS Code.
+Make sure MySQL is running.
 
 ---
 
-### Step 3: Install Dependencies
+### Step 4: Import the Database
 
-Run this command inside the project folder:
+In the project folder, open terminal and enter MySQL:
 
 ```bash
+mysql -u root
+```
+
+Create the database:
+
+```sql
+CREATE DATABASE johor_hr_knowledge_hub;
+EXIT;
+```
+
+Import the SQL file:
+
+```bash
+mysql -u root johor_hr_knowledge_hub < database\johor_hr_knowledge_hub.sql
+```
+
+To check whether the database was imported successfully:
+
+```bash
+mysql -u root
+```
+
+Then run:
+
+```sql
+USE johor_hr_knowledge_hub;
+SHOW TABLES;
+EXIT;
+```
+
+---
+
+### Step 5: Install and Run Backend
+
+Open a terminal for the backend:
+
+```bash
+cd C:\laragon\www\AD15_Aespa\backend
 npm install
-```
-
-This installs all required packages for the Vue project.
-
----
-
-### Step 4: Start the Development Server
-
-Run:
-
-```bash
 npm run dev
 ```
 
-After running the command, Vite will show a local link, usually:
+The backend should run at:
 
 ```text
-http://localhost:5173/
+http://localhost:3000
 ```
 
-Open the link in your browser.
+Keep this terminal open.
+
+---
+
+### Step 6: Install and Run Frontend
+
+Open another terminal for the frontend:
+
+```bash
+cd C:\laragon\www\AD15_Aespa
+npm install
+npm run dev
+```
+
+The frontend should run at:
+
+```text
+http://localhost:5173
+```
+
+Open the link in a browser.
 
 ---
 
 ## 6. Important Note About Laragon
 
-Laragon is **not required** for this prototype.
+Laragon is required for this prototype because the backend connects to a MySQL database.
 
-This project only uses Vue frontend, so it can run using:
-
-```bash
-npm run dev
-```
-
-Laragon is only needed later if the system is connected to:
-
-* PHP backend
-* MySQL database
-* phpMyAdmin
-
-For the current UI prototype, do not start Laragon unless backend/database development is added later.
-
----
-
-## 7. Required Files
-
-Make sure these files exist:
+The database connection is configured in:
 
 ```text
-src/main.js
-src/App.vue
-src/style.css
-src/components/InputField.vue
-src/components/StatCard.vue
-src/components/SettingCard.vue
+backend/db.js
 ```
 
----
+Default database settings:
 
-## 8. main.js
-
-The `src/main.js` file should contain:
-
-```js
-import { createApp } from 'vue'
-import App from './App.vue'
-import './style.css'
-
-createApp(App).mount('#app')
+```text
+Host: localhost
+User: root
+Password: empty
+Database: johor_hr_knowledge_hub
 ```
 
+Make sure Laragon MySQL is running before starting the backend server.
+
 ---
 
-## 9. Component Files
+## 7. Data Storage
 
-### InputField.vue
+This prototype uses both MySQL and browser localStorage.
 
-This component is used for reusable input fields and supports `v-model`.
+MySQL is used for backend-connected data such as:
 
-```vue
-<template>
-  <label class="input-group">
-    <span>{{ label }}</span>
-    <input
-      :type="type"
-      :placeholder="placeholder"
-      :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
-    />
-  </label>
-</template>
-
-<script setup>
-defineProps({
-  label: String,
-  placeholder: String,
-  modelValue: {
-    type: String,
-    default: ''
-  },
-  type: {
-    type: String,
-    default: 'text'
-  }
-})
-
-defineEmits(['update:modelValue'])
-</script>
+```text
+Documents
+Recommendations
+FAQs
+Notifications
+Chatbot conversations
+Escalation requests
 ```
 
----
+Browser localStorage is used for selected prototype interactions such as:
 
-### StatCard.vue
-
-This component displays dashboard statistics.
-
-```vue
-<template>
-  <div class="stat-card">
-    <span>{{ label }}</span>
-    <strong>{{ value }}</strong>
-    <p>{{ note }}</p>
-  </div>
-</template>
-
-<script setup>
-defineProps({
-  label: String,
-  value: String,
-  note: String
-})
-</script>
+```text
+Temporary UI data
+Prototype logs
+Saved browser state
+Some user interface changes
 ```
 
----
+To reset browser prototype data:
 
-### SettingCard.vue
-
-This component displays clickable setting cards.
-
-```vue
-<template>
-  <div class="setting-card">
-    <div>
-      <h4>{{ title }}</h4>
-      <p>{{ desc }}</p>
-    </div>
-
-    <button :class="{ danger: danger }">
-      {{ action }}
-    </button>
-  </div>
-</template>
-
-<script setup>
-defineProps({
-  title: String,
-  desc: String,
-  action: String,
-  danger: {
-    type: Boolean,
-    default: false
-  }
-})
-</script>
-```
-
----
-
-## 10. How to Use the Prototype
-
-### Public Portal
-
-1. Open the system.
-2. Use the search bar to search documents.
-3. Select a category filter.
-4. Click a document card to view its details.
-5. Click **Open Public Details** for public documents.
-6. Restricted documents will redirect users to login/register.
-
----
-
-### Login and Registration
-
-1. Click **Login / Register** from the sidebar.
-2. Choose one of the tabs:
-
-   * User Login
-   * Register
-   * Reset Password
-   * Admin Login
-3. Fill in the form.
-4. Click the related action button.
-
-Example:
-
-* Use **Demo User Login** to simulate registered user access.
-* Use **Demo Admin Login** to simulate administrator access.
-
----
-
-### Profile and Security
-
-1. Click **Profile & Security**.
-2. Edit user profile fields.
-3. Change notification preference.
-4. Click **Save Profile**.
-5. Click the MFA card to enable or disable MFA.
-
----
-
-### Document Management
-
-1. Click **Document Management**.
-2. Fill in the document upload form.
-3. Click **Upload and Extract Metadata**.
-4. The document will appear in the repository.
-5. It will also appear in the AI classification review section.
-6. Click **Approve** to approve a classification.
-7. Use the repository search bar to filter documents.
-8. Click **Archive** to archive a document.
-9. Click **Upload New Version** to update the selected document version.
-
----
-
-### Smart Support and Chatbot
-
-1. Click **Smart Support**.
-2. Use the smart search box to search using normal questions.
-3. Use the HR chatbot by typing a question.
-4. Press Enter or click **Send**.
-5. Click suggested questions to automatically ask the chatbot.
-
----
-
-### Notifications and Saved Documents
-
-1. Click **Notifications & Saved**.
-2. View unread notifications.
-3. Click **Mark All as Read** to update notification status.
-4. Click notification setting cards to toggle preferences.
-5. View saved documents.
-6. Click **Add Note** to update a saved document note.
-7. Click **Remove** to remove a saved document.
-
----
-
-### Admin Workspace
-
-1. Click **Admin Workspace**.
-2. View user account records.
-3. Click **Suspend** or **Reactivate** to update user status.
-4. Click **Create Role** to add a new role.
-5. View system activity logs.
-6. Click **Filter Logs** to show success logs only.
-
----
-
-## 11. Data Storage
-
-This prototype uses `localStorage`.
-
-This means:
-
-* Uploaded documents stay after refreshing the browser.
-* Created users stay after refreshing the browser.
-* Saved documents stay after refreshing the browser.
-* Logs stay after refreshing the browser.
-
-To reset the prototype data:
-
-1. Open the browser.
+1. Open the system in the browser.
 2. Press `F12`.
-3. Go to **Application** tab.
+3. Go to the **Application** tab.
 4. Open **Local Storage**.
-5. Delete the `jhr_` data items.
+5. Delete the related `jhr_` data items.
 6. Refresh the page.
 
-Alternative method:
+To reset database data, re-import:
 
-* Open the system in an incognito/private window.
+```bash
+mysql -u root johor_hr_knowledge_hub < database\johor_hr_knowledge_hub.sql
+```
 
----
 
-## 12. Developer
+## 8. Developer
 
 ```text
 Project: Johor HR Knowledge Hub
