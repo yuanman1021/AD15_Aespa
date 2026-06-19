@@ -1075,8 +1075,7 @@
       Restore
     </button>
 
-    
-
+  
   </div>
 
                   </td>
@@ -1235,9 +1234,7 @@
         <h2>{{ previewDocument.title }}</h2>
       </div>
 
-      <button @click="closePreview">
-        ✕
-      </button>
+  
     </div>
 
     <div class="preview-badges">

@@ -299,6 +299,23 @@ td button:hover,
   box-shadow: var(--shadow);
 }
 
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+
+.profile-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+
 .hero-card {
   min-height: 340px;
   background:
@@ -620,8 +637,8 @@ dd {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1.2fr repeat(3, 0.6fr);
-  gap: 18px;
+  grid-template-columns: 1.2fr 1.3fr;
+  gap: 24px;
 }
 
 .welcome-card {
@@ -1430,6 +1447,7 @@ mark {
 .preview-modal{
   width:900px;
   max-width:95vw;
+  line-height: 1.8;
 }
 
 .preview-header{
@@ -1446,24 +1464,10 @@ mark {
   flex-wrap:wrap;
 }
 
-.preview-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:16px;
-  margin-bottom:20px;
-}
-
-.info-card{
-  background:#f8fafc;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  padding:14px;
-}
-
 .info-card span{
   display:block;
   color:#64748b;
-  font-size:12px;
+  font-size:14px;
   margin-bottom:4px;
 }
 
@@ -1473,4 +1477,18 @@ mark {
   border-radius:16px;
   padding:18px;
   margin-bottom:20px;
+  line-height: 1.8;
+}
+
+.action-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.action-group button {
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 38px;
 }
