@@ -933,7 +933,13 @@
               <p class="eyebrow">Repository &amp; Search</p>
               <h3>Search and Manage Documents</h3>
             </div>
-            <button class="primary" @click="openNewVersionModal">Upload New Version</button>
+            <button
+              v-if="session === 'Admin'"
+              class="primary"
+              @click="openNewVersionModal"
+            >
+             Upload New Version
+            </button>
           </div>
 
           <!-- 5-column filter toolbar -->
