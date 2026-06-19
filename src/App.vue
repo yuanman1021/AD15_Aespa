@@ -645,6 +645,35 @@
         <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification queue" />
         <StatCard label="Archived" :value="String(archivedCount)" note="Old circular versions" />
 
+<div class="wide-card">
+  <div class="section-title">
+    <div>
+      <p class="eyebrow">Repository Analytics</p>
+      <h3>Document Statistics</h3>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <StatCard
+      label="Public Documents"
+      :value="String(publicDocumentCount)"
+      note="Accessible by everyone"
+    />
+
+    <StatCard
+      label="Restricted Documents"
+      :value="String(restrictedDocumentCount)"
+      note="Admin approval required"
+    />
+
+    <StatCard
+      label="Draft Documents"
+      :value="String(draftDocumentCount)"
+      note="Not yet published"
+    />
+  </div>
+</div>
+
         <!-- ─── MODULE 4.1 DOCUMENT UPLOAD ─── -->
         <div class="wide-card">
           <div class="section-title">
@@ -1135,6 +1164,37 @@
             </div>
           </div>
         </div>
+
+        <div
+  v-if="showPreviewModal"
+  class="modal-overlay"
+  @click.self="showPreviewModal = false"
+>
+  <div class="modal-card">
+    <h3>{{ previewDocument?.title }}</h3>
+
+    <p>
+      {{ previewDocument?.summary }}
+    </p>
+
+    <p>
+      Reference:
+      {{ previewDocument?.referenceNo }}
+    </p>
+
+    <p>
+      Category:
+      {{ previewDocument?.category }}
+    </p>
+
+    <button
+      class="primary"
+      @click="showPreviewModal = false"
+    >
+      Close
+    </button>
+  </div>
+</div>
 
         <!-- ─── AUDIT LOG ─── -->
         <div class="wide-card">
@@ -3235,12 +3295,16 @@ function refreshClassification() {
 // ─── MODULE 4.3 + 4.4: REPOSITORY FUNCTIONS ───
 
 function previewRepositoryDoc(doc) {
-  selectedDoc.value = doc
-  screen.value = 'public'
-  doc.totalViews = (doc.totalViews || 0) + 1
-  toast.value = `Preview opened for ${doc.referenceNo}.`
-  addLog('Previewed repository document', 'Document Repository', 'Success', session.value)
+  previewDoc.value = doc
+  showPreviewModal.value = true
+
+  addAuditEntry(
+    'view',
+    doc.title,
+    'Viewed document details'
+  )
 }
+
 
 // ─── MODULE 4.5: ARCHIVE FUNCTIONS ───
 
