@@ -1222,79 +1222,88 @@
           </div>
         </div>
 
-        <div
-         v-if="showPreviewModal"
+       <div
+  v-if="showPreviewModal && previewDocument"
   class="modal-overlay"
-  @click.self="showPreviewModal = false"
+  @click.self="closePreview"
 >
-  <div class="modal-card">
-    <h3>{{ previewDoc.title }}</h3>
+  <div class="modal-card preview-modal">
 
-    <p>
-      <strong>Reference Number:</strong>
-      {{ previewDoc.referenceNo }}
-    </p>
+    <div class="preview-header">
+      <div>
+        <p class="eyebrow">Document Details</p>
+        <h2>{{ previewDocument.title }}</h2>
+      </div>
 
-    <p>
-      <strong>Category:</strong>
-      {{ previewDoc.category }}
-    </p>
+      <button @click="closePreview">
+        ✕
+      </button>
+    </div>
 
-    <p>
-      <strong>Document Type:</strong>
-      {{ previewDoc.type }}
-    </p>
+    <div class="preview-badges">
+      <span class="status-pill green">
+        {{ previewDocument.access }}
+      </span>
 
-    <p>
-      <strong>Access Level:</strong>
-      {{ previewDoc.access }}
-    </p>
+      <span class="status-pill">
+        {{ previewDocument.status }}
+      </span>
 
-    <p>
-      <strong>Status:</strong>
-      {{ previewDoc.status }}
-    </p>
+      <span class="status-pill">
+        Version {{ previewDocument.version }}
+      </span>
+    </div>
 
-    <p>
-      <strong>Effective Date:</strong>
-      {{ previewDoc.effectiveDate }}
-    </p>
+    <div class="preview-grid">
 
-    <p>
-      <strong>Department:</strong>
-      {{ previewDoc.departmentTag }}
-    </p>
+      <div class="info-card">
+        <span>Reference Number</span>
+        <strong>{{ previewDocument.referenceNo }}</strong>
+      </div>
 
-    <p>
-      <strong>Summary:</strong>
-      {{ previewDoc.summary }}
-    </p>
+      <div class="info-card">
+        <span>Category</span>
+        <strong>{{ previewDocument.category }}</strong>
+      </div>
 
-    <button
-      class="primary"
-      @click="showPreviewModal = false"
-    >
-      Close
-    </button>
+      <div class="info-card">
+        <span>Document Type</span>
+        <strong>{{ previewDocument.type }}</strong>
+      </div>
+
+      <div class="info-card">
+        <span>Department</span>
+        <strong>{{ previewDocument.departmentTag }}</strong>
+      </div>
+
+      <div class="info-card">
+        <span>Effective Date</span>
+        <strong>{{ previewDocument.effectiveDate }}</strong>
+      </div>
+
+      <div class="info-card">
+        <span>Total Views</span>
+        <strong>{{ previewDocument.totalViews || 0 }}</strong>
+      </div>
+
+    </div>
+
+    <div class="summary-card">
+      <h4>Document Summary</h4>
+      <p>{{ previewDocument.summary }}</p>
+    </div>
+
+    <div class="button-row">
+
+      <button @click="closePreview">
+        Close
+      </button>
+    </div>
+
   </div>
 </div>
 
-<div v-if="showPreviewModal" class="modal-overlay">
-  <div class="modal">
-    <h3>{{ previewDocument?.title }}</h3>
 
-    <p><strong>Reference:</strong> {{ previewDocument?.referenceNumber }}</p>
-    <p><strong>Category:</strong> {{ previewDocument?.category }}</p>
-    <p><strong>Type:</strong> {{ previewDocument?.type }}</p>
-    <p><strong>Status:</strong> {{ previewDocument?.status }}</p>
-    <p><strong>Version:</strong> {{ previewDocument?.version }}</p>
-    <p><strong>Summary:</strong> {{ previewDocument?.summary }}</p>
-
-    <button @click="closePreview">
-      Close
-    </button>
-  </div>
-</div>
 
         <!-- ─── AUDIT LOG ─── -->
         <div

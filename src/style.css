@@ -1426,3 +1426,51 @@ mark {
 .toast.error p {
   color: #b00020;
 }
+
+.preview-modal{
+  width:900px;
+  max-width:95vw;
+}
+
+.preview-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:20px;
+}
+
+.preview-badges{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.preview-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.info-card{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:14px;
+}
+
+.info-card span{
+  display:block;
+  color:#64748b;
+  font-size:12px;
+  margin-bottom:4px;
+}
+
+.summary-card{
+  background:white;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:20px;
+}
