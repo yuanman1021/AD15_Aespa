@@ -1275,7 +1275,11 @@
 </div>
 
         <!-- ─── AUDIT LOG ─── -->
-        <div class="wide-card">
+        <div
+            v-if="session === 'Admin'"
+            class="wide-card"
+        >
+
           <div class="section-title">
             <div>
               <p class="eyebrow">Document Audit Trail</p>
@@ -1303,7 +1307,11 @@
           </div>
         </div>
 
+        
+
       </section>  
+
+      
 
       <!-- SMART SUPPORT -->
       <section v-if="screen === 'smart'" class="grid-two">
@@ -2862,7 +2870,43 @@ const versionForm = ref({
   fileName: '',
   fileObject: null
 })
-const documentAuditLog = ref([])
+const documentAuditLog = ref([
+  {
+     id: 1,
+    actionType: 'upload',
+    actionLabel: 'Document Uploaded',
+    documentTitle: 'Employee Leave Policy 2026',
+    actionDetails: 'Uploaded by Administrator',
+    createdAt: '19 Jun 2026 10:00 AM'
+  },
+  {
+    id: 2,
+    actionType: 'classification',
+    actionLabel: 'AI Classification Approved',
+    documentTitle: 'Promotion Guidelines',
+    actionDetails: 'Category approved as Promotion',
+    createdAt: '19 Jun 2026 10:15 AM'
+  },
+  {
+    id: 3,
+    actionType: 'archive',
+    actionLabel: 'Document Archived',
+    documentTitle: 'Disciplinary Action Procedures',
+    actionDetails: 'Superseded by newer circular',
+    createdAt: '19 Jun 2026 10:30 AM'
+  },
+  {
+    id: 4,
+    actionType: 'version',
+    actionLabel: 'New Version Uploaded',
+    documentTitle: 'Promotion Guidelines',
+    actionDetails: 'Version 2.0 uploaded',
+    createdAt: '19 Jun 2026 11:00 AM'
+
+  }
+])
+
+
 const fileInputRef = ref(null)
 const versionFileInputRef = ref(null)
 
