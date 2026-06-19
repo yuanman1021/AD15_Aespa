@@ -84,11 +84,11 @@ This index table provides a quick reference for locating the frontend implementa
 
 | Module | Frontend Script |
 |---|---|
-| Guest Access Module | • [Public Portal Interface](src/App.vue#L55-L134)<br>• [Search Results Interface](src/App.vue#L135-L175)<br>• [Public Document Details Modal](src/App.vue#L176-L244) |
-| User Registration and Login Module | • [User Login Interface](src/App.vue#L284-L317)<br>• [User Registration Interface](src/App.vue#L318-L356)<br>• [Password Reset Interface](src/App.vue#L395-L444)<br>• [MFA Verification Interface](src/App.vue#L303-L311) |
-| Profile Management Module | • [User Profile Interface](src/App.vue#L446-L470)<br>• [Edit Profile Form](src/App.vue#L471-L512)<br>• [Notification Preference Settings](src/App.vue#L502-L512)<br>• [Account Deactivation Interface](src/App.vue#L545-L585)<br>• [Change Password Interface](src/App.vue#L588-L630) |
-| Role and Permission Control Module | • [Role Management Interface](src/App.vue#L1933-L2007)<br>• [User Account Management Table](src/App.vue#L2009-L2059)<br>• [System Activity Logs Interface](src/App.vue#L2062-L2084) |
-| Administrator Authentication Module | • [Administrator Login Interface](src/App.vue#L358-L391)<br>• [Administrator Workspace](src/App.vue#L1854-L1931) |
+| Guest Access Module | • [Public Portal Search Interface](src/App.vue#L55-L88)<br>• [Search Results Interface](src/App.vue#L132-L169)<br>• [Public Document Details Modal](src/App.vue#L170-L243) |
+| User Registration and Login Module | • [Authentication Overview Panel](src/App.vue#L247-L269)<br>• [Login/Register/Admin Tab Navigation](src/App.vue#L271-L280)<br>• [User Login Form](src/App.vue#L282-L316)<br>• [User Registration Form](src/App.vue#L318-L356)<br>• [Password Reset Modal](src/App.vue#L393-L443)<br>|
+| Profile Management Module | • [User Profile Display Card](src/App.vue#L447-L468)<br>• [Edit Profile Form](src/App.vue#L470-L510)<br>• [Notification Preference Dropdown](src/App.vue#L494-L505)<br>• [Account Security Settings Cards](src/App.vue#L512-L543)<br>• [Account Deactivation Request Modal](src/App.vue#L545-L585)<br>• [Change Password Modal](src/App.vue#L588-L630)<br>|
+| Administrator Authentication Module | • [Administrator Login Form](src/App.vue#L358-L390)<br>• [Administrator Workspace Overview](src/App.vue#L2028-L2038)<br> |
+| Role and Permission Control Module | • [Role and Permission Control Interface](src/App.vue#L2105-L2135)<br>• [Create/Edit Role Modal](src/App.vue#L2137-L2179)<br>• [User Account Management Table](src/App.vue#L2181-L2232)<br>• [System Activity Logs Interface](src/App.vue#L2235-L2259)<br> |
 
 ---
 
@@ -97,11 +97,11 @@ This index table provides a quick reference for locating the frontend implementa
 
 | Module | Frontend Script |
 |---|---|
-| Document Upload Module | • [Document Upload Interface](src/App.vue#L648-L777) |
-| Document Classification and Categorization Module | • [AI Classification Review Interface](src/App.vue#L778-L890)<br>• [Classification Approval Interface](src/App.vue#L842-L887) |
-| Document Storage Repository Module | • [Document Repository Table](src/App.vue#L891-L1004)<br>• [Document Audit Trail](src/App.vue#L1139-L1167) |
-| Document Search and Filter Module | • [Repository Search Interface](src/App.vue#L891-L1004)<br>• [Repository Filter Controls](src/App.vue#L901-L942)<br>• [Repository Result Table](src/App.vue#L943-L1004) |
-| Document Update and Archive Module | • [Archive Document Modal](src/App.vue#L1005-L1052)<br>• [Upload New Version Modal](src/App.vue#L1053-L1138) |
+| Document Upload Module | • [Document Upload Interface](src/App.vue#L497-L640) |
+| Document Classification and Categorization Module | • [AI Classification Review Interface](src/App.vue#L641-L753)<br>• [Classification Approval Interface](src/App.vue#L710-L747) |
+| Document Storage Repository Module | • [Document Repository Table](src/App.vue#L754-L891)<br>• [Document Preview Interface](src/App.vue#L1032-L1084)<br>• [Document Audit Trail](src/App.vue#L1088-L1125) |
+| Document Search and Filter Module | • [Repository Search Interface](src/App.vue#L754-L891)<br>• [Repository Filter Controls](src/App.vue#L769-L815)<br>• [Repository Result Table](src/App.vue#L828-L891) |
+| Document Update and Archive Module | • [Archive Document Modal](src/App.vue#L900-L947)<br>• [Upload New Version Modal](src/App.vue#L948-L1029)<br>• [Version Management Interface](src/App.vue#L948-L1029) |
 
 ---
 
