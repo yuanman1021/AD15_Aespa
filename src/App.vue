@@ -997,7 +997,7 @@
                   <th>Document</th>
                   <th>Reference No.</th>
                   <th>Category</th>
-                  <th>Department</th>
+                 
                   <th>Access</th>
                   <th>Status</th>
                   <th>Effective Date</th>
@@ -1018,7 +1018,7 @@
                   </td>
                   <td>{{ doc.referenceNo }}</td>
                   <td>{{ doc.category }}</td>
-                  <td>{{ doc.departmentTag || '—' }}</td>
+              
                   <td>
                     <span :class="{
                       'status-pill green': doc.access === 'Public',
@@ -1036,14 +1036,12 @@
                   <td>{{ doc.effectiveDate || '—' }}</td>
                   <td>{{ doc.totalViews || 0 }}</td>
                     <td>
+
   <div class="action-group">
 
-    <button
-      class="secondary"
-      @click="previewRepositoryDoc(doc)"
-    >
-      View Details
-    </button>
+    <button @click="openPreview(doc)">
+  View Details
+</button>
 
     <button
       v-if="session === 'User' || session === 'Admin'"
@@ -1077,6 +1075,7 @@
       Restore
     </button>
 
+    
 
   </div>
 
@@ -1275,6 +1274,23 @@
       class="primary"
       @click="showPreviewModal = false"
     >
+      Close
+    </button>
+  </div>
+</div>
+
+<div v-if="showPreviewModal" class="modal-overlay">
+  <div class="modal">
+    <h3>{{ previewDocument?.title }}</h3>
+
+    <p><strong>Reference:</strong> {{ previewDocument?.referenceNumber }}</p>
+    <p><strong>Category:</strong> {{ previewDocument?.category }}</p>
+    <p><strong>Type:</strong> {{ previewDocument?.type }}</p>
+    <p><strong>Status:</strong> {{ previewDocument?.status }}</p>
+    <p><strong>Version:</strong> {{ previewDocument?.version }}</p>
+    <p><strong>Summary:</strong> {{ previewDocument?.summary }}</p>
+
+    <button @click="closePreview">
       Close
     </button>
   </div>
@@ -2504,6 +2520,26 @@ async function loadSavedDocuments() {
   }
 }
 
+function downloadDocument(doc) {
+  addAuditEntry(
+    'download',
+    doc.title,
+    'Document downloaded'
+  )
+
+  toast.value = `${doc.title} downloaded successfully`
+}
+
+function openPreview(doc) {
+  previewDocument.value = doc
+  showPreviewModal.value = true
+}
+
+function closePreview() {
+  showPreviewModal.value = false
+  previewDocument.value = null
+}
+
 onMounted(async () => {
   await loadDocuments()
   await loadRecommendations()
@@ -2860,6 +2896,10 @@ const uploadForm = ref({
 })
 
 // ── Subsystem 2 new reactive state ──
+
+const showPreviewModal = ref(false)
+const previewDocument = ref(null)
+
 const repoCategory = ref('')
 const repoStatus = ref('')
 const repoAccess = ref('')
