@@ -75,10 +75,9 @@ The prototype includes the following main functions:
 
 
 ---
-
 ## 2. GitHub Index Table: Module to Frontend Script Mapping
 
-This table helps lecturers, teammates and reviewers quickly locate the frontend implementation for each functional module in this repository. Since this prototype is built mainly in one Vue file, most module interfaces are implemented in `src/App.vue`, while reusable UI elements are stored in `src/components/`.
+This index table provides a quick reference for locating the frontend implementation of each functional module in the repository. Since most frontend interfaces are implemented in one main Vue file, the main module links point to `src/App.vue`, while reusable UI components are stored in `src/components/`.
 
 ## Subsystem 1: User and Access Management
 **Developer:** Lee May Yan
@@ -111,12 +110,21 @@ This table helps lecturers, teammates and reviewers quickly locate the frontend 
 
 | Module | Frontend Script |
 |---|---|
-| Smart Search Module | • [Smart Search Interface](src/App.vue#L1170-L1232)<br>• [Smart Search Results Interface](src/App.vue#L1374-L1421)<br>• [Trending Documents Interface](src/App.vue#L1548-L1572)<br>• [Frequently Used Policies Interface](src/App.vue#L1574-L1598) |
-| FAQ and Knowledge Assistance Module | • [HR Chatbot Interface](src/App.vue#L1233-L1292)<br>• [Escalation Request Interface](src/App.vue#L1293-L1369)<br>• [FAQ Section Interface](src/App.vue#L1531-L1549)<br>• [Document Summary Generation Interface](src/App.vue#L1476-L1489) |
-| Personalized Recommendation Module | • [Recommended Documents Interface](src/App.vue#L1423-L1478)<br>• [AI Document Summary Panel](src/App.vue#L1479-L1491)<br>• [Recommendation Report Interface](src/App.vue#L1494-L1526) |
-| Notification and Update Alert Module | • [Notification Preferences Interface](src/App.vue#L1616-L1657)<br>• [Smart Alerts Interface](src/App.vue#L1658-L1700)<br>• [Recent Notifications Panel](src/App.vue#L1701-L1743)<br>• [User Feedback Interface](src/App.vue#L1745-L1769) |
-| Saved Documents and Personal Storage Module | • [Save Favourite Documents from Search Results](src/App.vue#L1403-L1410)<br>• [Save Favourite Documents from Recommendations](src/App.vue#L1456-L1463)<br>• [Personal Storage Interface](src/App.vue#L1775-L1853)<br>• [Personal Notes Interface](src/App.vue#L1784-L1802)<br>• [Remove Favourite Document Interface](src/App.vue#L1829-L1843) |
+| Smart Search Module | • [Smart Search Interface](src/App.vue#L1170-L1232)<br>• [Smart Search Results Interface](src/App.vue#L1374-L1421) |
+| FAQ and Knowledge Assistance Module | • [HR Chatbot Interface](src/App.vue#L1233-L1292)<br>• [Escalation Request Interface](src/App.vue#L1293-L1369)<br>• [FAQ Section](src/App.vue#L1531-L1549) |
+| Personalized Recommendation Module | • [Recommended Documents Interface](src/App.vue#L1423-L1478)<br>• [AI Document Summary Panel](src/App.vue#L1479-L1491)<br>• [Recommendation Report Interface](src/App.vue#L1494-L1530) |
+| Notification and Update Alert Module | • [Notification Preferences Interface](src/App.vue#L1616-L1657)<br>• [Smart Alerts Interface](src/App.vue#L1658-L1700)<br>• [Recent Notifications Panel](src/App.vue#L1701-L1743) |
+| Saved Documents and Personal Storage Module | • [Saved Documents Overview](src/App.vue#L1601-L1614)<br>• [Personal Storage Interface](src/App.vue#L1775-L1853)<br>• [Personal Notes Interface](src/App.vue#L1784-L1802) |
 
+---
+
+## Shared Components
+
+| Component | Frontend Script |
+|---|---|
+| Reusable Input Field | • [InputField Component](src/components/InputField.vue) |
+| Reusable Statistic Card | • [StatCard Component](src/components/StatCard.vue) |
+| Reusable Setting Card | • [SettingCard Component](src/components/SettingCard.vue) |
 ---
 
 ## 3. Technology Used
