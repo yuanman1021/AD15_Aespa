@@ -649,7 +649,7 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.1 — Document Upload</p>
+              <p class="eyebrow">Document Upload</p>
               <h3>Upload HR Document</h3>
             </div>
             <div style="display:flex;gap:10px;">
@@ -779,7 +779,7 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.2 — AI Classification Review</p>
+              <p class="eyebrow">AI Classification Review</p>
               <h3>Suggested Document Categories</h3>
             </div>
             <button @click="refreshClassification">Refresh Suggestions</button>
@@ -892,7 +892,7 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Module 4.3 &amp; 4.4 — Repository &amp; Search</p>
+              <p class="eyebrow">Repository &amp; Search</p>
               <h3>Search and Manage Documents</h3>
             </div>
             <button class="primary" @click="openNewVersionModal">Upload New Version</button>
@@ -1007,7 +1007,7 @@
           <div class="modal-card">
             <div class="section-title" style="margin-bottom:16px;">
               <div>
-                <p class="eyebrow">Module 4.5 — Archive Document</p>
+                <p class="eyebrow">Archive Document</p>
                 <h3>Archive: {{ archiveTarget?.referenceNo }}</h3>
               </div>
               <button @click="showArchiveModal = false">✕</button>
