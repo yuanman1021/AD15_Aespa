@@ -812,7 +812,9 @@
         </div>
 
         <!-- ─── MODULE 4.2 AI CLASSIFICATION REVIEW ─── -->
-        <div class="wide-card">
+        <div v-if="session === 'Admin'"
+        class="wide-card">
+
           <div class="section-title">
             <div>
               <p class="eyebrow">AI Classification Review</p>
@@ -1027,8 +1029,8 @@
                   </td>
                   <td>{{ doc.effectiveDate || '—' }}</td>
                   <td>{{ doc.totalViews || 0 }}</td>
-                  <td>
-      <div class="action-group">
+                    <td>
+  <div class="action-group">
 
     <button
       class="secondary"
@@ -1068,6 +1070,7 @@
     >
       Restore
     </button>
+
 
   </div>
 
