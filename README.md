@@ -110,11 +110,11 @@ This index table provides a quick reference for locating the frontend implementa
 
 | Module | Frontend Script |
 |---|---|
-| Smart Search Module | • [Smart Search Interface](src/App.vue#L1170-L1232)<br>• [Smart Search Results Interface](src/App.vue#L1374-L1421) |
-| FAQ and Knowledge Assistance Module | • [HR Chatbot Interface](src/App.vue#L1233-L1292)<br>• [Escalation Request Interface](src/App.vue#L1293-L1369)<br>• [FAQ Section](src/App.vue#L1531-L1549) |
-| Personalized Recommendation Module | • [Recommended Documents Interface](src/App.vue#L1423-L1478)<br>• [AI Document Summary Panel](src/App.vue#L1479-L1491)<br>• [Recommendation Report Interface](src/App.vue#L1494-L1530) |
-| Notification and Update Alert Module | • [Notification Preferences Interface](src/App.vue#L1616-L1657)<br>• [Smart Alerts Interface](src/App.vue#L1658-L1700)<br>• [Recent Notifications Panel](src/App.vue#L1701-L1743) |
-| Saved Documents and Personal Storage Module | • [Saved Documents Overview](src/App.vue#L1601-L1614)<br>• [Personal Storage Interface](src/App.vue#L1775-L1853)<br>• [Personal Notes Interface](src/App.vue#L1784-L1802) |
+| Smart Search Module | • [Smart Search Interface](src/App.vue#L1344-L1404)<br>• [Smart Search Results Interface](src/App.vue#L1545-L1592)<br>• [Trending Documents Interface](src/App.vue#L1722-L1746)<br>• [Frequently Used Policies Interface](src/App.vue#L1748-L1772) |
+| FAQ and Knowledge Assistance Module | • [HR Chatbot Interface](src/App.vue#L1406-L1463)<br>• [Escalation Request Interface](src/App.vue#L1464-L1493)<br>• [FAQ Section Interface](src/App.vue#L1702-L1720)<br>• [Document Summary Generation Interface](src/App.vue#L1650-L1663) |
+| Personalized Recommendation Module | • [Recommended Documents Interface](src/App.vue#L1594-L1648)<br>• [AI Document Summary Panel](src/App.vue#L1650-L1663)<br>• [Recommendation Report Interface](src/App.vue#L1665-L1699) |
+| Notification and Update Alert Module | • [Notification Preferences Interface](src/App.vue#L1787-L1828)<br>• [Smart Alerts Interface](src/App.vue#L1830-L1871)<br>• [Recent Notifications Panel](src/App.vue#L1873-L1914)<br>• [User Feedback Interface](src/App.vue#L1916-L1944) |
+| Saved Documents and Personal Storage Module | • [Save Favourite Documents from Search Results](src/App.vue#L1577-L1580)<br>• [Save Favourite Documents from Recommendations](src/App.vue#L1630-L1633)<br>• [Personal Storage Interface](src/App.vue#L1946-L2025)<br>• [Personal Notes Interface](src/App.vue#L1954-L1979)<br>• [Remove Favourite Document Interface](src/App.vue#L2015-L2017) |
 
 ---
 
