@@ -667,15 +667,30 @@
 
 
         <!-- ─── MODULE 4.1 DOCUMENT UPLOAD ─── -->
-        <div class="wide-card">
+        <div v-if="session === 'Admin'"
+        class="wide-card">
+
           <div class="section-title">
             <div>
               <p class="eyebrow">Document Upload</p>
               <h3>Upload HR Document</h3>
             </div>
             <div style="display:flex;gap:10px;">
-              <button @click="saveDocumentAsDraft">Save as Draft</button>
-              <button class="primary" @click="uploadDocument">Upload &amp; Submit for Review</button>
+              <button
+                class="primary"
+                @click="uploadDocument"
+                :disabled="session !== 'Admin'"
+              >
+                Upload & Submit for Review
+              </button>
+
+              <button
+                 @click="saveDocumentAsDraft"
+                :disabled="session !== 'Admin'"
+                >
+                Save as Draft
+            </button>
+
             </div>
           </div>
 
