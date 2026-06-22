@@ -3525,6 +3525,11 @@ function confirmArchive() {
   archiveTarget.value = null
 }
 
+function archiveDocument(doc) {
+  archiveTarget.value = doc
+  showArchiveModal.value = true
+}
+
 // ─── MODULE 4.5: VERSION MANAGEMENT FUNCTIONS ───
 
 function openNewVersionModal() {
