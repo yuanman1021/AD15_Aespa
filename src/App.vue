@@ -3006,6 +3006,19 @@ const filteredDocs = computed(() => {
 
 const repositoryDocs = computed(() => {
   return documents.value.filter((doc) => {
+
+    // Access Control
+    if (session.value === 'Guest' && doc.access !== 'Public') {
+      return false
+    }
+
+    if (
+      session.value === 'User' &&
+      doc.access === 'Restricted'
+    ) {
+      return false
+    }
+
     const searchText = `${doc.title} ${doc.referenceNo} ${doc.category}`.toLowerCase()
     const matchesQuery = !repoQuery.value || searchText.includes(repoQuery.value.toLowerCase())
     const matchesType = !repoType.value || doc.type === repoType.value
