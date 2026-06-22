@@ -3539,6 +3539,18 @@ function openNewVersionModal() {
   showVersionModal.value = true
 }
 
+function openVersionModal(doc) {
+  versionForm.value = {
+    documentId: doc.documentId,
+    changeSummary: '',
+    updateType: '',
+    newEffectiveDate: '',
+    fileName: '',
+    fileObject: null
+  }
+  showVersionModal.value = true
+}
+
 function selectDocForVersion(doc) {
   selectedDoc.value = doc
   openNewVersionModal()
