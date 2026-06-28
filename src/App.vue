@@ -10,7 +10,7 @@
       </div>
 
       <div class="session-card">
-        <span>Current access</span>
+        <span>{{ t('currentAccess') }}</span>
         <strong>{{ session }}</strong>
         <small>{{ sessionText }}</small>
       </div>
@@ -22,12 +22,12 @@
           :class="{ active: screen === item.id }"
           @click="screen = item.id"
         >
-          <span>{{ item.label }}</span>
+          <span>{{ t(item.labelKey) }}</span>
         </button>
       </nav>
 
       <button class="ghost-button" @click="logoutPrototype">
-        Logout 
+        {{ t('logout') }}
       </button>
     </aside>
 
@@ -39,15 +39,22 @@
         </div>
 
         <div class="top-actions">
-         <button @click="screen = 'auth'; authMode = 'login'">User Login</button>
+          <button @click="toggleLanguage">
+            {{ language === 'en' ? 'BM' : 'EN' }}
+          </button>
+
+          <button @click="screen = 'auth'; authMode = 'login'">
+            {{ t('userLogin') }}
+          </button>
+
           <button class="primary" @click="screen = 'auth'; authMode = 'admin'">
-            Admin Login
+            {{ t('adminLogin') }}
           </button>
         </div>
       </header>
 
       <div v-if="toast" :class="['toast', toastType]">
-        <span>System message</span>
+        <span>{{ t('systemMessage') }}</span>
         <p>{{ toast }}</p>
         <button @click="toast = ''">×</button>
       </div>
@@ -55,16 +62,14 @@
       <!-- PUBLIC PORTAL -->
       <section v-if="screen === 'public'" class="grid-two">
         <div class="hero-card">
-          <p class="eyebrow">Guest Access</p>
-          <h3>Search official HR documents without logging in.</h3>
-          <p>
-            Search and preview public HR policies, circulars and guidelines.
-          </p>
+          <p class="eyebrow">{{ t('guestAccess') }}</p>
+          <h3>{{ t('publicTitle') }}</h3>
+          <p>{{ t('publicDesc') }}</p>
 
           <div class="search-box">
             <input
               v-model="query"
-              placeholder="Search by title, reference number or category..."
+              :placeholder="t('searchPlaceholder')"
             />
 
             <select v-model="category">
@@ -99,19 +104,19 @@
 
           <dl>
             <div>
-              <dt>Reference</dt>
+              <dt>{{ t('reference') }}</dt>
               <dd>{{ selectedDoc.referenceNo }}</dd>
             </div>
             <div>
-              <dt>Category</dt>
+              <dt>{{ t('category') }}</dt>
               <dd>{{ selectedDoc.category }}</dd>
             </div>
             <div>
-              <dt>Type</dt>
+              <dt>{{ t('type') }}</dt>
               <dd>{{ selectedDoc.type }}</dd>
             </div>
             <div>
-              <dt>Status</dt>
+              <dt>{{ t('status') }}</dt>
               <dd>{{ selectedDoc.status }}</dd>
             </div>
           </dl>
@@ -121,23 +126,23 @@
             class="primary full"
             @click="openDocumentDetails(selectedDoc)"
           >
-            Open Public Details
+            {{ t('openPublicDetails') }}
           </button>
 
           <button v-else class="primary full" @click="screen = 'auth'">
-            Register / Login to Access
+            {{ t('registerLoginAccess') }}
           </button>
         </div>
 
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Search Results</p>
-              <h3>{{ filteredDocs.length }} document(s) found</h3>
+              <p class="eyebrow">{{ t('searchResults') }}</p>
+              <h3>{{ filteredDocs.length }} {{ t('documentsFound') }}</h3>
             </div>
 
             <button @click="screen = 'auth'; authMode = 'register'">
-              Request Account Registration
+              {{ t('requestRegistration') }}
             </button>
           </div>
 
@@ -162,81 +167,77 @@
             </button>
 
             <div v-if="filteredDocs.length === 0" class="empty-state">
-              No matching documents found. Try another keyword or category.
+              {{ t('noMatchingDocuments') }}
             </div>
           </div>
         </div>
-       <div
-    v-if="publicDetailsModalOpen"
-    class="modal-overlay"
-    @click.self="publicDetailsModalOpen = false"
-  >
+        <div
+          v-if="publicDetailsModalOpen"
+          class="modal-overlay"
+          @click.self="publicDetailsModalOpen = false"
+        >
     <div class="modal-card public-detail-modal">
       <div class="section-title">
         <div>
-          <p class="eyebrow">Public Document Details</p>
+          <p class="eyebrow">{{ t('publicDocumentDetails') }}</p>
           <h3>{{ selectedDoc.title }}</h3>
         </div>
 
         <button @click="publicDetailsModalOpen = false">
-          Close
+          {{ t('close') }}
         </button>
       </div>
 
       <div class="public-detail-header">
         <span class="status-pill green">{{ selectedDoc.access }}</span>
         <span class="status-pill">{{ selectedDoc.status }}</span>
-              <span class="status-pill">Version {{ selectedDoc.version }}</span>
+              <span class="status-pill">{{ t('version') }} {{ selectedDoc.version }}</span>
             </div>
 
             <dl>
               <div>
-                <dt>Reference Number</dt>
+                <dt>{{ t('referenceNumber') }}</dt>
                 <dd>{{ selectedDoc.referenceNo }}</dd>
               </div>
               <div>
-                <dt>Category</dt>
+                <dt>{{ t('category') }}</dt>
                 <dd>{{ selectedDoc.category }}</dd>
               </div>
               <div>
-                <dt>Document Type</dt>
+                <dt>{{ t('documentType') }}</dt>
                 <dd>{{ selectedDoc.type }}</dd>
               </div>
               <div>
-                <dt>Effective Date</dt>
+                <dt>{{ t('effectiveDate') }}</dt>
                 <dd>{{ selectedDoc.effectiveDate }}</dd>
               </div>
               <div>
-                <dt>Issuing Department</dt>
+                <dt>{{ t('issuingDepartment') }}</dt>
                 <dd>Johor Human Resource Management Division</dd>
               </div>
               <div>
-                <dt>Document Purpose</dt>
+                <dt>{{ t('documentPurpose') }}</dt>
                 <dd>Provides official guidance for HR-related procedures.</dd>
               </div>
             </dl>
 
             <div class="public-summary-box">
-              <h4>Document Summary</h4>
+              <h4>{{ t('documentSummary') }}</h4>
               <p>{{ selectedDoc.summary }}</p>
             </div>
 
             <div class="public-summary-box">
-              <h4>Prototype Note</h4>
-              <p>
-                This page shows the public document information available to guest users.
-                Additional actions such as download, bookmark, AI chatbot, recommendations
-                and notification subscription require login.
-              </p>
+              <h4>{{ t('prototypeNote') }}</h4>
+              <p>{{ t('prototypeNoteText') }}</p>
             </div>
 
             <div class="button-row">
               <button class="primary" @click="publicDetailsModalOpen = false">
-                Back to Public Portal
+                {{ t('backToPublicPortal') }}
               </button>
 
               <button @click="screen = 'auth'; authMode = 'register'; publicDetailsModalOpen = false">
-                Request Account Registration
+                {{ t('requestRegistration') }}
               </button>
             </div>
           </div>
@@ -246,24 +247,22 @@
       <!-- LOGIN / REGISTER -->
       <section v-if="screen === 'auth'" class="auth-layout">
         <div class="auth-info">
-          <p class="eyebrow">Registration and Login</p>
-          <h3>Secure access using official Johor government email.</h3>
-          <p>
-            Users can register, log in, reset password and use MFA protection.
-          </p>
+          <p class="eyebrow">{{ t('registrationLogin') }}</p>
+          <h3>{{ t('authTitle') }}</h3>
+          <p>{{ t('authDesc') }}</p>
 
           <div class="metric-row">
             <div>
               <strong>JWT</strong>
-              <span>Session control</span>
+              <span>{{ t('sessionControl') }}</span>
             </div>
             <div>
               <strong>MFA</strong>
-              <span>Extra protection</span>
+              <span>{{ t('extraProtection') }}</span>
             </div>
             <div>
               <strong>Lock</strong>
-              <span>Failed login handling</span>
+              <span>{{ t('failedLoginHandling') }}</span>
             </div>
           </div>
         </div>
@@ -276,116 +275,116 @@
               :class="{ selected: authMode === tab.id }"
               @click="authMode = tab.id"
             >
-              {{ tab.label }}
+              {{ t(tab.labelKey) }}
             </button>
           </div>
 
           <div v-if="authMode === 'login'" class="form-panel">
-            <h3>User Login Account</h3>
-            <p>Access full document search and registered features.</p>
+            <h3>{{ t('userLoginAccount') }}</h3>
+            <p>{{ t('userLoginDesc') }}</p>
 
             <InputField
               v-model="loginForm.email"
-              label="Government Email"
+              :label="t('governmentEmail')"
               placeholder="user@johor.gov.my"
             />
 
             <InputField
               v-model="loginForm.password"
-              label="Password"
-              placeholder="Enter password"
+              :label="t('password')"
+              :placeholder="t('enterPassword')"
               type="password"
             />
 
             <InputField
               v-model="loginForm.mfa"
-              label="MFA Code"
-              placeholder="6-digit code if enabled"
+              :label="t('mfaCode')"
+              :placeholder="t('mfaPlaceholder')"
             />
 
             <button class="primary full" @click="userLogin">
-              Login as Registered User
+              {{ t('userLogin') }}
             </button>
 
             <button
               class="link-button"
               @click="resetAccountType = 'user'; resetModalOpen = true"
             >
-              Forgot password?
+              {{ t('forgotPassword') }}
             </button>
           </div>
 
           <div v-if="authMode === 'register'" class="form-panel">
-            <h3>Register Account</h3>
-            <p>Create account using required profile information.</p>
+            <h3>{{ t('registerAccount') }}</h3>
+            <p>{{ t('registerDesc') }}</p>
 
             <InputField
               v-model="registerForm.name"
-              label="Full Name"
-              placeholder="Enter full name"
+              :label="t('fullName')"
+              :placeholder="t('enterFullName')"
             />
 
             <InputField
               v-model="registerForm.email"
-              label="Government Email"
-              placeholder="name@johor.gov.my"
+              :label="t('governmentEmail')"
+              placeholder="user@johor.gov.my"
             />
 
             <InputField
               v-model="registerForm.department"
-              label="Department"
-              placeholder="Human Resource Management Division"
+              :label="t('department')"
+              :placeholder="t('enterDepartment')"
             />
 
             <InputField
               v-model="registerForm.designation"
-              label="Designation Level"
-              placeholder="Officer / Assistant Officer"
+              :label="t('designation')"
+              :placeholder="t('enterDesignation')"
             />
 
             <InputField
               v-model="registerForm.password"
-              label="Password"
-              placeholder="Minimum 8 characters"
+              :label="t('password')"
+              :placeholder="t('passwordPlaceholder')"
               type="password"
             />
 
             <button class="primary full" @click="registerUser">
-              Submit Registration
+              {{ t('submitRegistration') }}
             </button>
           </div>
 
           <div v-if="authMode === 'admin'" class="form-panel">
-            <h3>Administrator Login Account</h3>
-            <p>Dedicated admin login for management functions.</p>
+            <h3>{{ t('adminLoginAccount') }}</h3>
+            <p>{{ t('adminLoginDesc') }}</p>
 
             <InputField
               v-model="adminLoginForm.email"
-              label="Admin Email"
+              :label="t('adminEmail')"
               placeholder="admin@johor.gov.my"
             />
 
             <InputField
               v-model="adminLoginForm.password"
-              label="Password"
-              placeholder="Enter admin password"
+              :label="t('password')"
+              :placeholder="t('enterPassword')"
               type="password"
             />
 
             <InputField
               v-model="adminLoginForm.mfa"
-              label="MFA Code"
-              placeholder="6-digit code"
+              :label="t('mfaCode')"
+              :placeholder="t('mfaPlaceholder')"
             />
 
             <button class="primary full" @click="adminLogin">
-              Login as Administrator
+              {{ t('adminLogin') }}
             </button>
             <button
               class="link-button"
               @click="resetAccountType = 'admin'; resetModalOpen = true"
             >
-              Forgot password?
+              {{ t('forgotPassword') }}
             </button>
           </div>
                 </div>
@@ -394,50 +393,50 @@
           <div class="modal-card reset-form-card">
             <div class="section-title">
               <div>
-                <p class="eyebrow">Account Recovery</p>
+                <p class="eyebrow"> {{ t('accountRecovery') }}y</p>
                 <h3>
-                  {{ resetAccountType === 'admin' ? 'Reset Admin Password' : 'Reset User Password' }}
+                  {{ resetAccountType === 'admin' ? t('resetAdminPassword') : t('resetUserPassword') }}
                 </h3>
               </div>
 
               <button @click="resetModalOpen = false">
-                Cancel
+                {{ t('cancel') }}
               </button>
             </div>
 
             <p class="muted">
               {{
                 resetAccountType === 'admin'
-                  ? 'Enter your administrator email, verification code and new password.'
-                  : 'Enter your registered government email, verification code and new password.'
+                  ? t('resetAdminDesc')
+                  : t('resetUserDesc')
               }}
             </p>
 
             <InputField
               v-model="resetForm.email"
-              :label="resetAccountType === 'admin' ? 'Admin Email' : 'Registered Email'"
-              :placeholder="resetAccountType === 'admin' ? 'admin@johor.gov.my' : 'user@johor.gov.my'"
+              :label="resetAccountType === 'admin' ? t('adminEmail') : t('governmentEmail')"
+              :placeholder="resetAccountType === 'admin' ? t('enterAdminEmail') : t('enterGovernmentEmail')"
             />
 
             <button class="primary full" @click="sendResetLink">
-              Send Reset Link
+              {{ t('sendResetLink') }}
             </button>
 
             <InputField
               v-model="resetForm.code"
-              label="Verification Code"
-              placeholder="Enter code"
+              :label="t('verificationCode')"
+              :placeholder="t('enterCode')"
             />
 
             <InputField
               v-model="resetForm.newPassword"
-              label="New Password"
-              placeholder="Enter new password"
+              :label="t('newPassword')"
+              :placeholder="t('enterNewPassword')"
               type="password"
             />
 
             <button class="secondary full" @click="updatePassword">
-              Update Password
+              {{ t('updatePassword') }}
             </button>
           </div>
         </div>
@@ -473,34 +472,35 @@
 
           <InputField
             v-model="profileForm.name"
-            label="Full Name"
-            placeholder="Nur Aina Rahman"
+            :label="t('fullName')"
+            :placeholder="t('fullNamePlaceholder')"
           />
 
           <InputField
             v-model="profileForm.email"
-            label="Email"
+            :label="t('email')"
+            :placeholder="t('emailPlaceholder')"
             placeholder="aina@johor.gov.my"
           />
 
           <InputField
             v-model="profileForm.department"
-            label="Department"
-            placeholder="Human Resource Management Division"
+            :label="t('department')"
+            :placeholder="t('departmentPlaceholder')"
           />
 
           <InputField
             v-model="profileForm.designation"
-            label="Designation Level"
-            placeholder="Assistant Officer"
+            :label="t('designation')"
+            :placeholder="t('designationPlaceholder')"
           />
 
           <label class="input-group">
-            <span>Notification Preference</span>
+            <span>{{ t('notificationPreference') }}</span>
             <select v-model="notificationFrequency">
-              <option>Instant</option>
-              <option>Daily</option>
-              <option>Weekly</option>
+              <option>{{ t('instant') }}</option>
+              <option>{{ t('daily') }}</option>
+              <option>{{ t('weekly') }}</option>
             </select>
           </label>
 
@@ -513,29 +513,29 @@
           <div class="section-title">
             <h3>Account Security</h3>
             <span :class="mfaEnabled ? 'status-pill green' : 'status-pill amber'">
-              {{ mfaEnabled ? 'MFA Enabled' : 'MFA Disabled' }}
+              {{ mfaEnabled ? t('mfaEnabled') : t('mfaDisabled') }}
             </span>
           </div>
 
           <div class="settings-grid">
             <SettingCard
-              title="Change Password"
-              desc="Update password while logged in."
-              action="Change"
+              :title="t('changePassword')"
+              :desc="t('updatePassword')"
+              :action="t('change')"
               @click="changePasswordModalOpen = true"
             />
 
             <SettingCard
-              title="Enable MFA"
-              desc="Use verification code during login."
-              :action="mfaEnabled ? 'Disable' : 'Enable'"
+              :title="t('enableMfa')"
+              :desc="t('useVerificationCode')"
+              :action="mfaEnabled ? t('disable') : t('enable')"
               @click="toggleMfa"
             />
 
             <SettingCard
-              title="Deactivate Account"
-              desc="Request own account deactivation."
-              action="Request"
+              :title="t('deactivateAccount')"
+              :desc="t('requestAccountDeactivation')"
+              :action="t('request')"
               danger
               @click="deactivationModalOpen = true"
             />
@@ -550,88 +550,86 @@
           <div class="modal-card deactivation-form-card">
             <div class="section-title">
               <div>
-                <p class="eyebrow">Account Deactivation</p>
-                <h3>Request Account Deactivation</h3>
+                <p class="eyebrow">{{ t('accountDeactivation') }}</p>
+                <h3>{{ t('requestAccountDeactivation') }}</h3>
               </div>
 
               <button @click="cancelDeactivationRequest">
-                Cancel
+                {{ t('cancel') }}
               </button>
             </div>
 
             <p class="muted">
-              Submit a request to deactivate your account. The request will be reviewed by an administrator before the account is deactivated.
+              {{ t('deactivationDesc') }}
             </p>
 
             <label class="input-group">
-              <span>Reason for Deactivation</span>
+              <span>{{ t('reasonForDeactivation') }}</span>
               <textarea
                 v-model="deactivationForm.reason"
                 class="feedback-textarea"
-                placeholder="Example: I no longer need access to the Johor HR Knowledge Hub."
+                :placeholder="t('deactivationPlaceholder')"
               ></textarea>
             </label>
 
             <InputField
               v-model="deactivationForm.confirmText"
-              label="Type DEACTIVATE to confirm"
+              :label="t('typeDeactivate')"
               placeholder="DEACTIVATE"
             />
 
             <button class="primary full danger-button" @click="submitDeactivationRequest">
-              Submit Deactivation Request
+              {{ t('submitDeactivation') }}
             </button>
           </div>
         </div>
       </section>
 
-        <div
-          v-if="changePasswordModalOpen"
-          class="modal-overlay"
-          @click.self="cancelChangePassword"
-        >
-          <div class="modal-card">
-            <div class="section-title">
-              <div>
-                <p class="eyebrow">Account Security</p>
-                <h3>Change Password</h3>
-              </div>
-
-              <button @click="cancelChangePassword">
-                Cancel
-              </button>
+      <div
+        v-if="changePasswordModalOpen"
+        class="modal-overlay"
+        @click.self="cancelChangePassword"
+      >
+        <div class="modal-card">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">{{ t('accountSecurity') }}</p>
+              <h3>{{ t('changePassword') }}</h3>
             </div>
 
-            <InputField
-              v-model="changePasswordForm.currentPassword"
-              label="Current Password"
-              placeholder="Enter current password"
-              type="password"
-            />
-
-            <InputField
-              v-model="changePasswordForm.newPassword"
-              label="New Password"
-              placeholder="Enter new password"
-              type="password"
-            />
-
-            <InputField
-              v-model="changePasswordForm.confirmPassword"
-              label="Confirm New Password"
-              placeholder="Re-enter new password"
-              type="password"
-            />
-
-            <button class="primary full" @click="submitChangePassword">
-              Update Password
+            <button @click="cancelChangePassword">
+              {{ t('cancel') }}
             </button>
           </div>
-        </div>
 
-     <!-- =====================================================
-           SUBSYSTEM 2 — KNOWLEDGE AND DOCUMENT MANAGEMENT
-           ===================================================== -->
+          <InputField
+            v-model="changePasswordForm.currentPassword"
+            :label="t('currentPassword')"
+            :placeholder="t('enterCurrentPassword')"
+            type="password"
+          />
+
+          <InputField
+            v-model="changePasswordForm.newPassword"
+            :label="t('newPassword')"
+            :placeholder="t('enterNewPassword')"
+            type="password"
+          />
+
+          <InputField
+            v-model="changePasswordForm.confirmPassword"
+            :label="t('confirmNewPassword')"
+            :placeholder="t('reenterNewPassword')"
+            type="password"
+          />
+
+          <button class="primary full" @click="submitChangePassword">
+            {{ t('updatePassword') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- DOCUMENT MANAGEMENT -->
       <section v-if="screen === 'documents'" class="dashboard-grid">
 
         <!-- Welcome banner -->
@@ -644,26 +642,26 @@
           <p>Browse, search and view HR documents available to your access level.</p>
         </div>
 
-         <div
-  v-if="session === 'Admin'"
-  class="stats-grid"
->
-        <StatCard label="Total Documents" :value="String(documents.length)" note="Repository records" />
-        <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification queue" />
-        <StatCard label="Archived" :value="String(archivedCount)" note="Old circular versions" />
+        <div
+            v-if="session === 'Admin'"
+            class="stats-grid"
+          >
+                  <StatCard label="Total Documents" :value="String(documents.length)" note="Repository records" />
+                  <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification queue" />
+                  <StatCard label="Archived" :value="String(archivedCount)" note="Old circular versions" />
+
+                  <StatCard
+            label="Published"
+            :value="String(documents.filter(d => d.status === 'Published').length)"
+            note="Available documents"
+        />
 
         <StatCard
-  label="Published"
-  :value="String(documents.filter(d => d.status === 'Published').length)"
-  note="Available documents"
-/>
-
-<StatCard
-  label="Restricted"
-  :value="String(documents.filter(d => d.access === 'Restricted').length)"
-  note="Protected documents"
-/>
-</div>
+          label="Restricted"
+          :value="String(documents.filter(d => d.access === 'Restricted').length)"
+          note="Protected documents"
+        />
+        </div>
 
 
         <!-- ─── MODULE 4.1 DOCUMENT UPLOAD ─── -->
@@ -685,7 +683,7 @@
               </button>
 
               <button
-                 @click="saveDocumentAsDraft"
+                @click="saveDocumentAsDraft"
                 :disabled="session !== 'Admin'"
                 >
                 Save as Draft
@@ -938,16 +936,16 @@
               class="primary"
               @click="openNewVersionModal"
             >
-             Upload New Version
+            Upload New Version
             </button>
           </div>
 
           <!-- 5-column filter toolbar -->
           <div class="repo-filters">
             <input
-              v-model="repoQuery"
-              placeholder="Search by title, reference number or category..."
-            />
+                v-model="repoQuery"
+                :placeholder="t('searchPlaceholder')"
+              />
             <select v-model="repoType">
               <option value="">All Types</option>
               <option>Circular</option>
@@ -1545,7 +1543,7 @@
         <div v-if="hasSearched" class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Search Results</p>
+              <p class="eyebrow">{{ t('searchResults') }}</p>
               <h3>Smart Search Result Documents</h3>
             </div>
 
@@ -2302,7 +2300,7 @@ function useLocalStorage(key, defaultValue) {
 
   function submitDeactivationRequest() {
     if (!deactivationForm.value.reason.trim()) {
-     showToast('Please enter a reason for account deactivation.', 'info')
+    showToast('Please enter a reason for account deactivation.', 'info')
       return
     }
 
@@ -2719,19 +2717,19 @@ const suggestedQuestions = [
 ]
 
 const navItems = [
-  { id: 'public', label: 'Public Portal' },
-  { id: 'auth', label: 'Login / Register' },
-  { id: 'profile', label: 'Profile & Security' },
-  { id: 'documents', label: 'Document Management' },
-  { id: 'smart', label: 'Smart Support' },
-  { id: 'personal', label: 'Notifications & Saved' },
-  { id: 'admin', label: 'Admin Workspace' }
+  { id: 'public', labelKey: 'navPublic' },
+  { id: 'auth', labelKey: 'navAuth' },
+  { id: 'profile', labelKey: 'navProfile' },
+  { id: 'documents', labelKey: 'navDocuments' },
+  { id: 'smart', labelKey: 'navSmart' },
+  { id: 'personal', labelKey: 'navPersonal' },
+  { id: 'admin', labelKey: 'navAdmin' }
 ]
 
 const authTabs = [
-  { id: 'login', label: 'User Login' },
-  { id: 'register', label: 'Register' },
-  { id: 'admin', label: 'Admin Login' }
+  { id: 'login', labelKey: 'userLogin' },
+  { id: 'register', labelKey: 'register' },
+  { id: 'admin', labelKey: 'adminLogin' }
 ]
 
 //const categories = ['All', 'Leave Policy', 'Promotion', 'Discipline', 'Salary', 'Loan']
@@ -2766,6 +2764,906 @@ const toastType = ref('success')
 function showToast(message, type = 'success') {
   toast.value = message
   toastType.value = type
+}
+
+const language = useLocalStorage('jhr_language', 'en')
+
+const translations = {
+  en: {
+    // General
+    systemMessage: 'System message',
+    currentAccess: 'Current access',
+    publicMode: 'Public mode',
+    adminSession: 'Administrator session',
+    userSession: 'Registered user session',
+    userLogin: 'User Login',
+    adminLogin: 'Admin Login',
+    register: 'Register',
+    logout: 'Logout',
+    close: 'Close',
+    cancel: 'Cancel',
+    refresh: 'Refresh',
+    clear: 'Clear',
+    save: 'Save',
+    export: 'Export',
+    action: 'Action',
+    actions: 'Actions',
+    status: 'Status',
+    access: 'Access',
+    category: 'Category',
+    type: 'Type',
+    department: 'Department',
+    designation: 'Designation',
+    password: 'Password',
+    email: 'Email',
+    user: 'User',
+    role: 'Role',
+    description: 'Description',
+    question: 'Question',
+
+    // Temporary email example keys
+    'user@johor.gov.my': 'user@johor.gov.my',
+    'admin@johor.gov.my': 'admin@johor.gov.my',
+
+    // Navigation
+    navPublic: 'Public Portal',
+    navAuth: 'Login / Register',
+    navProfile: 'Profile & Security',
+    navDocuments: 'Document Management',
+    navSmart: 'Smart Support',
+    navPersonal: 'Notifications & Saved',
+    navAdmin: 'Admin Workspace',
+
+    // Public Portal
+    guestAccess: 'Guest Access',
+    publicTitle: 'Search official HR documents without logging in.',
+    publicDesc: 'Search and preview public HR policies, circulars and guidelines.',
+    searchPlaceholder: 'Search by title, reference number or category...',
+    searchResults: 'Search Results',
+    documentsFound: 'document(s) found',
+    requestRegistration: 'Request Account Registration',
+    openPublicDetails: 'Open Public Details',
+    registerLoginAccess: 'Register / Login to Access',
+    noMatchingDocuments: 'No matching documents found. Try another keyword or category.',
+    publicDocumentDetails: 'Public Document Details',
+    reference: 'Reference',
+    referenceNumber: 'Reference Number',
+    documentType: 'Document Type',
+    effectiveDate: 'Effective Date',
+    issuingDepartment: 'Issuing Department',
+    issuingDepartmentValue: 'Johor Human Resource Management Division',
+    documentPurpose: 'Document Purpose',
+    documentPurposeValue: 'Provides official guidance for HR-related procedures.',
+    documentSummary: 'Document Summary',
+    prototypeNote: 'Prototype Note',
+    prototypeNoteText: 'This page shows the public document information available to guest users. Additional actions such as download, bookmark, AI chatbot, recommendations and notification subscription require login.',
+    backToPublicPortal: 'Back to Public Portal',
+    version: 'Version',
+
+    // Auth
+    registrationLogin: 'Registration and Login',
+    authTitle: 'Secure access using official Johor government email.',
+    authDesc: 'Users can register, log in, reset password and use MFA protection.',
+    sessionControl: 'Session control',
+    extraProtection: 'Extra protection',
+    failedLoginHandling: 'Failed login handling',
+    userLoginAccount: 'User Login Account',
+    userLoginDesc: 'Access full document search and registered features.',
+    loginRegisteredUser: 'Login as Registered User',
+    governmentEmail: 'Government Email',
+    adminEmail: 'Admin Email',
+    mfaCode: 'MFA Code',
+    mfaPlaceholder: '6-digit code if enabled',
+    forgotPassword: 'Forgot password?',
+    registerAccount: 'Register Account',
+    registerDesc: 'Create account using required profile information.',
+    fullName: 'Full Name',
+    fullNamePlaceholder: 'Enter full name',
+    enterFullName: 'Enter full name',
+    enterGovernmentEmail: 'Enter government email',
+    enterAdminEmail: 'Enter admin email',
+    enterDepartment: 'Enter department',
+    enterDesignation: 'Enter designation',
+    designationLevel: 'Designation Level',
+    departmentPlaceholder: 'Human Resource Management Division',
+    designationPlaceholder: 'Officer / Assistant Officer',
+    passwordPlaceholder: 'Minimum 8 characters',
+    enterPassword: 'Enter password',
+    enterAdminPassword: 'Enter admin password',
+    submitRegistration: 'Submit Registration',
+    adminLoginAccount: 'Administrator Login Account',
+    adminLoginDesc: 'Dedicated admin login for management functions.',
+
+    // Reset Password
+    accountRecovery: 'Account Recovery',
+    resetAdminPassword: 'Reset Admin Password',
+    resetUserPassword: 'Reset User Password',
+    resetAdminDesc: 'Enter your administrator email, verification code and new password.',
+    resetUserDesc: 'Enter your registered government email, verification code and new password.',
+    registeredEmail: 'Registered Email',
+    sendResetLink: 'Send Reset Link',
+    verificationCode: 'Verification Code',
+    enterCode: 'Enter code',
+    enterVerificationCode: 'Enter verification code',
+    newPassword: 'New Password',
+    enterNewPassword: 'Enter new password',
+    reenterNewPassword: 'Re-enter new password',
+    updatePassword: 'Update Password',
+
+    // Profile
+    activeRegisteredUser: 'Active Registered User',
+    notification: 'Notification',
+    profileManagement: 'Profile Management',
+    manageUserProfile: 'Manage User Profile',
+    notificationPreference: 'Notification Preference',
+    saveProfile: 'Save Profile',
+    instant: 'Instant',
+    daily: 'Daily',
+    weekly: 'Weekly',
+    emailPlaceholder: 'aina@johor.gov.my',
+
+    // Security
+    accountSecurity: 'Account Security',
+    mfaEnabled: 'MFA Enabled',
+    mfaDisabled: 'MFA Disabled',
+    changePassword: 'Change Password',
+    changePasswordDesc: 'Update password while logged in.',
+    currentPassword: 'Current Password',
+    confirmNewPassword: 'Confirm New Password',
+    change: 'Change',
+    enableMfa: 'Enable MFA',
+    enableMfaDesc: 'Use verification code during login.',
+    useVerificationCode: 'Use verification code during login.',
+    enable: 'Enable',
+    disable: 'Disable',
+    deactivateAccount: 'Deactivate Account',
+    deactivateDesc: 'Request own account deactivation.',
+    request: 'Request',
+    accountDeactivation: 'Account Deactivation',
+    requestAccountDeactivation: 'Request Account Deactivation',
+    deactivationDesc: 'Submit a request to deactivate your account. The request will be reviewed by an administrator before the account is deactivated.',
+    reasonForDeactivation: 'Reason for Deactivation',
+    deactivationPlaceholder: 'Example: I no longer need access to the Johor HR Knowledge Hub.',
+    typeDeactivate: 'Type DEACTIVATE to confirm',
+    submitDeactivation: 'Submit Deactivation Request',
+    enterCurrentPassword: 'Enter current password',
+    accountDeactivation: 'Account Deactivation',
+    requestAccountDeactivation: 'Request Account Deactivation',
+    deactivationDesc: 'Submit a request to deactivate your account. The request will be reviewed by an administrator before the account is deactivated.',
+    reasonForDeactivation: 'Reason for Deactivation',
+    deactivationPlaceholder: 'Example: I no longer need access to the Johor HR Knowledge Hub.',
+    typeDeactivate: 'Type DEACTIVATE to confirm',
+    submitDeactivation: 'Submit Deactivation Request',
+
+    // Admin Workspace
+    adminWorkspace: 'Administrator Workspace',
+    adminWorkspaceDesc: 'Manage users, permissions, documents, AI suggestions and audit logs.',
+    adminControlDesc: 'Admin can control user access, roles and system records.',
+    users: 'Users',
+    documents: 'Documents',
+    auditEvents: 'Audit Events',
+    registeredAccounts: 'Registered accounts',
+    repositoryRecords: 'Repository records',
+    systemActivityLogs: 'System Activity Logs',
+    systemActivityLogNote: 'System activity logs',
+    hrEscalation: 'HR Escalation',
+    escalationRequestsFromUsers: 'Escalation Requests from Users',
+    submittedAt: 'Submitted At',
+    markResolved: 'Mark Resolved',
+    completed: 'Completed',
+    noEscalationSubmitted: 'No escalation requests submitted yet.',
+    rolePermission: 'Role and Permission Control',
+    createRole: 'Create Role',
+    editRole: 'Edit Role',
+    roleManagement: 'Role Management',
+    createNewRole: 'Create New Role',
+    saveChanges: 'Save Changes',
+    roleName: 'Role Name',
+    roleDescription: 'Role Description',
+    permissions: 'Permissions',
+    roleNamePlaceholder: 'Example: Document Reviewer',
+    roleDescriptionPlaceholder: 'Describe what this role can do...',
+    permissionsPlaceholder: 'Enter permissions separated by comma',
+    userAccountManagement: 'User Account Management',
+    createdAt: 'Created At',
+    updatedAt: 'Updated At',
+    suspend: 'Suspend',
+    reactivate: 'Reactivate',
+    filterLogs: 'Filter Logs',
+
+    // Document Management
+    documentManagement: 'Document Management',
+    documentManagementTitle: 'Upload, classify, store, search and manage HR documents.',
+    administrators: 'Administrators',
+    adminsDocumentDesc: 'Can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.',
+    guestUser: 'Guest & User',
+    guestUserDocumentDesc: 'Browse, search and view HR documents available to your access level.',
+    totalDocuments: 'Total Documents',
+    pendingReview: 'Pending Review',
+    archived: 'Archived',
+    published: 'Published',
+    restricted: 'Restricted',
+    aiClassificationQueue: 'AI classification queue',
+    oldCircularVersions: 'Old circular versions',
+    availableDocuments: 'Available documents',
+    protectedDocuments: 'Protected documents',
+    documentUpload: 'Document Upload',
+    uploadHrDocument: 'Upload HR Document',
+    uploadSubmitReview: 'Upload & Submit for Review',
+    saveAsDraft: 'Save as Draft',
+    documentTitle: 'Document Title',
+    officialReferenceNumber: 'Official Reference Number',
+    issuingAuthority: 'Issuing Authority',
+    expiryDate: 'Expiry Date',
+    departmentTag: 'Department Tag',
+    selectDepartment: '— Select Department —',
+    accessLevel: 'Access Level',
+    language: 'Language',
+    pdfFile: 'PDF File',
+    choosePdfFile: 'Click to choose PDF file',
+    dragDropPdf: 'or drag and drop here · PDF only · Max 20MB',
+    fileSelected: 'File selected',
+    remove: 'Remove',
+
+    // AI Classification
+    aiClassificationReview: 'AI Classification Review',
+    suggestedDocumentCategories: 'Suggested Document Categories',
+    refreshSuggestions: 'Refresh Suggestions',
+    classificationDesc: 'Review and approve or modify the AI-suggested categories and department tags before each document is published.',
+    noClassification: 'No documents waiting for classification review.',
+    aiConfidence: 'AI Confidence',
+    suggestedCategories: 'Suggested Categories',
+    departmentTags: 'Department Tags',
+    modifyCategory: 'Modify Category',
+    modifyDepartmentTag: 'Modify Department Tag',
+    approve: 'Approve',
+    approved: 'Approved',
+    modify: 'Modify',
+    reject: 'Reject',
+
+    // Repository
+    repositorySearch: 'Repository & Search',
+    searchManageDocuments: 'Search and Manage Documents',
+    uploadNewVersion: 'Upload New Version',
+    allTypes: 'All Types',
+    allCategories: 'All Categories',
+    allStatuses: 'All Statuses',
+    allAccessLevels: 'All Access Levels',
+    showing: 'Showing',
+    result: 'result',
+    results: 'results',
+    forText: 'for',
+    document: 'Document',
+    referenceNo: 'Reference No.',
+    views: 'Views',
+    noDocumentsMatch: 'No documents match your filters.',
+    viewDetails: 'View Details',
+    download: 'Download',
+    newVersion: 'New Version',
+    archive: 'Archive',
+    restore: 'Restore',
+
+    // Archive and Version
+    archiveDocument: 'Archive Document',
+    archiveDesc: 'Archiving removes this document from active circulation. Users with saved copies will be notified.',
+    archiveReason: 'Archive Reason',
+    selectReason: '— Select reason —',
+    supersededReason: 'Superseded by newer circular',
+    expiredReason: 'Document has expired',
+    withdrawnReason: 'Officially withdrawn',
+    otherReason: 'Other reason',
+    successorReference: 'Successor Document Reference (if replaced)',
+    additionalNotes: 'Additional Notes',
+    additionalNotesPlaceholder: 'Provide any additional explanation...',
+    confirmArchive: 'Confirm Archive',
+    versionManagement: 'Version Management',
+    documentToUpdate: 'Document to Update',
+    selectDocument: '— Select document —',
+    currentVersion: 'Current',
+    newVersionWillBe: 'New version will be',
+    updateType: 'Update Type',
+    selectType: '— Select type —',
+    amendment: 'Amendment',
+    replacement: 'Replacement',
+    correction: 'Correction',
+    withdrawal: 'Withdrawal',
+    changeSummary: 'Change Summary',
+    changeSummaryPlaceholder: 'Describe what changed in this version...',
+    newPdfFile: 'New PDF File',
+    newEffectiveDate: 'New Effective Date (if changed)',
+
+    // Preview and Audit
+    documentDetails: 'Document Details',
+    totalViews: 'Total Views',
+    documentAuditTrail: 'Document Audit Trail',
+    recentDocumentActions: 'Recent Document Actions',
+    exportLog: 'Export Log',
+    noAuditActions: 'No audit actions recorded yet. Actions will appear here after you upload, classify, archive or update documents.',
+
+    // Smart Support
+    smartSearch: 'Smart Search',
+    smartSearchTitle: 'Search HR policies using normal questions.',
+    smartSearchDesc: 'Type a question and the system will suggest related documents.',
+    smartSearchPlaceholder: 'Example: TASKA subsidy, promotion TBK, SPKN travel...',
+    sortResults: 'Sort Results',
+    relevance: 'Relevance',
+    latestUpdated: 'Latest Updated',
+    titleAz: 'Title A-Z',
+    mostViewed: 'Most Viewed',
+    performSmartSearch: 'Perform Smart Search',
+    clearSearch: 'Clear Search',
+    recentSearchHistory: 'Recent Search History',
+    noRecentSearch: 'No recent search history yet.',
+    hrAssistant: 'HR Assistant',
+    askChatbot: 'Ask the HR Chatbot',
+    suggestedQuestions: 'Suggested questions',
+    chatbotPlaceholder: 'Ask about login, documents, leave, promotion, salary, upload...',
+    send: 'Send',
+    helpful: 'Helpful',
+    notHelpful: 'Not Helpful',
+    escalateHrOfficer: 'Escalate to HR Officer',
+    optionalFeedback: 'Optional chatbot feedback comment...',
+    hrOfficerSupport: 'HR Officer Support',
+    escalateQuestion: 'Escalate Question',
+    questionPlaceholder: 'Enter the question to escalate...',
+    descriptionPlaceholder: 'Describe why this question needs HR officer support...',
+    submitHrOfficer: 'Submit to HR Officer',
+    conversationHistory: 'Conversation History',
+    rating: 'Rating',
+    noConversation: 'No conversation history yet.',
+    escalationRequests: 'Escalation Requests',
+    noEscalation: 'No escalation request submitted yet.',
+    smartSearchResults: 'Smart Search Result Documents',
+    searchResult: 'Search Result',
+    saveDocument: 'Save Document',
+    generateSummary: 'Generate Summary',
+    noMatchingSmartDocument: 'No matching document found. Try searching TASKA, TBK, SPKN, COS, CFS, promotion, or contract.',
+    recommendations: 'Recommendations',
+    recommendedDocuments: 'Recommended Documents',
+    recommended: 'Recommended',
+    reason: 'Reason',
+    relevanceScore: 'Relevance Score',
+    reportIncorrect: 'Report Incorrect',
+    noRecommended: 'No recommended documents available.',
+    aiDocumentSummary: 'AI Document Summary',
+    recommendationReport: 'Recommendation Report',
+    reportIncorrectRecommendation: 'Report Incorrect Recommendation',
+    reporting: 'Reporting',
+    irrelevant: 'Irrelevant',
+    inaccurate: 'Inaccurate',
+    outdated: 'Outdated',
+    inappropriate: 'Inappropriate',
+    others: 'Others',
+    reportDescriptionPlaceholder: 'Explain why this recommendation is incorrect...',
+    submitReport: 'Submit Report',
+    faq: 'FAQ',
+    frequentlyAskedQuestions: 'Frequently Asked Questions',
+    trendingDocuments: 'Trending Documents',
+    popularDocuments: 'Currently Popular HR Documents',
+    trending: 'Trending',
+    score: 'Score',
+    frequentlyUsedPolicies: 'Frequently Used Policies',
+    suggestedFrequentlyUsed: 'Suggested Frequently Used Policies',
+    frequentlyUsed: 'Frequently Used',
+
+    // Personal Storage and Notifications
+    savedNotifications: 'Saved Documents and Notifications',
+    savedNotificationsTitle: 'Keep track of saved documents, notes and policy updates.',
+    savedNotificationsDesc: 'Users receive alerts when relevant or saved documents are updated.',
+    saved: 'Saved',
+    unreadAlerts: 'Unread Alerts',
+    notes: 'Notes',
+    personalCollection: 'Personal collection',
+    policyUpdates: 'Policy updates',
+    personalNotes: 'Personal notes',
+    notificationPreferences: 'Notification Preferences',
+    manageAlerts: 'Manage Alerts',
+    savePreferences: 'Save Preferences',
+    policyUpdatesTitle: 'Policy Updates',
+    policyUpdatesDesc: 'Notify when new relevant documents are published.',
+    savedDocumentUpdates: 'Saved Document Updates',
+    savedDocumentUpdatesDesc: 'Notify when bookmarked documents are replaced.',
+    frequency: 'Frequency',
+    frequencyDesc: 'Choose instant, daily or weekly notifications.',
+    deliveryChannel: 'Delivery Channel',
+    deliveryChannelDesc: 'Choose how notifications are delivered.',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    smartAlerts: 'Smart Alerts',
+    recommendedAlerts: 'Recommended Alerts Based on User Activity',
+    refreshAlerts: 'Refresh Alerts',
+    markRead: 'Mark as Read',
+    markAllRead: 'Mark All as Read',
+    noSmartAlerts: 'No smart alerts available.',
+    recentNotifications: 'Recent Notifications',
+    policyUpdatesAlerts: 'Policy Updates and Alerts',
+    noNotifications: 'No notifications available.',
+    userFeedback: 'User Feedback',
+    submitFeedback: 'Submit Feedback',
+    feedbackCategory: 'Feedback Category',
+    feedbackContent: 'Feedback Content',
+    feedbackPlaceholder: 'Write your feedback here...',
+    systemIssue: 'System Issue',
+    documentIssue: 'Document Issue',
+    chatbotIssue: 'Chatbot Issue',
+    searchIssue: 'Search Issue',
+    suggestion: 'Suggestion',
+    personalStorage: 'Personal Storage',
+    savedPersonalNotes: 'Saved Documents and Personal Notes',
+    personalNote: 'Personal Note',
+    noteContent: 'Note Content',
+    notePlaceholder: 'Write your personal note for this document...',
+    saveNote: 'Save Note',
+    note: 'Note',
+    noPersonalNote: 'No personal note yet.',
+    editNote: 'Edit Note',
+    addNote: 'Add Note',
+    deleteNote: 'Delete Note',
+    noSavedDocuments: 'No saved documents yet. Go to Smart Support and save one.'
+  },
+
+  ms: {
+    // General
+    systemMessage: 'Mesej Sistem',
+    currentAccess: 'Akses Semasa',
+    publicMode: 'Mod awam',
+    adminSession: 'Sesi pentadbir',
+    userSession: 'Sesi pengguna berdaftar',
+    userLogin: 'Log Masuk Pengguna',
+    adminLogin: 'Log Masuk Pentadbir',
+    register: 'Daftar',
+    logout: 'Log Keluar',
+    close: 'Tutup',
+    cancel: 'Batal',
+    refresh: 'Segar Semula',
+    clear: 'Kosongkan',
+    save: 'Simpan',
+    export: 'Eksport',
+    action: 'Tindakan',
+    actions: 'Tindakan',
+    status: 'Status',
+    access: 'Akses',
+    category: 'Kategori',
+    type: 'Jenis',
+    department: 'Jabatan',
+    designation: 'Jawatan',
+    password: 'Kata Laluan',
+    email: 'Emel',
+    user: 'Pengguna',
+    role: 'Peranan',
+    description: 'Penerangan',
+    question: 'Soalan',
+
+    // Temporary email example keys
+    'user@johor.gov.my': 'user@johor.gov.my',
+    'admin@johor.gov.my': 'admin@johor.gov.my',
+
+    // Navigation
+    navPublic: 'Portal Awam',
+    navAuth: 'Log Masuk / Daftar',
+    navProfile: 'Profil & Keselamatan',
+    navDocuments: 'Pengurusan Dokumen',
+    navSmart: 'Sokongan Pintar',
+    navPersonal: 'Notifikasi & Simpanan',
+    navAdmin: 'Ruang Kerja Pentadbir',
+
+    // Public Portal
+    guestAccess: 'Akses Tetamu',
+    publicTitle: 'Cari dokumen rasmi HR tanpa log masuk.',
+    publicDesc: 'Cari dan pratonton polisi HR, pekeliling dan garis panduan awam.',
+    searchPlaceholder: 'Cari mengikut tajuk, nombor rujukan atau kategori...',
+    searchResults: 'Keputusan Carian',
+    documentsFound: 'dokumen dijumpai',
+    requestRegistration: 'Mohon Pendaftaran Akaun',
+    openPublicDetails: 'Buka Butiran Awam',
+    registerLoginAccess: 'Daftar / Log Masuk untuk Akses',
+    noMatchingDocuments: 'Tiada dokumen sepadan dijumpai. Cuba kata kunci atau kategori lain.',
+    publicDocumentDetails: 'Butiran Dokumen Awam',
+    reference: 'Rujukan',
+    referenceNumber: 'Nombor Rujukan',
+    documentType: 'Jenis Dokumen',
+    effectiveDate: 'Tarikh Berkuat Kuasa',
+    issuingDepartment: 'Jabatan Pengeluar',
+    issuingDepartmentValue: 'Bahagian Pengurusan Sumber Manusia Johor',
+    documentPurpose: 'Tujuan Dokumen',
+    documentPurposeValue: 'Menyediakan panduan rasmi untuk prosedur berkaitan HR.',
+    documentSummary: 'Ringkasan Dokumen',
+    prototypeNote: 'Nota Prototaip',
+    prototypeNoteText: 'Halaman ini menunjukkan maklumat dokumen awam yang tersedia kepada pengguna tetamu. Tindakan tambahan seperti muat turun, penanda buku, chatbot AI, cadangan dan langganan notifikasi memerlukan log masuk.',
+    backToPublicPortal: 'Kembali ke Portal Awam',
+    version: 'Versi',
+
+    // Auth
+    registrationLogin: 'Pendaftaran dan Log Masuk',
+    authTitle: 'Akses selamat menggunakan emel rasmi Kerajaan Johor.',
+    authDesc: 'Pengguna boleh mendaftar, log masuk, menetapkan semula kata laluan dan menggunakan perlindungan MFA.',
+    sessionControl: 'Kawalan sesi',
+    extraProtection: 'Perlindungan tambahan',
+    failedLoginHandling: 'Pengendalian log masuk gagal',
+    userLoginAccount: 'Akaun Log Masuk Pengguna',
+    userLoginDesc: 'Akses carian dokumen penuh dan fungsi pengguna berdaftar.',
+    loginRegisteredUser: 'Log Masuk sebagai Pengguna Berdaftar',
+    governmentEmail: 'Emel Kerajaan',
+    adminEmail: 'Emel Pentadbir',
+    mfaCode: 'Kod MFA',
+    mfaPlaceholder: 'Kod 6 digit jika diaktifkan',
+    forgotPassword: 'Lupa kata laluan?',
+    registerAccount: 'Daftar Akaun',
+    registerDesc: 'Cipta akaun menggunakan maklumat profil yang diperlukan.',
+    fullName: 'Nama Penuh',
+    fullNamePlaceholder: 'Masukkan nama penuh',
+    enterFullName: 'Masukkan nama penuh',
+    enterGovernmentEmail: 'Masukkan emel kerajaan',
+    enterAdminEmail: 'Masukkan emel pentadbir',
+    enterDepartment: 'Masukkan jabatan',
+    enterDesignation: 'Masukkan jawatan',
+    designationLevel: 'Tahap Jawatan',
+    departmentPlaceholder: 'Bahagian Pengurusan Sumber Manusia',
+    designationPlaceholder: 'Pegawai / Penolong Pegawai',
+    passwordPlaceholder: 'Minimum 8 aksara',
+    enterPassword: 'Masukkan kata laluan',
+    enterAdminPassword: 'Masukkan kata laluan pentadbir',
+    submitRegistration: 'Hantar Pendaftaran',
+    adminLoginAccount: 'Akaun Log Masuk Pentadbir',
+    adminLoginDesc: 'Log masuk khas pentadbir untuk fungsi pengurusan.',
+    enterCurrentPassword: 'Masukkan kata laluan semasa',
+
+    // Reset Password
+    accountRecovery: 'Pemulihan Akaun',
+    resetAdminPassword: 'Tetapkan Semula Kata Laluan Pentadbir',
+    resetUserPassword: 'Tetapkan Semula Kata Laluan Pengguna',
+    resetAdminDesc: 'Masukkan emel pentadbir, kod pengesahan dan kata laluan baharu.',
+    resetUserDesc: 'Masukkan emel kerajaan berdaftar, kod pengesahan dan kata laluan baharu.',
+    registeredEmail: 'Emel Berdaftar',
+    sendResetLink: 'Hantar Pautan Tetapan Semula',
+    verificationCode: 'Kod Pengesahan',
+    enterCode: 'Masukkan kod',
+    enterVerificationCode: 'Masukkan kod pengesahan',
+    newPassword: 'Kata Laluan Baharu',
+    enterNewPassword: 'Masukkan kata laluan baharu',
+    reenterNewPassword: 'Masukkan semula kata laluan baharu',
+    updatePassword: 'Kemas Kini Kata Laluan',
+
+    // Profile
+    activeRegisteredUser: 'Pengguna Berdaftar Aktif',
+    notification: 'Notifikasi',
+    profileManagement: 'Pengurusan Profil',
+    manageUserProfile: 'Urus Profil Pengguna',
+    notificationPreference: 'Tetapan Notifikasi',
+    saveProfile: 'Simpan Profil',
+    instant: 'Serta-merta',
+    daily: 'Harian',
+    weekly: 'Mingguan',
+    emailPlaceholder: 'aina@johor.gov.my',
+    accountDeactivation: 'Nyahaktif Akaun',
+    requestAccountDeactivation: 'Mohon Nyahaktif Akaun',
+    deactivationDesc: 'Hantar permohonan untuk menyahaktifkan akaun anda. Permohonan ini akan disemak oleh pentadbir sebelum akaun dinyahaktifkan.',
+    reasonForDeactivation: 'Sebab Nyahaktif Akaun',
+    deactivationPlaceholder: 'Contoh: Saya tidak lagi memerlukan akses ke Johor HR Knowledge Hub.',
+    typeDeactivate: 'Taip DEACTIVATE untuk pengesahan',
+    submitDeactivation: 'Hantar Permohonan Nyahaktif',
+
+    // Security
+    accountSecurity: 'Keselamatan Akaun',
+    mfaEnabled: 'MFA Diaktifkan',
+    mfaDisabled: 'MFA Dinyahaktifkan',
+    changePassword: 'Tukar Kata Laluan',
+    changePasswordDesc: 'Kemas kini kata laluan semasa log masuk.',
+    currentPassword: 'Kata Laluan Semasa',
+    confirmNewPassword: 'Sahkan Kata Laluan Baharu',
+    change: 'Tukar',
+    enableMfa: 'Aktifkan MFA',
+    enableMfaDesc: 'Gunakan kod pengesahan semasa log masuk.',
+    useVerificationCode: 'Gunakan kod pengesahan semasa log masuk.',
+    enable: 'Aktifkan',
+    disable: 'Nyahaktifkan',
+    deactivateAccount: 'Nyahaktifkan Akaun',
+    deactivateDesc: 'Mohon nyahaktifkan akaun sendiri.',
+    request: 'Mohon',
+    accountDeactivation: 'Nyahaktif Akaun',
+    requestAccountDeactivation: 'Mohon Nyahaktif Akaun',
+    deactivationDesc: 'Hantar permohonan untuk menyahaktifkan akaun anda. Permohonan ini akan disemak oleh pentadbir sebelum akaun dinyahaktifkan.',
+    reasonForDeactivation: 'Sebab Nyahaktif Akaun',
+    deactivationPlaceholder: 'Contoh: Saya tidak lagi memerlukan akses ke Johor HR Knowledge Hub.',
+    typeDeactivate: 'Taip DEACTIVATE untuk pengesahan',
+    submitDeactivation: 'Hantar Permohonan Nyahaktif',
+
+    // Admin Workspace
+    adminWorkspace: 'Ruang Kerja Pentadbir',
+    adminWorkspaceDesc: 'Urus pengguna, kebenaran, dokumen, cadangan AI dan log audit.',
+    adminControlDesc: 'Pentadbir boleh mengawal akses pengguna, peranan dan rekod sistem.',
+    users: 'Pengguna',
+    documents: 'Dokumen',
+    auditEvents: 'Peristiwa Audit',
+    registeredAccounts: 'Akaun berdaftar',
+    repositoryRecords: 'Rekod repositori',
+    systemActivityLogs: 'Log Aktiviti Sistem',
+    systemActivityLogNote: 'Log aktiviti sistem',
+    hrEscalation: 'Eskalasi HR',
+    escalationRequestsFromUsers: 'Permohonan Eskalasi daripada Pengguna',
+    submittedAt: 'Dihantar Pada',
+    markResolved: 'Tanda Selesai',
+    completed: 'Selesai',
+    noEscalationSubmitted: 'Tiada permohonan eskalasi dihantar.',
+    rolePermission: 'Kawalan Peranan dan Kebenaran',
+    createRole: 'Cipta Peranan',
+    editRole: 'Edit Peranan',
+    roleManagement: 'Pengurusan Peranan',
+    createNewRole: 'Cipta Peranan Baharu',
+    saveChanges: 'Simpan Perubahan',
+    roleName: 'Nama Peranan',
+    roleDescription: 'Penerangan Peranan',
+    permissions: 'Kebenaran',
+    roleNamePlaceholder: 'Contoh: Penyemak Dokumen',
+    roleDescriptionPlaceholder: 'Terangkan fungsi peranan ini...',
+    permissionsPlaceholder: 'Masukkan kebenaran dipisahkan dengan koma',
+    userAccountManagement: 'Pengurusan Akaun Pengguna',
+    createdAt: 'Dicipta Pada',
+    updatedAt: 'Dikemas Kini Pada',
+    suspend: 'Gantung',
+    reactivate: 'Aktifkan Semula',
+    filterLogs: 'Tapis Log',
+
+    // Document Management
+    documentManagement: 'Pengurusan Dokumen',
+    documentManagementTitle: 'Muat naik, klasifikasi, simpan, cari dan urus dokumen HR.',
+    administrators: 'Pentadbir',
+    adminsDocumentDesc: 'Boleh memuat naik dokumen rasmi HR, menyemak cadangan klasifikasi AI, mengurus repositori dokumen dan mengarkibkan pekeliling lama.',
+    guestUser: 'Tetamu & Pengguna',
+    guestUserDocumentDesc: 'Semak imbas, cari dan lihat dokumen HR yang tersedia mengikut tahap akses.',
+    totalDocuments: 'Jumlah Dokumen',
+    pendingReview: 'Menunggu Semakan',
+    archived: 'Diarkibkan',
+    published: 'Diterbitkan',
+    restricted: 'Terhad',
+    aiClassificationQueue: 'Barisan klasifikasi AI',
+    oldCircularVersions: 'Versi pekeliling lama',
+    availableDocuments: 'Dokumen tersedia',
+    protectedDocuments: 'Dokumen dilindungi',
+    documentUpload: 'Muat Naik Dokumen',
+    uploadHrDocument: 'Muat Naik Dokumen HR',
+    uploadSubmitReview: 'Muat Naik & Hantar untuk Semakan',
+    saveAsDraft: 'Simpan sebagai Draf',
+    documentTitle: 'Tajuk Dokumen',
+    officialReferenceNumber: 'Nombor Rujukan Rasmi',
+    issuingAuthority: 'Pihak Berkuasa Pengeluar',
+    expiryDate: 'Tarikh Luput',
+    departmentTag: 'Tag Jabatan',
+    selectDepartment: '— Pilih Jabatan —',
+    accessLevel: 'Tahap Akses',
+    language: 'Bahasa',
+    pdfFile: 'Fail PDF',
+    choosePdfFile: 'Klik untuk pilih fail PDF',
+    dragDropPdf: 'atau seret dan lepas di sini · PDF sahaja · Maksimum 20MB',
+    fileSelected: 'Fail dipilih',
+    remove: 'Buang',
+
+    // AI Classification
+    aiClassificationReview: 'Semakan Klasifikasi AI',
+    suggestedDocumentCategories: 'Kategori Dokumen Dicadangkan',
+    refreshSuggestions: 'Segar Semula Cadangan',
+    classificationDesc: 'Semak dan luluskan atau ubah kategori dan tag jabatan yang dicadangkan oleh AI sebelum setiap dokumen diterbitkan.',
+    noClassification: 'Tiada dokumen menunggu semakan klasifikasi.',
+    aiConfidence: 'Keyakinan AI',
+    suggestedCategories: 'Kategori Dicadangkan',
+    departmentTags: 'Tag Jabatan',
+    modifyCategory: 'Ubah Kategori',
+    modifyDepartmentTag: 'Ubah Tag Jabatan',
+    approve: 'Luluskan',
+    approved: 'Diluluskan',
+    modify: 'Ubah',
+    reject: 'Tolak',
+
+    // Repository
+    repositorySearch: 'Repositori & Carian',
+    searchManageDocuments: 'Cari dan Urus Dokumen',
+    uploadNewVersion: 'Muat Naik Versi Baharu',
+    allTypes: 'Semua Jenis',
+    allCategories: 'Semua Kategori',
+    allStatuses: 'Semua Status',
+    allAccessLevels: 'Semua Tahap Akses',
+    showing: 'Memaparkan',
+    result: 'keputusan',
+    results: 'keputusan',
+    forText: 'untuk',
+    document: 'Dokumen',
+    referenceNo: 'No. Rujukan',
+    views: 'Paparan',
+    noDocumentsMatch: 'Tiada dokumen sepadan dengan tapisan anda.',
+    viewDetails: 'Lihat Butiran',
+    download: 'Muat Turun',
+    newVersion: 'Versi Baharu',
+    archive: 'Arkib',
+    restore: 'Pulihkan',
+
+    // Archive and Version
+    archiveDocument: 'Arkib Dokumen',
+    archiveDesc: 'Pengarkiban akan mengeluarkan dokumen ini daripada edaran aktif. Pengguna yang menyimpan salinan akan dimaklumkan.',
+    archiveReason: 'Sebab Arkib',
+    selectReason: '— Pilih sebab —',
+    supersededReason: 'Digantikan oleh pekeliling baharu',
+    expiredReason: 'Dokumen telah tamat tempoh',
+    withdrawnReason: 'Ditarik balik secara rasmi',
+    otherReason: 'Sebab lain',
+    successorReference: 'Rujukan Dokumen Pengganti (jika diganti)',
+    additionalNotes: 'Nota Tambahan',
+    additionalNotesPlaceholder: 'Berikan penjelasan tambahan...',
+    confirmArchive: 'Sahkan Arkib',
+    versionManagement: 'Pengurusan Versi',
+    documentToUpdate: 'Dokumen untuk Dikemas Kini',
+    selectDocument: '— Pilih dokumen —',
+    currentVersion: 'Semasa',
+    newVersionWillBe: 'Versi baharu ialah',
+    updateType: 'Jenis Kemas Kini',
+    selectType: '— Pilih jenis —',
+    amendment: 'Pindaan',
+    replacement: 'Penggantian',
+    correction: 'Pembetulan',
+    withdrawal: 'Penarikan balik',
+    changeSummary: 'Ringkasan Perubahan',
+    changeSummaryPlaceholder: 'Terangkan perubahan dalam versi ini...',
+    newPdfFile: 'Fail PDF Baharu',
+    newEffectiveDate: 'Tarikh Berkuat Kuasa Baharu (jika berubah)',
+
+    // Preview and Audit
+    documentDetails: 'Butiran Dokumen',
+    totalViews: 'Jumlah Paparan',
+    documentAuditTrail: 'Jejak Audit Dokumen',
+    recentDocumentActions: 'Tindakan Dokumen Terkini',
+    exportLog: 'Eksport Log',
+    noAuditActions: 'Tiada tindakan audit direkodkan lagi. Tindakan akan muncul di sini selepas anda memuat naik, mengklasifikasi, mengarkib atau mengemas kini dokumen.',
+
+    // Smart Support
+    smartSearch: 'Carian Pintar',
+    smartSearchTitle: 'Cari polisi HR menggunakan soalan biasa.',
+    smartSearchDesc: 'Taip soalan dan sistem akan mencadangkan dokumen berkaitan.',
+    smartSearchPlaceholder: 'Contoh: subsidi TASKA, kenaikan pangkat TBK, perjalanan SPKN...',
+    sortResults: 'Susun Keputusan',
+    relevance: 'Kerelevanan',
+    latestUpdated: 'Kemas Kini Terkini',
+    titleAz: 'Tajuk A-Z',
+    mostViewed: 'Paling Banyak Dilihat',
+    performSmartSearch: 'Jalankan Carian Pintar',
+    clearSearch: 'Kosongkan Carian',
+    recentSearchHistory: 'Sejarah Carian Terkini',
+    noRecentSearch: 'Tiada sejarah carian terkini.',
+    hrAssistant: 'Pembantu HR',
+    askChatbot: 'Tanya Chatbot HR',
+    suggestedQuestions: 'Soalan dicadangkan',
+    chatbotPlaceholder: 'Tanya tentang log masuk, dokumen, cuti, kenaikan pangkat, gaji, muat naik...',
+    send: 'Hantar',
+    helpful: 'Membantu',
+    notHelpful: 'Tidak Membantu',
+    escalateHrOfficer: 'Panjangkan kepada Pegawai HR',
+    optionalFeedback: 'Komen maklum balas chatbot secara pilihan...',
+    hrOfficerSupport: 'Sokongan Pegawai HR',
+    escalateQuestion: 'Panjangkan Soalan',
+    questionPlaceholder: 'Masukkan soalan untuk dieskalasikan...',
+    descriptionPlaceholder: 'Terangkan sebab soalan ini memerlukan sokongan pegawai HR...',
+    submitHrOfficer: 'Hantar kepada Pegawai HR',
+    conversationHistory: 'Sejarah Perbualan',
+    rating: 'Penilaian',
+    noConversation: 'Tiada sejarah perbualan.',
+    escalationRequests: 'Permohonan Eskalasi',
+    noEscalation: 'Tiada permohonan eskalasi dihantar.',
+    smartSearchResults: 'Dokumen Keputusan Carian Pintar',
+    searchResult: 'Keputusan Carian',
+    saveDocument: 'Simpan Dokumen',
+    generateSummary: 'Jana Ringkasan',
+    noMatchingSmartDocument: 'Tiada dokumen sepadan dijumpai. Cuba cari TASKA, TBK, SPKN, COS, CFS, kenaikan pangkat atau kontrak.',
+    recommendations: 'Cadangan',
+    recommendedDocuments: 'Dokumen Dicadangkan',
+    recommended: 'Dicadangkan',
+    reason: 'Sebab',
+    relevanceScore: 'Skor Kerelevanan',
+    reportIncorrect: 'Lapor Tidak Tepat',
+    noRecommended: 'Tiada dokumen cadangan tersedia.',
+    aiDocumentSummary: 'Ringkasan Dokumen AI',
+    recommendationReport: 'Laporan Cadangan',
+    reportIncorrectRecommendation: 'Lapor Cadangan Tidak Tepat',
+    reporting: 'Melaporkan',
+    irrelevant: 'Tidak berkaitan',
+    inaccurate: 'Tidak tepat',
+    outdated: 'Lapuk',
+    inappropriate: 'Tidak sesuai',
+    others: 'Lain-lain',
+    reportDescriptionPlaceholder: 'Terangkan sebab cadangan ini tidak tepat...',
+    submitReport: 'Hantar Laporan',
+    faq: 'FAQ',
+    frequentlyAskedQuestions: 'Soalan Lazim',
+    trendingDocuments: 'Dokumen Trending',
+    popularDocuments: 'Dokumen HR Popular Semasa',
+    trending: 'Trending',
+    score: 'Skor',
+    frequentlyUsedPolicies: 'Polisi Kerap Digunakan',
+    suggestedFrequentlyUsed: 'Cadangan Polisi Kerap Digunakan',
+    frequentlyUsed: 'Kerap Digunakan',
+
+    // Personal Storage and Notifications
+    savedNotifications: 'Dokumen Disimpan dan Notifikasi',
+    savedNotificationsTitle: 'Jejak dokumen disimpan, nota dan kemas kini polisi.',
+    savedNotificationsDesc: 'Pengguna menerima amaran apabila dokumen berkaitan atau dokumen disimpan dikemas kini.',
+    saved: 'Disimpan',
+    unreadAlerts: 'Amaran Belum Dibaca',
+    notes: 'Nota',
+    personalCollection: 'Koleksi peribadi',
+    policyUpdates: 'Kemas kini polisi',
+    personalNotes: 'Nota peribadi',
+    notificationPreferences: 'Tetapan Notifikasi',
+    manageAlerts: 'Urus Amaran',
+    savePreferences: 'Simpan Tetapan',
+    policyUpdatesTitle: 'Kemas Kini Polisi',
+    policyUpdatesDesc: 'Maklumkan apabila dokumen berkaitan baharu diterbitkan.',
+    savedDocumentUpdates: 'Kemas Kini Dokumen Disimpan',
+    savedDocumentUpdatesDesc: 'Maklumkan apabila dokumen yang ditanda buku diganti.',
+    frequency: 'Kekerapan',
+    frequencyDesc: 'Pilih notifikasi serta-merta, harian atau mingguan.',
+    deliveryChannel: 'Saluran Penghantaran',
+    deliveryChannelDesc: 'Pilih cara notifikasi dihantar.',
+    enabled: 'Diaktifkan',
+    disabled: 'Dinyahaktifkan',
+    smartAlerts: 'Amaran Pintar',
+    recommendedAlerts: 'Amaran Dicadangkan Berdasarkan Aktiviti Pengguna',
+    refreshAlerts: 'Segar Semula Amaran',
+    markRead: 'Tanda sebagai Dibaca',
+    markAllRead: 'Tanda Semua Dibaca',
+    noSmartAlerts: 'Tiada amaran pintar tersedia.',
+    recentNotifications: 'Notifikasi Terkini',
+    policyUpdatesAlerts: 'Kemas Kini Polisi dan Amaran',
+    noNotifications: 'Tiada notifikasi tersedia.',
+    userFeedback: 'Maklum Balas Pengguna',
+    submitFeedback: 'Hantar Maklum Balas',
+    feedbackCategory: 'Kategori Maklum Balas',
+    feedbackContent: 'Kandungan Maklum Balas',
+    feedbackPlaceholder: 'Tulis maklum balas anda di sini...',
+    systemIssue: 'Isu Sistem',
+    documentIssue: 'Isu Dokumen',
+    chatbotIssue: 'Isu Chatbot',
+    searchIssue: 'Isu Carian',
+    suggestion: 'Cadangan',
+    personalStorage: 'Simpanan Peribadi',
+    savedPersonalNotes: 'Dokumen Disimpan dan Nota Peribadi',
+    personalNote: 'Nota Peribadi',
+    noteContent: 'Kandungan Nota',
+    notePlaceholder: 'Tulis nota peribadi anda untuk dokumen ini...',
+    saveNote: 'Simpan Nota',
+    note: 'Nota',
+    noPersonalNote: 'Tiada nota peribadi lagi.',
+    editNote: 'Edit Nota',
+    addNote: 'Tambah Nota',
+    deleteNote: 'Padam Nota',
+    noSavedDocuments: 'Tiada dokumen disimpan lagi. Pergi ke Sokongan Pintar dan simpan satu dokumen.'
+  }
+}
+
+function t(key) {
+  return translations[language.value]?.[key] || translations.en[key] || key
+}
+
+function tv(value) {
+  if (!value) return ''
+  const key = String(value)
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .trim()
+    .split(' ')
+    .map((word, index) =>
+      index === 0
+        ? word.charAt(0).toLowerCase() + word.slice(1)
+        : word.charAt(0).toUpperCase() + word.slice(1)
+    )
+    .join('')
+
+  return translations[language.value]?.[key] || translations.en[key] || value
+}
+
+function toggleLanguage() {
+  language.value = language.value === 'en' ? 'ms' : 'en'
+  showToast(
+    language.value === 'en'
+      ? 'Language changed to English.'
+      : 'Bahasa ditukar kepada Bahasa Malaysia.',
+    'success'
+  )
 }
 
 const visibleNavItems = computed(() => {
@@ -2986,13 +3884,13 @@ const chatMessages = ref([
 
 const currentPageTitle = computed(() => {
   const found = navItems.find((item) => item.id === screen.value)
-  return found ? found.label : 'Dashboard'
+  return found ? t(found.labelKey) : 'Dashboard'
 })
 
 const sessionText = computed(() => {
-  if (session.value === 'Guest') return 'Public mode'
-  if (session.value === 'Admin') return 'Administrator session'
-  return 'Registered user session'
+  if (session.value === 'Guest') return t('publicMode')
+  if (session.value === 'Admin') return t('adminSession')
+  return t('userSession')
 })
 
 const filteredDocs = computed(() => {
