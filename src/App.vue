@@ -1573,12 +1573,12 @@
               </div>
 
               <div class="button-row">
-                <button class="primary" @click="saveDocument(doc)">
-                  Save Document
+                <button class="primary" @click="saveSearchResultDocument(doc)">
+                  {{ t('saveDocument') }}
                 </button>
 
-                <button @click="generateDocumentSummary(doc)">
-                  Generate Summary
+                <button @click="generateSearchResultSummary(doc)">
+                  {{ t('generateSummary') }}
                 </button>
               </div>
             </article>
@@ -1587,6 +1587,21 @@
               No matching document found. Try searching TASKA, TBK, SPKN, COS, CFS, promotion, or contract.
             </div>
           </div>
+        </div>
+
+        <div v-if="searchResultSummary" class="wide-card summary-panel">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">{{ t('aiDocumentSummary') }}</p>
+              <h3>{{ selectedSearchSummaryDoc?.title }}</h3>
+            </div>
+
+            <button @click="searchResultSummary = ''; selectedSearchSummaryDoc = null">
+              {{ t('close') }}
+            </button>
+          </div>
+
+          <p>{{ searchResultSummary }}</p>
         </div>
 
         <div class="wide-card">
@@ -1631,7 +1646,7 @@
                 </button>
 
                 <button @click="generateDocumentSummary(doc)">
-                  Generate Summary
+                  {{ t('generateSummary') }}
                 </button>
 
                 <button @click="openRecommendationReport(doc)">
@@ -2517,10 +2532,33 @@ async function loadSavedDocuments() {
       throw new Error('Failed to load saved documents')
     }
 
-    savedDocuments.value = await response.json()
+    const dbSavedDocuments = await response.json()
+    const localSavedDocuments = getLocalSavedDocuments()
+
+    const mergedDocuments = [...dbSavedDocuments]
+
+    localSavedDocuments.forEach((localItem) => {
+      const exists = mergedDocuments.some((item) => item.documentId === localItem.documentId)
+
+      if (!exists) {
+        mergedDocuments.push(localItem)
+      }
+    })
+
+    savedDocuments.value = mergedDocuments
+    persistLocalSavedDocuments()
   } catch (error) {
     console.error(error)
-    toast.value = 'Failed to load saved documents from database.'
+    savedDocuments.value = getLocalSavedDocuments()
+  }
+}
+
+function getLocalSavedDocuments() {
+  try {
+    return JSON.parse(localStorage.getItem(`jhr_saved_documents_${currentUserId}`) || '[]')
+  } catch (error) {
+    console.warn('Failed to read local saved documents.', error)
+    return []
   }
 }
 
@@ -3866,6 +3904,8 @@ const conversationHistory = ref([])
 const latestConversationId = ref(null)
 const generatedSummary = ref('')
 const selectedSummaryDoc = ref(null)
+const searchResultSummary = ref('')
+const selectedSearchSummaryDoc = ref(null)
 const ratingComment = ref('')
 const escalationPanelOpen = ref(false)
 const escalationRequests = ref([])
@@ -4863,6 +4903,10 @@ async function rateChatbotResponse(value) {
 }
 
 async function generateDocumentSummary(doc) {
+  selectedSummaryDoc.value = doc
+
+  const fallbackSummary = buildLocalDocumentSummary(doc)
+
   try {
     const response = await fetch('http://localhost:3000/api/document-summaries', {
       method: 'POST',
@@ -4880,16 +4924,71 @@ async function generateDocumentSummary(doc) {
     }
 
     const data = await response.json()
+    generatedSummary.value = data.summaryText || fallbackSummary
 
-    selectedSummaryDoc.value = doc
-    generatedSummary.value = data.summaryText
-
-    toast.value = 'Document summary generated.'
-    addLog('Generated document summary', 'AI Summary', 'Success', session.value)
+    toast.value = language.value === 'ms'
+      ? 'Ringkasan dokumen telah dijana.'
+      : 'Document summary generated.'
   } catch (error) {
     console.error(error)
-    toast.value = 'Failed to generate document summary.'
+    generatedSummary.value = fallbackSummary
+    toast.value = language.value === 'ms'
+      ? 'Ringkasan prototaip dijana tanpa sambungan backend.'
+      : 'Prototype summary generated without backend connection.'
   }
+
+  addLog('Generated document summary', 'AI Summary', 'Success', session.value)
+}
+
+function buildLocalDocumentSummary(doc) {
+  const title = doc.title || 'Selected document'
+  const category = doc.category || 'HR policy'
+  const summary = doc.summary || 'This document contains HR policy information for Johor government officers.'
+
+  if (language.value === 'ms') {
+    return `Ringkasan untuk ${title}: Dokumen ini berkaitan dengan ${category}. ${summary} Ringkasan ini membantu pengguna memahami tujuan utama dokumen tanpa membaca keseluruhan kandungan.`
+  }
+
+  return `Summary for ${title}: This document is related to ${category}. ${summary} This generated summary helps users understand the main purpose of the document without reading the full content.`
+}
+
+async function generateSearchResultSummary(doc) {
+  selectedSearchSummaryDoc.value = doc
+
+  const fallbackSummary = buildLocalDocumentSummary(doc)
+
+  try {
+    const response = await fetch('http://localhost:3000/api/document-summaries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        documentId: doc.documentId,
+        userId: currentUserId
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to generate document summary')
+    }
+
+    const data = await response.json()
+    searchResultSummary.value = data.summaryText || fallbackSummary
+
+    toast.value = language.value === 'ms'
+      ? 'Ringkasan dokumen telah dijana.'
+      : 'Document summary generated.'
+  } catch (error) {
+    console.error(error)
+    searchResultSummary.value = fallbackSummary
+
+    toast.value = language.value === 'ms'
+      ? 'Ringkasan prototaip dijana tanpa sambungan backend.'
+      : 'Prototype summary generated without backend connection.'
+  }
+
+  addLog('Generated search result document summary', 'AI Summary', 'Success', session.value)
 }
 
 function openEscalationPanel() {
@@ -5023,6 +5122,15 @@ function findDocumentAnswer(categoryName) {
 }
 
 async function saveDocument(doc) {
+  const alreadySaved = savedDocuments.value.some((item) => item.documentId === doc.documentId)
+
+  if (alreadySaved) {
+    toast.value = language.value === 'ms'
+      ? 'Dokumen ini sudah disimpan dalam koleksi peribadi.'
+      : 'This document is already saved in your personal collection.'
+    return
+  }
+
   try {
     const response = await fetch('http://localhost:3000/api/saved-documents', {
       method: 'POST',
@@ -5041,15 +5149,102 @@ async function saveDocument(doc) {
 
     await loadSavedDocuments()
 
-    toast.value = `${doc.title} saved to personal collection.`
-    addLog('Saved favourite document', 'Saved Documents', 'Success', session.value)
+    if (!savedDocuments.value.some((item) => item.documentId === doc.documentId)) {
+      addDocumentToLocalSavedList(doc)
+    }
+
+    toast.value = language.value === 'ms'
+      ? `${doc.title} telah disimpan dalam koleksi peribadi.`
+      : `${doc.title} saved to personal collection.`
   } catch (error) {
     console.error(error)
-    toast.value = 'Failed to save document.'
+    addDocumentToLocalSavedList(doc)
+    toast.value = language.value === 'ms'
+      ? `${doc.title} disimpan secara tempatan untuk prototaip.`
+      : `${doc.title} saved locally for prototype demo.`
+  }
+
+  addLog('Saved favourite document', 'Saved Documents', 'Success', session.value)
+}
+
+async function saveSearchResultDocument(doc) {
+  const alreadySaved = savedDocuments.value.some((item) => item.documentId === doc.documentId)
+
+  if (alreadySaved) {
+    toast.value = language.value === 'ms'
+      ? 'Dokumen ini sudah disimpan dalam koleksi peribadi.'
+      : 'This document is already saved in your personal collection.'
+    return
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/api/saved-documents', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        documentId: doc.documentId
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to save document')
+    }
+
+    await loadSavedDocuments()
+
+    if (!savedDocuments.value.some((item) => item.documentId === doc.documentId)) {
+      addDocumentToLocalSavedList(doc)
+    }
+
+    toast.value = language.value === 'ms'
+      ? `${doc.title} telah disimpan dalam koleksi peribadi.`
+      : `${doc.title} saved to personal collection.`
+  } catch (error) {
+    console.error(error)
+
+    addDocumentToLocalSavedList(doc)
+
+    toast.value = language.value === 'ms'
+      ? `${doc.title} disimpan secara tempatan untuk prototaip.`
+      : `${doc.title} saved locally for prototype demo.`
+  }
+
+  addLog('Saved document from smart search result', 'Smart Search', 'Success', session.value)
+}
+
+function addDocumentToLocalSavedList(doc) {
+  const savedItem = {
+    savedId: Date.now(),
+    documentId: doc.documentId,
+    title: doc.title,
+    category: doc.category || 'General',
+    type: doc.type || 'Document',
+    summary: doc.summary || '',
+    updated: doc.updated || doc.effectiveDate || new Date().toISOString(),
+    noteId: null,
+    note: ''
+  }
+
+  savedDocuments.value = [savedItem, ...savedDocuments.value]
+  persistLocalSavedDocuments()
+}
+
+function persistLocalSavedDocuments() {
+  try {
+    localStorage.setItem(`jhr_saved_documents_${currentUserId}`, JSON.stringify(savedDocuments.value))
+  } catch (error) {
+    console.warn('Failed to save local saved documents.', error)
   }
 }
 
 async function removeSavedDocument(savedId) {
+  const originalDocuments = [...savedDocuments.value]
+  savedDocuments.value = savedDocuments.value.filter((item) => item.savedId !== savedId)
+  persistLocalSavedDocuments()
+
   try {
     const response = await fetch(`http://localhost:3000/api/saved-documents/${savedId}`, {
       method: 'DELETE'
@@ -5060,13 +5255,17 @@ async function removeSavedDocument(savedId) {
     }
 
     await loadSavedDocuments()
-
-    toast.value = 'Saved document removed.'
-    addLog('Removed favourite document', 'Saved Documents', 'Success', session.value)
   } catch (error) {
     console.error(error)
-    toast.value = 'Failed to remove saved document.'
+    savedDocuments.value = originalDocuments.filter((item) => item.savedId !== savedId)
+    persistLocalSavedDocuments()
   }
+
+  toast.value = language.value === 'ms'
+    ? 'Dokumen disimpan telah dibuang.'
+    : 'Saved document removed.'
+
+  addLog('Removed favourite document', 'Saved Documents', 'Success', session.value)
 }
 
 function openNoteEditor(item) {
