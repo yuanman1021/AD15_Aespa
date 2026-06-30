@@ -393,7 +393,7 @@
           <div class="modal-card reset-form-card">
             <div class="section-title">
               <div>
-                <p class="eyebrow"> {{ t('accountRecovery') }}y</p>
+                <p class="eyebrow"> {{ t('accountRecovery') }}</p>
                 <h3>
                   {{ resetAccountType === 'admin' ? t('resetAdminPassword') : t('resetUserPassword') }}
                 </h3>
@@ -448,27 +448,27 @@
           <div class="avatar">NA</div>
           <h3>{{ profileForm.name }}</h3>
           <p>{{ profileForm.email }}</p>
-          <span class="status-pill green">Active Registered User</span>
+          <span class="status-pill green">{{ t('activeRegisteredUser') }}</span>
 
           <dl>
             <div>
-              <dt>Department</dt>
+              <dt>{{ t('department') }}</dt>
               <dd>{{ profileForm.department }}</dd>
             </div>
             <div>
-              <dt>Designation</dt>
+              <dt>{{ t('designation') }}</dt>
               <dd>{{ profileForm.designation }}</dd>
             </div>
             <div>
-              <dt>Notification</dt>
+              <dt>{{ t('notification') }}</dt>
               <dd>{{ notificationFrequency }}</dd>
             </div>
           </dl>
         </div>
 
         <div class="detail-card">
-          <p class="eyebrow">Profile Management</p>
-          <h3>Manage User Profile</h3>
+          <p class="eyebrow">{{ t('profileManagement') }}</p>
+          <h3>{{ t('manageUserProfile') }}</h3>
 
           <InputField
             v-model="profileForm.name"
@@ -505,13 +505,13 @@
           </label>
 
           <button class="primary full" @click="saveProfile">
-            Save Profile
+            {{ t('saveProfile') }}
           </button>
         </div>
 
         <div class="wide-card">
           <div class="section-title">
-            <h3>Account Security</h3>
+            <h3>{{ t('accountSecurity') }}</h3>
             <span :class="mfaEnabled ? 'status-pill green' : 'status-pill amber'">
               {{ mfaEnabled ? t('mfaEnabled') : t('mfaDisabled') }}
             </span>
@@ -634,33 +634,33 @@
 
         <!-- Welcome banner -->
         <div class="welcome-card">
-          <p class="eyebrow">Document Management</p>
-          <h3>Upload, classify, store, search and manage HR documents.</h3>
-          <h2>Administrators </h2>
-          <p>Can upload official HR documents, review AI classification suggestions, manage the document repository and archive outdated circulars.</p>
-          <h2>Guest & User</h2>
-          <p>Browse, search and view HR documents available to your access level.</p>
+          <p class="eyebrow"> {{ t('documentManagement') }}</p>
+          <h3>{{ t('documentManagementTitle') }}</h3>
+          <h3>{{ t('administrators') }}</h3>
+          <p>{{ t('adminsDocumentDesc') }}</p>
+          <h2>{{ t('guestUser') }}</h2>
+          <p>{{ t('guestUserDocumentDesc') }}</p>
         </div>
 
         <div
             v-if="session === 'Admin'"
             class="stats-grid"
           >
-                  <StatCard label="Total Documents" :value="String(documents.length)" note="Repository records" />
-                  <StatCard label="Pending Review" :value="String(pendingClassificationCount)" note="AI classification queue" />
-                  <StatCard label="Archived" :value="String(archivedCount)" note="Old circular versions" />
+                  <StatCard :label="t('totalDocuments')" :value="String(documents.length)" :note="t('repositoryRecords')" />
+                  <StatCard :label="t('pendingReview')" :value="String(pendingClassificationCount)" :note="t('aiClassificationQueue')" />
+                  <StatCard :label="t('archived')" :value="String(archivedCount)" :note="t('oldCircularVersions')" />
 
                   <StatCard
-            label="Published"
-            :value="String(documents.filter(d => d.status === 'Published').length)"
-            note="Available documents"
-        />
+                    :label="t('published')"
+                    :value="String(documents.filter(d => d.status === 'Published').length)"
+                    :note="t('availableDocuments')"
+                  />
 
-        <StatCard
-          label="Restricted"
-          :value="String(documents.filter(d => d.access === 'Restricted').length)"
-          note="Protected documents"
-        />
+                  <StatCard
+                    :label="t('restricted')"
+                    :value="String(documents.filter(d => d.access === 'Restricted').length)"
+                    :note="t('protectedDocuments')"
+                  />
         </div>
 
 
@@ -670,8 +670,8 @@
 
           <div class="section-title">
             <div>
-              <p class="eyebrow">Document Upload</p>
-              <h3>Upload HR Document</h3>
+              <p class="eyebrow">{{ t('documentUpload') }}</p>
+              <h3>{{ t('uploadHrDocument') }}</h3>
             </div>
             <div style="display:flex;gap:10px;">
               <button
@@ -679,14 +679,14 @@
                 @click="uploadDocument"
                 :disabled="session !== 'Admin'"
               >
-                Upload & Submit for Review
+                {{ t('uploadSubmitReview') }}
               </button>
 
               <button
                 @click="saveDocumentAsDraft"
                 :disabled="session !== 'Admin'"
                 >
-                Save as Draft
+                {{ t('saveAsDraft') }}
             </button>
 
             </div>
@@ -696,33 +696,33 @@
           <div class="form-grid">
             <InputField
               v-model="uploadForm.title"
-              label="Document Title *"
+              :label="t('documentTitle')"
               placeholder="Cuti Sakit Pegawai Kerajaan Johor"
             />
             <InputField
               v-model="uploadForm.referenceNo"
-              label="Official Reference Number *"
+              :label="t('officialReferenceNumber')"
               placeholder="JHR/CUTI/2026/01"
             />
             <InputField
               v-model="uploadForm.issuingAuthority"
-              label="Issuing Authority *"
+              :label="t('issuingAuthority')"
               placeholder="Human Resource Management Division"
             />
             <InputField
               v-model="uploadForm.effectiveDate"
-              label="Effective Date *"
+              :label="t('effectiveDate') + ' *'"
               placeholder="2026-01-12"
             />
             <InputField
               v-model="uploadForm.expiryDate"
-              label="Expiry Date"
+              :label="t('expiryDate')"
               placeholder="2028-01-12 (optional)"
             />
             <label class="input-group">
-              <span>Department Tag</span>
+              <span>{{ t('departmentTag') }}</span>
               <select v-model="uploadForm.departmentTag">
-                <option value="">— Select Department —</option>
+                <option value="">{{ t('selectDepartment') }}</option>
                 <option>Human Resource Management Division</option>
                 <option>Finance Division</option>
                 <option>Administration Division</option>
@@ -737,7 +737,7 @@
           <!-- Row 2: type / category / access / language -->
           <div class="form-grid">
             <label class="input-group">
-              <span>Document Type *</span>
+              <span>{{ t('documentType') }} *</span>
               <select v-model="uploadForm.type">
                 <option>Circular</option>
                 <option>Guideline</option>
@@ -749,7 +749,7 @@
               </select>
             </label>
             <label class="input-group">
-              <span>Category *</span>
+              <span>{{ t('category') }} *</span>
               <select v-model="uploadForm.category">
                 <option>Leave Policy</option>
                 <option>Promotion</option>
@@ -762,7 +762,7 @@
               </select>
             </label>
             <label class="input-group">
-              <span>Access Level *</span>
+              <span>{{ t('accessLevel') }} *</span>
               <select v-model="uploadForm.access">
                 <option>Public</option>
                 <option>Registered</option>
@@ -770,7 +770,7 @@
               </select>
             </label>
             <label class="input-group">
-              <span>Language *</span>
+              <span>{{ t('language') }} *</span>
               <select v-model="uploadForm.language">
                 <option value="BM">Bahasa Malaysia</option>
                 <option value="EN">English</option>
@@ -781,7 +781,7 @@
 
           <!-- File picker -->
           <label class="input-group" style="margin-bottom:16px;">
-            <span>PDF File *</span>
+            <span>{{ t('pdfFile') }} *</span>
             <div class="file-upload-box" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleFileDrop">
               <input
                 ref="fileInputRef"
@@ -791,14 +791,14 @@
                 @change="handleFileSelect"
               />
               <div v-if="!uploadForm.fileName" class="file-upload-placeholder">
-                <strong>Click to choose PDF file</strong>
-                <span>or drag and drop here · PDF only · Max 20MB</span>
+                <strong>{{t('choosePdfFile')}}</strong>
+                <span>{{ t('dragDropPdf') }}</span>
               </div>
               <div v-else class="file-upload-selected">
-                <span class="status-pill green">✓ File selected</span>
+                <span class="status-pill green">✓ {{ t('fileSelected') }}</span>
                 <strong>{{ uploadForm.fileName }}</strong>
                 <span>{{ uploadForm.fileSizeKb ? (uploadForm.fileSizeKb / 1024).toFixed(2) + ' MB' : '' }}</span>
-                <button @click.stop="clearFile" style="color:var(--johor-red);">Remove</button>
+                <button @click.stop="clearFile" style="color:var(--johor-red);">{{ t('remove') }}</button>
               </div>
             </div>
           </label>
@@ -815,15 +815,15 @@
 
           <div class="section-title">
             <div>
-              <p class="eyebrow">AI Classification Review</p>
-              <h3>Suggested Document Categories</h3>
+              <p class="eyebrow">{{ t('aiClassificationReview') }}</p>
+              <h3>{{ t('suggestedDocumentCategories') }}</h3>
             </div>
-            <button @click="refreshClassification">Refresh Suggestions</button>
+            <button @click="refreshClassification">{{ t('refreshSuggestions') }}</button>
           </div>
-          <p style="color:var(--muted);margin:0 0 18px;">Review and approve or modify the AI-suggested categories and department tags before each document is published.</p>
+          <p style="color:var(--muted);margin:0 0 18px;">{{t('classificationDesc')}}</p>
 
           <div v-if="classificationQueue.length === 0" class="empty-state">
-            <p>No documents waiting for classification review.</p>
+            <p>{{t('noClassification')}}</p>
           </div>
 
           <div class="doc-grid" v-else>
@@ -842,7 +842,7 @@
 
               <!-- Confidence score bar -->
               <div style="display:flex;align-items:center;gap:8px;margin:0;">
-                <span style="font-size:12px;color:var(--muted);font-weight:700;">AI Confidence</span>
+                <span style="font-size:12px;color:var(--muted);font-weight:700;">{{ t('aiConfidence') }}</span>
                 <div class="confidence-bar">
                   <div class="confidence-fill" :style="{ width: (item.confidence || 75) + '%' }"></div>
                 </div>
@@ -851,7 +851,7 @@
 
               <!-- Suggested categories -->
               <div>
-                <span style="font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">Suggested Categories</span>
+                <span style="font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">{{ t('suggestedCategories') }}</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                   <span v-for="s in item.suggestions" :key="s">{{ s }}</span>
                 </div>
@@ -859,7 +859,7 @@
 
               <!-- Suggested department tags -->
               <div>
-                <span style="font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">Department Tags</span>
+                <span style="font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">{{t('departmentTags')}}</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                   <span v-for="tag in item.tags" :key="tag">{{ tag }}</span>
                 </div>
@@ -868,7 +868,7 @@
               <!-- Modify fields shown when editing -->
               <div v-if="item.editing" style="display:grid;gap:8px;margin-top:4px;">
                 <label class="input-group" style="margin:0;">
-                  <span>Modify Category</span>
+                  <span>{{ t('modifyCategory') }}</span>
                   <select v-model="item.modifiedCategory">
                     <option v-for="s in item.suggestions" :key="s" :value="s">{{ s }}</option>
                     <option>Leave Policy</option>
@@ -881,7 +881,7 @@
                   </select>
                 </label>
                 <label class="input-group" style="margin:0;">
-                  <span>Modify Department Tag</span>
+                  <span>{{ t('modifyDepartmentTag') }}</span>
                   <select v-model="item.modifiedDepartmentTag">
                     <option>Human Resource Management Division</option>
                     <option>Finance Division</option>
@@ -890,8 +890,8 @@
                   </select>
                 </label>
                 <div style="display:flex;gap:8px;">
-                  <button class="primary" style="flex:1;" @click="confirmModifyClassification(item)">Save Changes</button>
-                  <button style="flex:1;" @click="item.editing = false">Cancel</button>
+                  <button class="primary" style="flex:1;" @click="confirmModifyClassification(item)"> {{ t('saveChanges') }}</button>
+                  <button style="flex:1;" @click="item.editing = false"> {{ t('cancel') }}</button>
                 </div>
               </div>
 
@@ -903,21 +903,21 @@
                   :disabled="item.status === 'Approved'"
                   @click="approveClassification(item)"
                 >
-                  {{ item.status === 'Approved' ? '✓ Approved' : 'Approve' }}
+                  {{ item.status === 'Approved' ? '✓ ' + t('approved') : t('approve') }}
                 </button>
                 <button
                   style="flex:1;"
                   :disabled="item.status === 'Approved'"
                   @click="startModifyClassification(item)"
                 >
-                  Modify
+                  {{ t('modify') }}
                 </button>
                 <button
                   class="secondary"
                   :disabled="item.status === 'Approved'"
                   @click="rejectClassification(item)"
                 >
-                  Reject
+                  {{ t('reject') }}
                 </button>
               </div>
             </article>
@@ -929,14 +929,14 @@
           <div class="section-title">
             <div>
               <p class="eyebrow">Repository &amp; Search</p>
-              <h3>Search and Manage Documents</h3>
+              <h3>{{ t('searchManageDocuments') }}</h3>
             </div>
             <button
               v-if="session === 'Admin'"
               class="primary"
               @click="openNewVersionModal"
             >
-            Upload New Version
+            {{ t('uploadNewVersion') }}
             </button>
           </div>
 
@@ -947,7 +947,7 @@
                 :placeholder="t('searchPlaceholder')"
               />
             <select v-model="repoType">
-              <option value="">All Types</option>
+              <option value="">{{t('allTypes')}}</option>
               <option>Circular</option>
               <option>Guideline</option>
               <option>Policy</option>
@@ -957,7 +957,7 @@
               <option>Administrative Decision</option>
             </select>
             <select v-model="repoCategory">
-              <option value="">All Categories</option>
+              <option value="">{{t('allCategories')}}</option>
               <option>Leave Policy</option>
               <option>Promotion</option>
               <option>Discipline</option>
@@ -975,7 +975,7 @@
               <option>Pending Review</option>
             </select>
             <select v-model="repoAccess">
-              <option value="">All Access Levels</option>
+              <option value="">{{t('allAccessLevels')}}</option>
               <option>Public</option>
               <option>Registered</option>
               <option>Restricted</option>
@@ -992,21 +992,20 @@
             <table>
               <thead>
                 <tr>
-                  <th>Document</th>
-                  <th>Reference No.</th>
-                  <th>Category</th>
-                 
-                  <th>Access</th>
-                  <th>Status</th>
-                  <th>Effective Date</th>
-                  <th>Views</th>
-                  <th>Actions</th>
+                  <th>{{ t('document') }}</th>
+                  <th>{{ t('referenceNo') }}</th>
+                  <th>{{ t('category') }}</th>
+                  <th>{{ t('access') }}</th>
+                  <th>{{ t('status') }}</th>
+                  <th>{{ t('effectiveDate') }}</th>
+                  <th>{{ t('views') }}</th>
+                  <th>{{ t('actions') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="repositoryDocs.length === 0">
                   <td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">
-                    No documents match your filters.
+                    {{t('noDocumentsMatch')}}
                   </td>
                 </tr>
                 <tr v-for="doc in repositoryDocs" :key="doc.documentId">
@@ -1038,15 +1037,15 @@
   <div class="action-group">
 
     <button @click="openPreview(doc)">
-  View Details
-</button>
+      {{t('viewDetails')}}
+    </button>
 
     <button
       v-if="session === 'User' || session === 'Admin'"
       class="secondary"
       @click="downloadDocument(doc)"
     >
-      Download
+      {{t('download')}}
     </button>
 
     <button
@@ -1054,7 +1053,7 @@
       class="secondary"
       @click="openVersionModal(doc)"
     >
-      New Version
+      {{t('newVersion')}}
     </button>
 
     <button
@@ -1062,7 +1061,7 @@
       class="secondary"
       @click="archiveDocument(doc)"
     >
-      Archive
+      {{t('archive')}}
     </button>
 
     <button
@@ -1070,7 +1069,7 @@
       class="secondary"
       @click="restoreDocument(doc)"
     >
-      Restore
+      {{t('restore')}}
     </button>
 
   
@@ -1090,45 +1089,45 @@
 
             <div class="section-title" style="margin-bottom:16px;">
               <div>
-                <p class="eyebrow">Archive Document</p>
+                <p class="eyebrow">{{ t('archiveDocument') }}</p>
                 <h3>Archive: {{ archiveTarget?.referenceNo }}</h3>
               </div>
               <button @click="showArchiveModal = false">✕</button>
             </div>
 
             <p style="color:var(--muted);margin:0 0 18px;">
-              Archiving removes this document from active circulation. Users with saved copies will be notified.
+              {{t('archiveDesc')}}
             </p>
 
             <label class="input-group">
-              <span>Archive Reason *</span>
+              <span>{{t('archiveReason')}} *</span>
               <select v-model="archiveForm.reason">
-                <option value="">— Select reason —</option>
-                <option value="superseded">Superseded by newer circular</option>
-                <option value="expired">Document has expired</option>
-                <option value="withdrawn">Officially withdrawn</option>
-                <option value="other">Other reason</option>
+                <option value="">{{t('selectReason')}}</option>
+                <option value="superseded">{{t('supersededReason')}}</option>
+                <option value="expired">{{t('expiredReason')}}</option>
+                <option value="withdrawn">{{t('withdrawnReason')}}</option>
+                <option value="other">{{t('otherReason')}}</option>
               </select>
             </label>
 
             <label class="input-group">
-              <span>Successor Document Reference (if replaced)</span>
+              <span>{{t('successorReference')}}</span>
               <input v-model="archiveForm.successorReference" placeholder="e.g. JHR/CUTI/2026/02" />
             </label>
 
             <label class="input-group">
-              <span>Additional Notes</span>
+              <span>{{t('additionalNotes')}}</span>
               <textarea
                 v-model="archiveForm.reasonDetails"
-                placeholder="Provide any additional explanation..."
+                :placeholder="t('additionalNotesPlaceholder')"
                 rows="3"
                 style="width:100%;border:1px solid var(--line);border-radius:16px;padding:14px 16px;font:inherit;resize:vertical;"
               ></textarea>
             </label>
 
             <div style="display:flex;gap:10px;margin-top:8px;">
-              <button class="secondary" style="flex:1;" @click="confirmArchive">Confirm Archive</button>
-              <button style="flex:1;" @click="showArchiveModal = false">Cancel</button>
+              <button class="secondary" style="flex:1;" @click="confirmArchive">{{t('confirmArchive')}}</button>
+              <button style="flex:1;" @click="showArchiveModal = false">{{t('cancel')}}</button>
             </div>
           </div>
         </div>
@@ -1138,16 +1137,16 @@
           <div class="modal-card">
             <div class="section-title" style="margin-bottom:16px;">
               <div>
-                <p class="eyebrow">Version Management</p>
-                <h3>Upload New Version</h3>
+                <p class="eyebrow">{{t('versionManagement')}}</p>
+                <h3>{{t('uploadNewVersion')}}</h3>
               </div>
               <button @click="showVersionModal = false">✕</button>
             </div>
 
             <label class="input-group">
-              <span>Document to Update *</span>
+              <span>{{t('documentToUpdate')}}</span>
               <select v-model="versionForm.documentId">
-                <option value="">— Select document —</option>
+                <option value="">{{t('selectDocument')}}</option>
                 <option
                   v-for="doc in documents.filter(d => d.status !== 'Archived')"
                   :key="doc.documentId"
@@ -1160,34 +1159,34 @@
 
             <div v-if="versionForm.documentId" class="version-info-box">
               <span class="status-pill">
-                Current: v{{ documents.find(d => d.documentId == versionForm.documentId)?.version || '1.0' }}
+                {{t('currentVersion')}}: v{{ documents.find(d => d.documentId == versionForm.documentId)?.version || '1.0' }}
               </span>
-              <span style="color:var(--muted);font-size:13px;">New version will be: v{{ nextVersionNumber }}</span>
+              <span style="color:var(--muted);font-size:13px;">{{t('newVersionWillBe')}}: v{{ nextVersionNumber }}</span>
             </div>
 
             <label class="input-group">
-              <span>Update Type *</span>
+              <span>{{t('updateType')}}</span>
               <select v-model="versionForm.updateType">
-                <option value="">— Select type —</option>
-                <option value="amendment">Amendment</option>
-                <option value="replacement">Replacement</option>
-                <option value="correction">Correction</option>
-                <option value="withdrawal">Withdrawal</option>
+                <option value="">— {{t('selectType')}} —</option>
+                <option value="amendment">{{t('amendment')}}</option>
+                <option value="replacement">{{t('replacement')}}</option>
+                <option value="correction">{{t('correction')}}</option>
+                <option value="withdrawal">{{t('withdrawal')}}</option>
               </select>
             </label>
 
             <label class="input-group">
-              <span>Change Summary *</span>
+              <span>{{t('changeSummary')}}</span>
               <textarea
                 v-model="versionForm.changeSummary"
-                placeholder="Describe what changed in this version..."
+                :placeholder="t('changeSummaryPlaceholder')"
                 rows="3"
                 style="width:100%;border:1px solid var(--line);border-radius:16px;padding:14px 16px;font:inherit;resize:vertical;"
               ></textarea>
             </label>
 
             <label class="input-group">
-              <span>New PDF File *</span>
+              <span>{{t('newPdfFile')}}</span>
               <div class="file-upload-box" @click="triggerVersionFileInput" @dragover.prevent @drop.prevent="handleVersionFileDrop">
                 <input
                   ref="versionFileInputRef"
@@ -1197,18 +1196,18 @@
                   @change="handleVersionFileSelect"
                 />
                 <div v-if="!versionForm.fileName" class="file-upload-placeholder">
-                  <strong>Click to choose PDF file</strong>
-                  <span>PDF only · Max 20MB</span>
+                  <strong>{{t('choosePdfFile')}}</strong>
+                  <span>{{t('dragDropPdf')}}</span>
                 </div>
                 <div v-else class="file-upload-selected">
-                  <span class="status-pill green">✓ File selected</span>
+                  <span class="status-pill green">✓ {{t('fileSelected')}}</span>
                   <strong>{{ versionForm.fileName }}</strong>
                 </div>
               </div>
             </label>
 
             <label class="input-group">
-              <span>New Effective Date (if changed)</span>
+              <span>{{t('newEffectiveDate')}}</span>
               <input v-model="versionForm.newEffectiveDate" type="date" />
             </label>
 
@@ -1228,7 +1227,7 @@
 
     <div class="preview-header">
       <div>
-        <p class="eyebrow">Document Details</p>
+        <p class="eyebrow">{{t('documentDetails')}}</p>
         <h2>{{ previewDocument.title }}</h2>
       </div>
 
@@ -1245,53 +1244,53 @@
       </span>
 
       <span class="status-pill">
-        Version {{ previewDocument.version }}
+        {{t('version')}} {{ previewDocument.version }}
       </span>
     </div>
 
     <div class="preview-grid">
 
       <div class="info-card">
-        <span>Reference Number</span>
+        <span>{{t('referenceNumber')}}</span>
         <strong>{{ previewDocument.referenceNo }}</strong>
       </div>
 
       <div class="info-card">
-        <span>Category</span>
+        <span>{{t('category')}}</span>
         <strong>{{ previewDocument.category }}</strong>
       </div>
 
       <div class="info-card">
-        <span>Document Type</span>
+        <span>{{t('documentType')}}</span>
         <strong>{{ previewDocument.type }}</strong>
       </div>
 
       <div class="info-card">
-        <span>Department</span>
+        <span>{{t('department')}}</span>
         <strong>{{ previewDocument.departmentTag }}</strong>
       </div>
 
       <div class="info-card">
-        <span>Effective Date</span>
+        <span>{{t('effectiveDate')}}</span>
         <strong>{{ previewDocument.effectiveDate }}</strong>
       </div>
 
       <div class="info-card">
-        <span>Total Views</span>
+        <span>{{t('totalViews')}}</span>
         <strong>{{ previewDocument.totalViews || 0 }}</strong>
       </div>
 
     </div>
 
     <div class="summary-card">
-      <h4>Document Summary</h4>
+      <h4>{{t('documentSummary')}}</h4>
       <p>{{ previewDocument.summary }}</p>
     </div>
 
     <div class="button-row">
 
       <button @click="closePreview">
-        Close
+        {{t('close')}}
       </button>
     </div>
 
@@ -1308,15 +1307,15 @@
 
           <div class="section-title">
             <div>
-              <p class="eyebrow">Document Audit Trail</p>
-              <h3>Recent Document Actions</h3>
+              <p class="eyebrow">{{t('documentAuditTrail')}}</p>
+              <h3>{{t('recentDocumentActions')}}</h3>
             </div>
-            <button @click="toast = 'Audit log exported.'">Export Log</button>
+            <button @click="toast = t('exportLog')">{{ t('exportLog') }}</button>
           </div>
 
           <div class="log-list">
             <div v-if="documentAuditLog.length === 0" class="empty-state">
-              <p>No audit actions recorded yet. Actions will appear here after you upload, classify, archive or update documents.</p>
+              <p>{{t('noAuditActions')}}</p>
             </div>
             <div
               v-for="entry in documentAuditLog"
@@ -1342,14 +1341,14 @@
       <!-- SMART SUPPORT -->
       <section v-if="screen === 'smart'" class="grid-two">
         <div class="hero-card">
-          <p class="eyebrow">Smart Search</p>
-          <h3>Search HR policies using normal questions.</h3>
-          <p>Type a question and the system will suggest related documents.</p>
+          <p class="eyebrow">{{ t('smartSearch') }}</p>
+          <h3>{{t('smartSearchTitle')}}</h3>
+          <p>{{t('smartSearchDesc')}}</p>
 
           <div class="search-box single">
             <input
               v-model="smartQuery"
-              placeholder="Example: TASKA subsidy, promotion TBK, SPKN travel..."
+              :placeholder="t('smartSearchPlaceholder')"
               @keyup.enter="performSmartSearch"
             />
           </div>
@@ -1364,27 +1363,27 @@
             </button>
           </div>
 
-          <label class="field-label">Sort Results</label>
+          <label class="field-label">{{ t('sortResults') }}</label>
           <select v-model="smartSortBy" class="feedback-input">
-            <option value="relevance">Relevance</option>
-            <option value="latest">Latest Updated</option>
-            <option value="title">Title A-Z</option>
-            <option value="most_viewed">Most Viewed</option>
+          <option value="relevance">{{ t('relevance') }}</option>
+          <option value="latest">{{ t('latestUpdated') }}</option>
+          <option value="title">{{ t('titleAz') }}</option>
+          <option value="most_viewed">{{ t('mostViewed') }}</option>
           </select>
 
           <button class="primary" @click="performSmartSearch">
-            Perform Smart Search
+            {{ t('performSmartSearch') }}
           </button>
 
           <button
             v-if="hasSearched"
             @click="clearSearchResults"
           >
-            Clear Search
+            {{ t('clearSearch') }}
           </button>
 
           <div class="history-panel">
-            <p class="eyebrow">Recent Search History</p>
+            <p class="eyebrow">{{ t('recentSearchHistory') }}</p>
 
             <button
               v-for="history in recentSearchHistory"
@@ -1396,14 +1395,14 @@
             </button>
 
             <p v-if="recentSearchHistory.length === 0" class="muted">
-              No recent search history yet.
+              {{ t('noRecentSearch') }}
             </p>
           </div>
         </div>
 
         <div class="detail-card chatbot-card">
-          <p class="eyebrow">HR Assistant</p>
-          <h3>Ask the HR Chatbot</h3>
+          <p class="eyebrow">{{ t('hrAssistant') }}</p>
+          <h3>{{ t('askChatbot') }}</h3>
 
           <div class="chat-window">
             <div
@@ -1416,7 +1415,7 @@
           </div>
 
           <div class="suggested-question-box">
-            <p>Suggested questions</p>
+            <p>{{ t('suggestedQuestions') }}</p>
             <div class="quick-question-row">
               <button
                 v-for="question in suggestedQuestions"
@@ -1431,54 +1430,54 @@
           <div class="chat-input-row">
             <input
               v-model="chatInput"
-              placeholder="Ask about login, documents, leave, promotion, salary, upload..."
+              :placeholder="t('chatbotPlaceholder')"
               @keyup.enter="sendChatMessage"
             />
             <button class="primary" @click="sendChatMessage">
-              Send
+              {{ t('send') }}
             </button>
           </div>
 
           <div class="assistant-actions">
             <button @click="rateChatbotResponse(1)">
-              👍 Helpful
+              👍 {{ t('helpful') }}
             </button>
 
             <button @click="rateChatbotResponse(0)">
-              👎 Not Helpful
+              👎 {{ t('notHelpful') }}
             </button>
 
             <button @click="openEscalationPanel">
-              Escalate to HR Officer
+              {{ t('escalateHrOfficer') }}
             </button>
           </div>
 
           <input
             v-model="ratingComment"
             class="feedback-input"
-            placeholder="Optional chatbot feedback comment..."
+            :placeholder="t('optionalFeedback')"
           />
 
           <div v-if="escalationPanelOpen" class="escalation-panel">
             <div class="section-title">
               <div>
-                <p class="eyebrow">HR Officer Support</p>
-                <h3>Escalate Question</h3>
+                <p class="eyebrow">{{ t('hrOfficerSupport') }}</p>
+                <h3>{{ t('escalateQuestion') }}</h3>
               </div>
 
               <button @click="cancelEscalationPanel">
-                Cancel
+                {{ t('cancel') }}
               </button>
             </div>
 
-            <label class="field-label">Question</label>
+            <label class="field-label">{{ t('question') }}</label>
             <input
               v-model="escalationForm.question"
               class="feedback-input"
-              placeholder="Enter the question to escalate..."
+              :placeholder="t('questionPlaceholder')"
             />
 
-            <label class="field-label">Description</label>
+            <label class="field-label">{{ t('description') }}</label>
             <textarea
               v-model="escalationForm.description"
               class="feedback-textarea"
@@ -1486,12 +1485,12 @@
             ></textarea>
 
             <button class="primary" @click="submitEscalationRequest">
-              Submit to HR Officer
+              {{ t('submitHrOfficer') }}
             </button>
           </div>
 
           <div class="history-panel">
-            <p class="eyebrow">Conversation History</p>
+            <p class="eyebrow">{{ t('conversationHistory') }}</p>
 
             <div
               v-for="item in conversationHistory"
@@ -1501,20 +1500,20 @@
               <strong>{{ item.questionText }}</strong>
               <p>{{ item.responseText }}</p>
               <small>
-                Status: {{ item.conversationStatus }}
+                {{ t('status') }}: {{ item.conversationStatus }}
                 <span v-if="item.ratingValue !== null">
-                  | Rating: {{ item.ratingValue === 1 ? 'Helpful' : 'Not Helpful' }}
+                  | {{ t('rating') }}: {{ item.ratingValue === 1 ? t('helpful') : t('notHelpful') }}
                 </span>
               </small>
             </div>
 
             <p v-if="conversationHistory.length === 0" class="muted">
-              No conversation history yet.
+              {{t('noConversation')}}
             </p>
           </div>
 
           <div class="history-panel">
-            <p class="eyebrow">Escalation Requests</p>
+            <p class="eyebrow">{{ t('escalationRequests') }}</p>
 
             <div
               v-for="request in escalationRequests.filter((item) => item.userId === currentUserId)"
@@ -1535,7 +1534,7 @@
               v-if="escalationRequests.filter((item) => item.userId === currentUserId).length === 0"
               class="muted"
             >
-              No escalation request submitted yet.
+              {{ t('noEscalation') }}
             </p>
           </div>
         </div>
@@ -1544,11 +1543,11 @@
           <div class="section-title">
             <div>
               <p class="eyebrow">{{ t('searchResults') }}</p>
-              <h3>Smart Search Result Documents</h3>
+              <h3>{{ t('smartSearchResults') }}</h3>
             </div>
 
             <button @click="clearSearchResults">
-              Clear
+              {{ t('clear') }}
             </button>
           </div>
 
@@ -1558,7 +1557,7 @@
               :key="doc.documentId"
               class="doc-card"
             >
-              <span class="status-pill amber">Search Result</span>
+              <h3>{{ t('smartSearchResults') }}</h3>
 
               <h4 v-html="highlightMatchedContent(doc.title)"></h4>
 
@@ -1584,7 +1583,7 @@
             </article>
 
             <div v-if="searchResults.length === 0" class="empty-state">
-              No matching document found. Try searching TASKA, TBK, SPKN, COS, CFS, promotion, or contract.
+              {{ t('noMatchingSmartDocument') }}
             </div>
           </div>
         </div>
@@ -1607,12 +1606,12 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Recommendations</p>
-              <h3>Recommended Documents</h3>
+              <p class="eyebrow">{{ t('recommendations') }}</p>
+              <h3>{{ t('recommendedDocuments') }}</h3>
             </div>
 
             <button @click="refreshRecommendations">
-              Refresh
+              {{ t('refresh') }}
             </button>
           </div>
 
@@ -1622,17 +1621,17 @@
               :key="doc.documentId"
               class="doc-card"
             >
-              <span class="status-pill green">Recommended</span>
+              <span class="status-pill green">{{ t('recommended') }}</span>
               <h4>{{ doc.title }}</h4>
 
               <p v-if="doc.reason">
-                Reason: {{ doc.reason }}
+                {{ t('reason') }}: {{ doc.reason }}
               </p>
 
               <p v-if="doc.summary" v-html="highlightMatchedContent(doc.summary)"></p>
 
               <p v-if="doc.relevanceScore">
-                Relevance Score: {{ doc.relevanceScore }}
+                {{ t('relevanceScore') }}: {{ doc.relevanceScore }}
               </p>
 
               <div>
@@ -1642,7 +1641,7 @@
 
               <div class="button-row">
                 <button class="primary" @click="saveDocument(doc)">
-                  Save Document
+                  {{ t('saveDocument') }}
                 </button>
 
                 <button @click="generateDocumentSummary(doc)">
@@ -1650,25 +1649,25 @@
                 </button>
 
                 <button @click="openRecommendationReport(doc)">
-                  Report Incorrect
+                  {{ t('reportIncorrect') }}
                 </button>
               </div>
             </article>
 
             <div v-if="smartResults.length === 0" class="empty-state">
-              No recommended documents available.
+              {{ t('noRecommended') }}
             </div>
           </div>
 
           <div v-if="generatedSummary" class="summary-panel">
             <div class="section-title">
               <div>
-                <p class="eyebrow">AI Document Summary</p>
+                <p class="eyebrow">{{ t('aiDocumentSummary') }}</p>
                 <h3>{{ selectedSummaryDoc?.title }}</h3>
               </div>
 
               <button @click="generatedSummary = ''">
-                Close
+                {{ t('close') }}
               </button>
             </div>
 
@@ -1678,12 +1677,12 @@
           <div v-if="reportDialogOpen" class="report-panel">
             <div class="section-title">
               <div>
-                <p class="eyebrow">Recommendation Report</p>
-                <h3>Report Incorrect Recommendation</h3>
+                <p class="eyebrow">{{ t('recommendationReport') }}</p>
+                <h3>{{ t('reportIncorrectRecommendation') }}</h3>
               </div>
 
               <button @click="cancelRecommendationReport">
-                Cancel
+                {{ t('cancel') }}
               </button>
             </div>
 
@@ -2047,7 +2046,7 @@
         </div>
 
         <StatCard label="Users" :value="String(users.length)" note="Registered accounts" />
-        <StatCard label="Documents" :value="String(documents.length)" note="Repository records" />
+        <StatCard :label="t('totalDocuments')" :value="String(documents.length)" :note="t('repositoryRecords')" />
         <StatCard label="Audit Events" :value="String(logs.length)" note="System activity logs" />
 
         <div class="wide-card">
@@ -3572,7 +3571,7 @@ const translations = {
     send: 'Hantar',
     helpful: 'Membantu',
     notHelpful: 'Tidak Membantu',
-    escalateHrOfficer: 'Panjangkan kepada Pegawai HR',
+    escalateHrOfficer: 'Rujuk kepada Pegawai HR',
     optionalFeedback: 'Komen maklum balas chatbot secara pilihan...',
     hrOfficerSupport: 'Sokongan Pegawai HR',
     escalateQuestion: 'Panjangkan Soalan',
