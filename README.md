@@ -79,16 +79,20 @@ The prototype includes the following main functions:
 
 This index table provides a quick reference for locating the frontend implementation of each functional module in the repository. Since most frontend interfaces are implemented in one main Vue file, the main module links point to `src/App.vue`, while reusable UI components are stored in `src/components/`.
 
+## 2. GitHub Index Table: Module to Frontend Script Mapping
+
+This index table provides a quick reference for locating the frontend implementation of each functional module in the repository. Since most frontend interfaces are implemented in one main Vue file, the main module links point to `src/App.vue`, while reusable UI components are stored in `src/components/`.
+
 ## Subsystem 1: User and Access Management
 **Developer:** Lee May Yan
 
 | Module | Frontend Script |
 |---|---|
-| Guest Access Module | • [Public Portal Search Interface](src/App.vue#L62-L133)<br>• [Search Results Interface](src/App.vue#L137-L174)<br>• [Public Document Details Modal](src/App.vue#L175-L244) |
-| User Registration and Login Module | • [Authentication Overview Panel](src/App.vue#L247-L270)<br>• [Login/Register/Admin Tab Navigation](src/App.vue#L271-L280)<br>• [User Login Form](src/App.vue#L282-L315)<br>• [User Registration Form](src/App.vue#L317-L356)<br>• [Administrator Login Form](src/App.vue#L357-L390)<br>• [Password Reset Modal](src/App.vue#L392-L443) |
-| Profile Management Module | • [User Profile Display Card](src/App.vue#L445-L468)<br>• [Edit Profile Form](src/App.vue#L470-L512)<br>• [Notification Preference Dropdown](src/App.vue#L500-L511)<br>• [Account Security Settings Cards](src/App.vue#L514-L538)<br>• [Account Deactivation Request Modal](src/App.vue#L540-L586)<br>• [Change Password Modal](src/App.vue#L589-L630) |
-| Administrator Authentication Module | • [Administrator Login Form](src/App.vue#L357-L390)<br>• [Administrator Workspace Overview](src/App.vue#L2040-L2052) |
-| Role and Permission Control Module | • [Role and Permission Control Interface](src/App.vue#L2119-L2147)<br>• [Create/Edit Role Modal](src/App.vue#L2149-L2192)<br>• [User Account Management Table](src/App.vue#L2195-L2246)<br>• [System Activity Logs Interface](src/App.vue#L2249-L2271) |
+| Guest Access Module | • [Public Portal Search Interface](src/App.vue#L62-L135)<br>• [Search Results Interface](src/App.vue#L137-L173)<br>• [Public Document Details Modal](src/App.vue#L174-L244) |
+| User Registration and Login Module | • [Authentication Overview Panel](src/App.vue#L247-L269)<br>• [Login/Register/Admin Tab Navigation](src/App.vue#L270-L280)<br>• [User Login Form](src/App.vue#L282-L336)<br>• [Failed Login Protection UI](src/App.vue#L305-L324)<br>• [Failed Login Protection Logic](src/App.vue#L4106-L4212)<br>• [User Registration Form](src/App.vue#L338-L376)<br>• [Administrator Login Form](src/App.vue#L378-L411)<br>• [Password Reset Modal](src/App.vue#L413-L463)<br>• [Reset Password Logic](src/App.vue#L4272-L4296) |
+| Profile Management Module | • [User Profile Display Card](src/App.vue#L466-L488)<br>• [Edit Profile Form](src/App.vue#L490-L530)<br>• [Notification Preference Dropdown](src/App.vue#L519-L526)<br>• [Account Security Settings Cards](src/App.vue#L533-L564)<br>• [Account Deactivation Request Modal](src/App.vue#L567-L607)<br>• [Change Password Modal](src/App.vue#L609-L651)<br>• [Change Password Logic](src/App.vue#L3788-L3827)<br>• [MFA Toggle Logic](src/App.vue#L4328-L4332) |
+| Administrator Authentication Module | • [Administrator Login Form](src/App.vue#L378-L411)<br>• [Administrator Login Logic](src/App.vue#L4214-L4237)<br>• [Administrator Workspace Overview](src/App.vue#L2063-L2073) |
+| Role and Permission Control Module | • [Role and Permission Control Interface](src/App.vue#L2140-L2170)<br>• [Create/Edit Role Modal](src/App.vue#L2172-L2213)<br>• [User Account Management Table](src/App.vue#L2216-L2268)<br>• [System Activity Logs Interface](src/App.vue#L2270-L2297)<br>• [Role Management Logic](src/App.vue#L5609-L5676)<br>• [User Status Control Logic](src/App.vue#L5596-L5607)<br>• [Activity Log Helper](src/App.vue#L4025-L4035)<br>• [Filter Logs Logic](src/App.vue#L5686-L5690) |
 
 ---
 
@@ -97,11 +101,11 @@ This index table provides a quick reference for locating the frontend implementa
 
 | Module | Frontend Script |
 |---|---|
-| Document Upload Module | • [Document Upload Interface](src/App.vue#L667-L810) |
-| Document Classification and Categorization Module | • [AI Classification Review Interface](src/App.vue#L812-L925)<br>• [Classification Approval Interface](src/App.vue#L886-L920) |
-| Document Storage Repository Module | • [Document Repository Table](src/App.vue#L927-L1082)<br>• [Document Preview Interface](src/App.vue#L1222-L1297)<br>• [Document Audit Trail](src/App.vue#L1302-L1338) |
-| Document Search and Filter Module | • [Repository Search Interface](src/App.vue#L927-L1082)<br>• [Repository Filter Controls](src/App.vue#L942-L984)<br>• [Repository Result Table](src/App.vue#L994-L1082) |
-| Document Update and Archive Module | • [Archive Document Modal](src/App.vue#L1085-L1132)<br>• [Upload New Version Modal](src/App.vue#L1135-L1219)<br>• [Version Management Interface](src/App.vue#L1135-L1219) |
+| Document Upload Module | • [Document Upload Interface](src/App.vue#L688-L831) |
+| Document Classification and Categorization Module | • [AI Classification Review Interface](src/App.vue#L833-L947)<br>• [Classification Approval Interface](src/App.vue#L910-L945) |
+| Document Storage Repository Module | • [Document Repository Table](src/App.vue#L948-L1103)<br>• [Document Preview Interface](src/App.vue#L1243-L1316)<br>• [Document Audit Trail](src/App.vue#L1323-L1358) |
+| Document Search and Filter Module | • [Repository Search Interface](src/App.vue#L948-L1103)<br>• [Repository Filter Controls](src/App.vue#L962-L1003)<br>• [Repository Result Table](src/App.vue#L1007-L1103) |
+| Document Update and Archive Module | • [Archive Document Modal](src/App.vue#L1106-L1154)<br>• [Upload New Version Modal](src/App.vue#L1156-L1239)<br>• [Version Management Interface](src/App.vue#L1156-L1239) |
 
 ---
 
@@ -110,11 +114,11 @@ This index table provides a quick reference for locating the frontend implementa
 
 | Module | Frontend Script |
 |---|---|
-| Smart Search Module | • [Smart Search Interface](src/App.vue#L1341-L1401)<br>• [Smart Search Results Interface](src/App.vue#L1542-L1589)<br>• [Trending Documents Interface](src/App.vue#L1744-L1768)<br>• [Frequently Used Policies Interface](src/App.vue#L1770-L1785) |
-| FAQ and Knowledge Assistance Module | • [HR Chatbot Interface](src/App.vue#L1403-L1459)<br>• [Escalation Request Interface](src/App.vue#L1461-L1491)<br>• [Chatbot Conversation History Interface](src/App.vue#L1493-L1514)<br>• [FAQ Section Interface](src/App.vue#L1722-L1742)<br>• [Document Summary Generation Interface](src/App.vue#L1592-L1605) |
-| Personalized Recommendation Module | • [Recommended Documents Interface](src/App.vue#L1607-L1675)<br>• [AI Document Summary Panel](src/App.vue#L1652-L1675)<br>• [Recommendation Report Interface](src/App.vue#L1677-L1719) |
-| Notification and Update Alert Module | • [Notification Preferences Interface](src/App.vue#L1802-L1843)<br>• [Smart Alerts Interface](src/App.vue#L1845-L1886)<br>• [Recent Notifications Panel](src/App.vue#L1888-L1929)<br>• [User Feedback Interface](src/App.vue#L1931-L1959) |
-| Saved Documents and Personal Storage Module | • [Save Favourite Documents from Search Results](src/App.vue#L1574-L1577)<br>• [Save Favourite Documents from Recommendations](src/App.vue#L1643-L1646)<br>• [Personal Storage Interface](src/App.vue#L1961-L2037)<br>• [Personal Notes Interface](src/App.vue#L1967-L1992)<br>• [Remove Favourite Document Interface](src/App.vue#L2027-L2033) |
+| Smart Search Module | • [Smart Search Interface](src/App.vue#L1362-L1424)<br>• [Smart Search Results Interface](src/App.vue#L1563-L1610)<br>• [Trending Documents Interface](src/App.vue#L1754-L1781)<br>• [Frequently Used Policies Interface](src/App.vue#L1783-L1807) |
+| FAQ and Knowledge Assistance Module | • [HR Chatbot Interface](src/App.vue#L1427-L1493)<br>• [Escalation Request Interface](src/App.vue#L1495-L1528)<br>• [Chatbot Conversation History Interface](src/App.vue#L1530-L1561)<br>• [FAQ Section Interface](src/App.vue#L1741-L1752)<br>• [Document Summary Generation Interface](src/App.vue#L1612-L1625) |
+| Personalized Recommendation Module | • [Recommended Documents Interface](src/App.vue#L1627-L1696)<br>• [AI Document Summary Panel](src/App.vue#L1683-L1696)<br>• [Recommendation Report Interface](src/App.vue#L1698-L1738) |
+| Notification and Update Alert Module | • [Notification Preferences Interface](src/App.vue#L1810-L1859)<br>• [Smart Alerts Interface](src/App.vue#L1864-L1907)<br>• [Recent Notifications Panel](src/App.vue#L1909-L1949)<br>• [User Feedback Interface](src/App.vue#L1951-L1980) |
+| Saved Documents and Personal Storage Module | • [Save Favourite Documents from Search Results](src/App.vue#L1595-L1603)<br>• [Save Favourite Documents from Recommendations](src/App.vue#L1663-L1667)<br>• [Personal Storage Interface](src/App.vue#L1982-L2060)<br>• [Personal Notes Interface](src/App.vue#L1990-L2029)<br>• [Remove Favourite Document Interface](src/App.vue#L2050-L2052) |
 
 ---
 
@@ -125,7 +129,6 @@ This index table provides a quick reference for locating the frontend implementa
 | Reusable Input Field | • [InputField Component](src/components/InputField.vue) |
 | Reusable Statistic Card | • [StatCard Component](src/components/StatCard.vue) |
 | Reusable Setting Card | • [SettingCard Component](src/components/SettingCard.vue) |
----
 
 ## 3. Technology Used
 
