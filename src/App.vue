@@ -302,6 +302,27 @@
               :placeholder="t('mfaPlaceholder')"
             />
 
+            <div
+              v-if="loginForm.email"
+              class="lock-status-box"
+              :class="{ locked: isPrototypeLocked(loginForm.email) }"
+            >
+              <strong>{{ t('failedLoginProtection') }}</strong>
+
+              <p v-if="isPrototypeLocked(loginForm.email)">
+                {{ t('accountLockedAfterAttempts') }}
+              </p>
+
+              <p v-else>
+                {{ t('failedAttempts') }}:
+                {{ getFailedAttempts(loginForm.email) }} / {{ MAX_LOGIN_ATTEMPTS }}
+              </p>
+
+              <small v-if="loginLockMessage">
+                {{ loginLockMessage }}
+              </small>
+            </div>
+
             <button class="primary full" @click="userLogin">
               {{ t('userLogin') }}
             </button>
@@ -2800,6 +2821,13 @@ const session = ref('Guest')
 const toast = ref('Welcome to Johor HR Knowledge Hub interactive prototype.')
 const toastType = ref('success')
 
+const MAX_LOGIN_ATTEMPTS = 3
+
+const failedLoginAttempts = useLocalStorage('jhr_failed_login_attempts', {})
+const lockedPrototypeAccounts = useLocalStorage('jhr_locked_prototype_accounts', {})
+
+const loginLockMessage = ref('')
+
 function showToast(message, type = 'success') {
   toast.value = message
   toastType.value = type
@@ -2912,6 +2940,13 @@ const translations = {
     submitRegistration: 'Submit Registration',
     adminLoginAccount: 'Administrator Login Account',
     adminLoginDesc: 'Dedicated admin login for management functions.',
+    failedLoginProtection: 'Failed Login Protection',
+    failedAttempts: 'Failed attempts',
+    failedAttemptText: 'failed login attempt(s).',
+    attemptRemainingText: 'attempt(s) remaining before account lock.',
+    accountLockedAfterAttempts: 'This account is locked after 3 failed login attempts.',
+    accountLockedToast: 'Account locked after multiple failed login attempts.',
+    enterEmailBeforeAttempt: 'Please enter an email before login attempt can be recorded.',
 
     // Reset Password
     accountRecovery: 'Account Recovery',
@@ -3346,6 +3381,13 @@ const translations = {
     adminLoginAccount: 'Akaun Log Masuk Pentadbir',
     adminLoginDesc: 'Log masuk khas pentadbir untuk fungsi pengurusan.',
     enterCurrentPassword: 'Masukkan kata laluan semasa',
+    failedLoginProtection: 'Perlindungan Log Masuk Gagal',
+    failedAttempts: 'Percubaan gagal',
+    failedAttemptText: 'percubaan log masuk gagal.',
+    attemptRemainingText: 'percubaan lagi sebelum akaun dikunci.',
+    accountLockedAfterAttempts: 'Akaun ini dikunci selepas 3 percubaan log masuk gagal.',
+    accountLockedToast: 'Akaun dikunci selepas beberapa percubaan log masuk gagal.',
+    enterEmailBeforeAttempt: 'Sila masukkan emel sebelum percubaan log masuk direkodkan.',
 
     // Reset Password
     accountRecovery: 'Pemulihan Akaun',
@@ -4061,22 +4103,90 @@ function fakeLogin(type) {
   addLog(`${type} demo login`, 'Authentication', 'Success', type)
 }
 
+function getLoginKey(email) {
+  return email.trim().toLowerCase()
+}
+
+function getFailedAttempts(email) {
+  const key = getLoginKey(email)
+  return failedLoginAttempts.value[key] || 0
+}
+
+function isPrototypeLocked(email) {
+  const key = getLoginKey(email)
+  return lockedPrototypeAccounts.value[key] === true
+}
+
+function recordFailedLogin(email) {
+  const key = getLoginKey(email)
+
+  if (!key) {
+    loginLockMessage.value = t('enterEmailBeforeAttempt')
+    return
+  }
+
+  failedLoginAttempts.value[key] = (failedLoginAttempts.value[key] || 0) + 1
+
+  const attempts = failedLoginAttempts.value[key]
+  const remaining = MAX_LOGIN_ATTEMPTS - attempts
+
+  if (attempts >= MAX_LOGIN_ATTEMPTS) {
+    lockedPrototypeAccounts.value[key] = true
+    loginLockMessage.value = t('accountLockedAfterAttempts')
+  } else {
+    loginLockMessage.value =
+      `${attempts} ${t('failedAttemptText')} ${remaining} ${t('attemptRemainingText')}`
+  }
+}
+
+function resetFailedLogin(email) {
+  const key = getLoginKey(email)
+  failedLoginAttempts.value[key] = 0
+  lockedPrototypeAccounts.value[key] = false
+  loginLockMessage.value = ''
+}
+
 function userLogin() {
+  loginLockMessage.value = ''
+
   if (!loginForm.value.email || !loginForm.value.password) {
     showToast('Please enter email and password.', 'info')
     addLog('Failed login attempt', 'User Login', 'Warning', 'Unknown User')
+    recordFailedLogin(loginForm.value.email)
+    return
+  }
+
+  if (isPrototypeLocked(loginForm.value.email)) {
+    loginLockMessage.value = t('accountLockedAfterAttempts')
+    showToast(t('accountLockedToast'), 'error')
+    addLog('Login blocked - account locked', 'User Login', 'Warning', loginForm.value.email)
+    return
+  }
+
+  if (loginForm.value.password.length < 8) {
+    showToast('Password must contain at least 8 characters.', 'error')
+    addLog('Failed login attempt - invalid password length', 'User Login', 'Warning', loginForm.value.email)
+    recordFailedLogin(loginForm.value.email)
+    return
+  }
+
+  if (loginForm.value.mfa && !/^\d{6}$/.test(loginForm.value.mfa)) {
+    showToast('MFA code must be 6 digits.', 'error')
+    addLog('Failed login attempt - invalid MFA code', 'User Login', 'Warning', loginForm.value.email)
+    recordFailedLogin(loginForm.value.email)
     return
   }
 
   const loggedInUser = users.value.find(
-  (user) =>
-    user.email.toLowerCase() === loginForm.value.email.toLowerCase() &&
-    user.role.toLowerCase().includes('registered')
+    (user) =>
+      user.email.toLowerCase() === loginForm.value.email.toLowerCase() &&
+      user.role.toLowerCase().includes('registered')
   )
 
   if (!loggedInUser) {
     showToast('User account not found.', 'error')
     addLog('Failed login attempt - account not found', 'User Login', 'Warning', loginForm.value.email)
+    recordFailedLogin(loginForm.value.email)
     return
   }
 
@@ -4085,6 +4195,8 @@ function userLogin() {
     addLog('Failed login attempt - inactive account', 'User Login', 'Warning', loggedInUser.name)
     return
   }
+
+  resetFailedLogin(loginForm.value.email)
 
   profileForm.value = {
     name: loggedInUser.name,

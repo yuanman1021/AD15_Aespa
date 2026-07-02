@@ -1492,3 +1492,35 @@ mark {
   font-weight: 700;
   min-height: 38px;
 }
+
+.lock-status-box {
+  margin: 12px 0;
+  padding: 14px 16px;
+  border: 1px solid #facc15;
+  background: #fffbeb;
+  border-radius: 14px;
+  color: #92400e;
+}
+
+.lock-status-box strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.lock-status-box p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.lock-status-box small {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.lock-status-box.locked {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
