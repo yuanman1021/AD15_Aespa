@@ -1690,23 +1690,23 @@
               Reporting: <strong>{{ selectedRecommendation.title }}</strong>
             </p>
 
-            <label class="field-label">Reason</label>
+            <label class="field-label">{{ t('reason') }}</label>
             <select v-model="recommendationReportForm.reportReason">
-              <option>Irrelevant</option>
-              <option>Inaccurate</option>
-              <option>Outdated</option>
-              <option>Inappropriate</option>
-              <option>Others</option>
+              <option>{{ t('irrelevant') }}</option>
+              <option>{{ t('inaccurate') }}</option>
+              <option>{{ t('outdated') }}</option>
+              <option>{{ t('inappropriate') }}</option>
+              <option>{{ t('others') }}</option>
             </select>
 
-            <label class="field-label">Description</label>
+            <label class="field-label">{{ t('description') }}</label>
             <textarea
               v-model="recommendationReportForm.reportDescription"
               placeholder="Explain why this recommendation is incorrect..."
             ></textarea>
 
             <button class="primary full" @click="submitRecommendationReport">
-              Submit Report
+              {{ t('submitReport') }}
             </button>
           </div>
         </div>
@@ -1714,12 +1714,12 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">FAQ</p>
-              <h3>Frequently Asked Questions</h3>
+              <p class="eyebrow">{{ t('faq') }}</p>
+              <h3>{{ t('frequentlyAskedQuestions') }}</h3>
             </div>
 
             <button @click="openEscalationPanel">
-              Escalate to HR Officer
+              {{t('escalateHrOfficer')}}
             </button>
           </div>
 
@@ -1734,8 +1734,8 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Trending Documents</p>
-              <h3>Currently Popular HR Documents</h3>
+              <p class="eyebrow">{{ t('trendingDocuments') }}</p>
+              <h3>{{ t('popularDocuments') }}</h3>
             </div>
           </div>
 
@@ -1745,13 +1745,13 @@
               :key="doc.trendingId"
               class="doc-card"
     >
-              <span class="status-pill green">Trending</span>
+              <span class="status-pill green">{{ t('trending') }}</span>
               <h4>{{ doc.title }}</h4>
               <p>{{ doc.summary }}</p>
 
               <div>
-                <span>Views: {{ doc.viewCount }}</span>
-                <span>Score: {{ doc.trendingScore }}</span>
+                <span>{{ t('views') }}: {{ doc.viewCount }}</span>
+                <span>{{ t('score') }}: {{ doc.trendingScore }}</span>
               </div>
             </article>
           </div>
@@ -1760,8 +1760,8 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Frequently Used Policies</p>
-              <h3>Suggested Frequently Used Policies</h3>
+              <p class="eyebrow">{{t('frequentlyUsedPolicies')}}</p>
+              <h3>{{t('suggestedFrequentlyUsed')}}</h3>
             </div>
           </div>
 
@@ -1771,7 +1771,7 @@
               :key="doc.documentId"
               class="doc-card"
             >
-              <span class="status-pill amber">Frequently Used</span>
+              <span class="status-pill amber">{{ t('frequentlyUsed') }}</span>
               <h4>{{ doc.title }}</h4>
               <p>{{ doc.summary }}</p>
 
@@ -1782,14 +1782,16 @@
             </article>
           </div>
         </div>
+
+
       </section>
 
       <!-- PERSONAL STORAGE AND NOTIFICATION -->
       <section v-if="screen === 'personal'" class="dashboard-grid">
         <div class="welcome-card">
-          <p class="eyebrow">Saved Documents and Notifications</p>
-          <h3>Keep track of saved documents, notes and policy updates.</h3>
-          <p>Users receive alerts when relevant or saved documents are updated.</p>
+          <p class="eyebrow">{{ t('savedNotifications') }}</p>
+          <h3>{{ t('savedNotificationsTitle') }}</h3>
+          <p>{{ t('savedNotificationsDesc') }}</p>
         </div>
 
         <StatCard label="Saved" :value="String(savedDocuments.length)" note="Personal collection" />
@@ -1799,12 +1801,12 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Notification Preferences</p>
-              <h3>Manage Alerts</h3>
+              <p class="eyebrow">{{ t('notificationPreferences') }}</p>
+              <h3>{{ t('manageAlerts') }}</h3>
             </div>
 
             <button @click="saveNotificationPreferences">
-              Save Preferences
+              {{ t('savePreferences') }}
             </button>
           </div>
 
@@ -1842,12 +1844,12 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Smart Alerts</p>
-              <h3>Recommended Alerts Based on User Activity</h3>
+              <p class="eyebrow">{{ t('smartAlerts') }}</p>
+              <h3>{{ t('recommendedAlerts') }}</h3>
             </div>
 
             <button @click="loadNotifications">
-              Refresh Alerts
+              {{ t('refreshAlerts') }}
             </button>
           </div>
 
@@ -1873,23 +1875,23 @@
               v-if="!alert.read"
               @click="markNotificationRead(alert.id)"
             >
-              Mark as Read
+              {{ t('markRead') }}
             </button>
           </div>
 
           <p v-if="smartAlerts.length === 0" class="muted">
-            No smart alerts available.
+            {{ t('noSmartAlerts') }}
           </p>
         </div>
 
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Recent Notifications</p>
-              <h3>Policy Updates and Alerts</h3>
+              <p class="eyebrow">{{ t('recentNotifications') }}</p>
+              <h3>{{ t('policyUpdatesAlerts') }}</h3>
             </div>
             <button @click="markAllNotificationsRead">
-              Mark All as Read
+              {{ t('markAllRead') }}
             </button>
           </div>
 
@@ -1914,13 +1916,13 @@
                   v-if="!notice.read"
                   @click="markNotificationRead(notice.id)"
                 >
-                  Mark as Read
+                  {{ t('markRead') }}
                 </button>
               </div>
             </div>
 
             <p v-if="policyNotifications.length === 0" class="muted">
-              No notifications available.
+              {{ t('noNotifications') }}
             </p>
           </div>
         </div>
@@ -1928,22 +1930,22 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">User Feedback</p>
-              <h3>Submit Feedback</h3>
+              <p class="eyebrow">{{ t('userFeedback') }}</p>
+              <h3>{{ t('submitFeedback') }}</h3>
             </div>
           </div>
 
-          <label class="field-label">Feedback Category</label>
+          <label class="field-label">{{ t('feedbackCategory') }}</label>
           <select v-model="feedbackForm.feedbackCategory" class="feedback-input">
-            <option>System Issue</option>
-            <option>Document Issue</option>
-            <option>Chatbot Issue</option>
-            <option>Search Issue</option>
-            <option>Suggestion</option>
-            <option>Others</option>
+            <option>{{ t('systemIssue') }}</option>
+            <option>{{ t('documentIssue') }}</option>
+            <option>{{ t('chatbotIssue') }}</option>
+            <option>{{ t('searchIssue') }}</option>
+            <option>{{ t('suggestion') }}</option>
+            <option>{{ t('others') }}</option>
           </select>
 
-          <label class="field-label">Feedback Content</label>
+          <label class="field-label">{{ t('feedbackContent') }}</label>
           <textarea
             v-model="feedbackForm.feedbackContent"
             class="feedback-textarea"
@@ -1951,15 +1953,15 @@
           ></textarea>
 
           <button class="primary" @click="submitUserFeedback">
-            Submit Feedback
+            {{ t('submitFeedback') }}
           </button>
         </div>
 
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">Personal Storage</p>
-              <h3>Saved Documents and Personal Notes</h3>
+              <p class="eyebrow">{{ t('personalStorage') }}</p>
+              <h3>{{ t('savedPersonalNotes') }}</h3>
             </div>
           </div>
 
@@ -1969,16 +1971,16 @@
           >
             <div class="section-title">
               <div>
-                <p class="eyebrow">Personal Note</p>
+                <p class="eyebrow">{{ t('personalNote') }}</p>
                 <h3>{{ noteForm.title }}</h3>
               </div>
 
               <button @click="cancelNoteEditor">
-                Cancel
+                {{ t('cancel') }}
               </button>
             </div>
 
-            <label class="field-label">Note Content</label>
+            <label class="field-label">{{ t('noteContent') }}</label>
             <textarea
               v-model="noteForm.noteContent"
               class="feedback-textarea"
@@ -1986,7 +1988,7 @@
             ></textarea>
 
             <button class="primary" @click="savePersonalNote">
-              Save Note
+              {{ t('saveNote') }}
             </button>
           </div>
 
@@ -2004,7 +2006,7 @@
               </p>
 
               <p v-else class="muted">
-                No personal note yet.
+                {{ t('noPersonalNote') }}
               </p>
 
               <div>
@@ -2014,24 +2016,24 @@
 
               <div class="button-row">
                 <button @click="openNoteEditor(item)">
-                  {{ item.note ? 'Edit Note' : 'Add Note' }}
+                  {{ item.note ? t('editNote') : t('addNote') }}
                 </button>
 
                 <button
                   v-if="item.noteId"
                   @click="deletePersonalNote(item)"
                 >
-                  Delete Note
+                  {{ t('deleteNote') }}
                 </button>
 
                 <button @click="removeSavedDocument(item.savedId)">
-                  Remove
+                  {{ t('remove') }}
                 </button>
               </div>
             </article>
 
             <div v-if="savedDocuments.length === 0" class="empty-state">
-              No saved documents yet. Go to Smart Support and save one.
+              {{ t('noSavedDocuments') }}
             </div>
           </div>
         </div>
@@ -2040,9 +2042,9 @@
       <!-- ADMIN WORKSPACE -->
       <section v-if="screen === 'admin' && session === 'Admin'" class="dashboard-grid">
         <div class="welcome-card admin-theme">
-          <p class="eyebrow">Administrator Workspace</p>
-          <h3>Manage users, permissions, documents, AI suggestions and audit logs.</h3>
-          <p>Admin can control user access, roles and system records.</p>
+          <p class="eyebrow">{{ t('adminWorkspace') }}</p>
+          <h3>{{ t('adminWorkspaceDesc') }}</h3>
+          <p>{{ t('adminControlDesc') }}</p>
         </div>
 
         <StatCard label="Users" :value="String(users.length)" note="Registered accounts" />
@@ -2052,12 +2054,12 @@
         <div class="wide-card">
           <div class="section-title">
             <div>
-              <p class="eyebrow">HR Escalation</p>
-              <h3>Escalation Requests from Users</h3>
+              <p class="eyebrow">{{ t('hrEscalation') }}</p>
+              <h3>{{ t('escalationRequestsFromUsers') }}</h3>
             </div>
 
             <button @click="loadEscalationRequests">
-              Refresh
+              {{ t('refresh') }}
             </button>
           </div>
 
@@ -2065,12 +2067,12 @@
             <table>
               <thead>
                 <tr>
-                  <th>Question</th>
-                  <th>User</th>
-                  <th>Description</th>
-                  <th>Status</th>
-                  <th>Submitted At</th>
-                  <th>Action</th>
+                  <th>{{ t('question') }}</th>
+                  <th>{{ t('user') }}</th>
+                  <th>{{ t('description') }}</th>
+                  <th>{{ t('status') }}</th>
+                  <th>{{ t('submittedAt') }}</th>
+                  <th>{{ t('action') }}</th>
                 </tr>
               </thead>
 
@@ -2097,11 +2099,11 @@
                       v-if="request.escalationStatus !== 'Resolved'"
                       @click="resolveEscalationRequest(request.escalationId)"
                     >
-                      Mark Resolved
+                      {{ t('markResolved') }}
                     </button>
 
                     <span v-else class="muted">
-                      Completed
+                      {{ t('completed') }}
                     </span>
                   </td>
                 </tr>
@@ -2110,15 +2112,15 @@
           </div>
 
           <p v-if="escalationRequests.length === 0" class="muted">
-            No escalation requests submitted yet.
+            {{ t('noEscalationSubmitted') }}
           </p>
         </div>
 
-       <div class="wide-card">
+      <div class="wide-card">
         <div class="section-title">
-          <h3>Role and Permission Control</h3>
+          <h3>{{ t('rolePermission') }}</h3>
           <button @click="openCreateRoleForm">
-            Create Role
+            {{ t('createRole') }}
           </button>
         </div>
 
@@ -2139,7 +2141,7 @@
 
       <div class="button-row">
         <button @click="openEditRoleForm(role, index)">
-          Edit Role
+          {{ t('editRole') }}
         </button>
       </div>
     </article>
@@ -2150,12 +2152,12 @@
   <div class="modal-card">
     <div class="section-title">
       <div>
-        <p class="eyebrow">Role Management</p>
-        <h3>{{ editingRoleIndex === null ? 'Create New Role' : 'Edit Role' }}</h3>
+        <p class="eyebrow">{{ t('roleManagement') }}</p>
+        <h3>{{ editingRoleIndex === null ? t('createNewRole') : t('editRole') }}</h3>
       </div>
 
       <button @click="cancelRoleForm">
-        Cancel
+        {{ t('cancel') }}
       </button>
     </div>
 
@@ -2166,7 +2168,7 @@
     />
 
     <label class="input-group">
-      <span>Role Description</span>
+      <span>{{ t('roleDescription') }}</span>
       <textarea
         v-model="roleForm.description"
         class="feedback-textarea"
@@ -2175,7 +2177,7 @@
     </label>
 
     <label class="input-group">
-      <span>Permissions</span>
+      <span>{{ t('permissions') }}</span>
       <textarea
         v-model="roleForm.permissions"
         class="feedback-textarea"
@@ -2184,7 +2186,7 @@
     </label>
 
     <button class="primary full" @click="saveRole">
-      {{ editingRoleIndex === null ? 'Create Role' : 'Save Changes' }}
+      {{ editingRoleIndex === null ? t('createRole') : t('saveChanges') }}
     </button>
   </div>
 </div>
@@ -2192,7 +2194,7 @@
 
         <div class="wide-card">
           <div class="section-title">
-            <h3>User Account Management</h3>
+            <h3>{{ t('userAccountManagement') }}</h3>
             <button @click="toast = 'User table exported for audit review.'">
               Export
             </button>
@@ -2235,7 +2237,7 @@
 
                   <td>
                     <button @click="toggleUserStatus(user)">
-                      {{ user.status === 'Active' ? 'Suspend' : 'Reactivate' }}
+                      {{ user.status === 'Active' ? t('suspend') : t('reactivate') }}
                     </button>
                   </td>
                 </tr>
@@ -2246,9 +2248,9 @@
 
         <div class="wide-card">
           <div class="section-title">
-            <h3>System Activity Logs</h3>
+            <h3>{{ t('systemActivityLogs') }}</h3>
             <button @click="filterLogs">
-              Filter Logs
+              {{ t('filterLogs') }}
             </button>
           </div>
 
