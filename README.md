@@ -84,7 +84,7 @@ This index table provides a quick reference for locating the frontend implementa
 
 | Module | Frontend Script |
 |---|---|
-| Guest Access Module | • [Public Portal Search Interface](src/App.vue#L62-L133)<br>• [Search Results Interface](src/App.vue#L134-L174)<br>• [Public Document Details Modal](src/App.vue#L175-L244) |
+| Guest Access Module | • [Public Portal Search Interface](src/App.vue#L62-L133)<br>• [Search Results Interface](src/App.vue#L137-L174)<br>• [Public Document Details Modal](src/App.vue#L175-L244) |
 | User Registration and Login Module | • [Authentication Overview Panel](src/App.vue#L247-L270)<br>• [Login/Register/Admin Tab Navigation](src/App.vue#L271-L280)<br>• [User Login Form](src/App.vue#L282-L315)<br>• [User Registration Form](src/App.vue#L317-L356)<br>• [Administrator Login Form](src/App.vue#L357-L390)<br>• [Password Reset Modal](src/App.vue#L392-L443) |
 | Profile Management Module | • [User Profile Display Card](src/App.vue#L445-L468)<br>• [Edit Profile Form](src/App.vue#L470-L512)<br>• [Notification Preference Dropdown](src/App.vue#L500-L511)<br>• [Account Security Settings Cards](src/App.vue#L514-L538)<br>• [Account Deactivation Request Modal](src/App.vue#L540-L586)<br>• [Change Password Modal](src/App.vue#L589-L630) |
 | Administrator Authentication Module | • [Administrator Login Form](src/App.vue#L357-L390)<br>• [Administrator Workspace Overview](src/App.vue#L2040-L2052) |
