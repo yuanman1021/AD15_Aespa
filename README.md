@@ -308,7 +308,40 @@ Open the link in a browser.
 
 ---
 
-## 6. Important Note About Laragon
+---
+
+## 6. Login Data / Test Accounts
+
+Only the predefined prototype accounts listed below can log in to the system.
+
+For demonstration purposes, the password validation is simplified. Users may enter any password as long as it contains at least 8 characters. For MFA verification, users may enter any 6-digit code.
+
+Example login input:
+
+```text
+Password: 12345678
+MFA Code: 123456
+```
+
+| Name | Email | Role | Account Status | Login Access |
+|---|---|---|---|---|
+| Nur Aina Rahman | aina@johor.gov.my | Registered User | Active | User Login |
+| Daniel Tan | daniel@johor.gov.my | Registered User | Suspended | Cannot log in unless reactivated |
+| Tung Ern | tungern@johor.gov.my | Registered User | Active | User Login |
+| May Yan | mayyan@johor.gov.my | Administrator | Active | Administrator Login |
+| Yuan Man | yuanman@johor.gov.my | Administrator | Active | Administrator Login |
+
+Notes:
+
+```text
+1. Registered User accounts can access the normal user workspace.
+2. Administrator accounts can access the administrator workspace.
+3. Suspended accounts are blocked from logging in until reactivated by an administrator.
+4. Any 8-character password is accepted for prototype demonstration.
+5. Any 6-digit MFA code is accepted for prototype demonstration.
+```
+
+## 7. Important Note About Laragon
 
 Laragon is required for this prototype because the backend connects to a MySQL database.
 
@@ -331,7 +364,7 @@ Make sure Laragon MySQL is running before starting the backend server.
 
 ---
 
-## 7. Data Storage
+## 8. Data Storage
 
 This prototype uses both MySQL and browser localStorage.
 
@@ -371,7 +404,7 @@ mysql -u root johor_hr_knowledge_hub < database\johor_hr_knowledge_hub.sql
 ```
 
 
-## 8. Developer
+## 9. Developer
 
 ```text
 Project: Johor HR Knowledge Hub
