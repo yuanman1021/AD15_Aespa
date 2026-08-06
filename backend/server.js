@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import db from './db.js'
 
 const app = express()
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -1051,9 +1051,9 @@ app.patch('/api/escalation-requests/:escalationId/resolve', async (req, res) => 
   try {
     await db.query(
       `UPDATE escalationRequests
-       SET escalationStatus = 'Resolved',
-           resolvedAt = NOW()
-       WHERE escalationId = ?`,
+        SET escalationStatus = 'Resolved',
+            resolvedAt = NOW()
+        WHERE escalationId = ?`,
       [req.params.escalationId]
     )
 
@@ -1069,5 +1069,5 @@ app.patch('/api/escalation-requests/:escalationId/resolve', async (req, res) => 
 })
 
 app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`)
+  console.log(`Backend running on port ${PORT}`)
 })

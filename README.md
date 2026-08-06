@@ -422,3 +422,9 @@ Developer: Lee Tung Ern
 Subsystem 3: Intelligent Recommendation and Support
 Developer: Khoo Yuan Man
 ```
+Deployment / Future Development Notes
+
+This project includes a Vue frontend, Node.js/Express backend and MySQL database. 
+For local development, create environment files based on .env.example and backend/.env.example.
+
+The AI-related features in this prototype, such as HR chatbot, smart search and document recommendation, are prototype interface features only. The actual AI model integration has not been fully developed.

@@ -2302,6 +2302,7 @@ import { computed, ref, watch, onMounted } from 'vue'
 import InputField from './components/InputField.vue'
 import StatCard from './components/StatCard.vue'
 import SettingCard from './components/SettingCard.vue'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 function useLocalStorage(key, defaultValue) {
   let initialValue = defaultValue
@@ -2408,7 +2409,7 @@ const recommendationReportForm = ref({
 
 async function loadDocuments() {
   try {
-    const response = await fetch('http://localhost:3000/api/documents')
+    const response = await fetch(`${API_BASE_URL}/api/documents`)
 
     if (!response.ok) {
       throw new Error('Failed to load documents')
@@ -2427,7 +2428,7 @@ async function loadDocuments() {
 
 async function loadRecommendations() {
   try {
-    const response = await fetch(`http://localhost:3000/api/recommendations/${currentUserId}`)
+    const response = await fetch(`${API_BASE_URL}/api/recommendations/${currentUserId}`)
 
     if (!response.ok) {
       throw new Error('Failed to load recommendations')
@@ -2447,7 +2448,7 @@ async function loadRecommendations() {
 
 async function loadFaqs() {
   try {
-    const response = await fetch('http://localhost:3000/api/faqs')
+    const response = await fetch(`${API_BASE_URL}/api/faqs`)
 
     if (!response.ok) {
       throw new Error('Failed to load FAQs')
@@ -2462,7 +2463,7 @@ async function loadFaqs() {
 
 async function loadConversationHistory() {
   try {
-    const response = await fetch(`http://localhost:3000/api/chatbot/conversations/${currentUserId}`)
+    const response = await fetch(`${API_BASE_URL}/api/chatbot/conversations/${currentUserId}`)
 
     if (!response.ok) {
       throw new Error('Failed to load conversation history')
@@ -2476,7 +2477,7 @@ async function loadConversationHistory() {
 
 async function loadEscalationRequests() {
   try {
-    const response = await fetch('http://localhost:3000/api/escalation-requests')
+    const response = await fetch(`${API_BASE_URL}/api/escalation-requests`)
 
     if (!response.ok) {
       throw new Error('Failed to load escalation requests')
@@ -2491,7 +2492,7 @@ async function loadEscalationRequests() {
 async function resolveEscalationRequest(escalationId) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/escalation-requests/${escalationId}/resolve`,
+      `${API_BASE_URL}/api/escalation-requests/${escalationId}/resolve`,
       {
         method: 'PATCH'
       }
@@ -2513,7 +2514,7 @@ async function resolveEscalationRequest(escalationId) {
 
 async function loadNotifications() {
   try {
-    const response = await fetch(`http://localhost:3000/api/notifications/${currentUserId}`)
+    const response = await fetch(`${API_BASE_URL}/api/notifications/${currentUserId}`)
 
     if (!response.ok) {
       throw new Error('Failed to load notifications')
@@ -2528,7 +2529,7 @@ async function loadNotifications() {
 
 async function loadNotificationPreferences() {
   try {
-    const response = await fetch(`http://localhost:3000/api/notification-preferences/${currentUserId}`)
+    const response = await fetch(`${API_BASE_URL}/api/notification-preferences/${currentUserId}`)
 
     if (!response.ok) {
       throw new Error('Failed to load notification preferences')
@@ -2548,7 +2549,7 @@ async function loadNotificationPreferences() {
 
 async function loadSavedDocuments() {
   try {
-    const response = await fetch(`http://localhost:3000/api/saved-documents/${currentUserId}`)
+    const response = await fetch(`${API_BASE_URL}/api/saved-documents/${currentUserId}`)
 
     if (!response.ok) {
       throw new Error('Failed to load saved documents')
@@ -4699,7 +4700,7 @@ function addAuditEntry(actionType, documentTitle, actionDetails) {
 async function loadSearchSuggestions() {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/search-suggestions?keyword=${encodeURIComponent(smartQuery.value)}`
+      `${API_BASE_URL}/api/search-suggestions?keyword=${encodeURIComponent(smartQuery.value)}`
     )
 
     if (!response.ok) {
@@ -4719,7 +4720,7 @@ function selectSearchSuggestion(suggestion) {
 
 async function loadRecentSearchHistory() {
   try {
-    const response = await fetch(`http://localhost:3000/api/search-history/${currentUserId}`)
+    const response = await fetch(`${API_BASE_URL}/api/search-history/${currentUserId}`)
 
     if (!response.ok) {
       throw new Error('Failed to load recent search history')
@@ -4733,7 +4734,7 @@ async function loadRecentSearchHistory() {
 
 async function loadTrendingDocuments() {
   try {
-    const response = await fetch('http://localhost:3000/api/trending-documents')
+    const response = await fetch(`${API_BASE_URL}/api/trending-documents`)
 
     if (!response.ok) {
       throw new Error('Failed to load trending documents')
@@ -4747,7 +4748,7 @@ async function loadTrendingDocuments() {
 
 async function loadFrequentlyUsedPolicies() {
   try {
-    const response = await fetch('http://localhost:3000/api/frequently-used-policies')
+    const response = await fetch(`${API_BASE_URL}/api/frequently-used-policies`)
 
     if (!response.ok) {
       throw new Error('Failed to load frequently used policies')
@@ -4769,7 +4770,7 @@ async function performSmartSearch() {
 
   try {
     const response = await fetch(
-      `http://localhost:3000/api/search?userId=${currentUserId}&keyword=${encodeURIComponent(smartQuery.value)}&sortBy=${smartSortBy.value}`
+      `${API_BASE_URL}/api/search?userId=${currentUserId}&keyword=${encodeURIComponent(smartQuery.value)}&sortBy=${smartSortBy.value}`
     )
 
     if (!response.ok) {
@@ -4844,7 +4845,7 @@ function clearSearchResults() {
 async function refreshRecommendations() {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/recommendations/refresh/${currentUserId}`,
+      `${API_BASE_URL}/api/recommendations/refresh/${currentUserId}`,
       {
         method: 'POST'
       }
@@ -4885,7 +4886,7 @@ async function submitRecommendationReport() {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/recommendation-reports', {
+    const response = await fetch(`${API_BASE_URL}/api/recommendation-reports`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -4946,7 +4947,7 @@ async function sendChatMessage() {
   })
 
   try {
-    const response = await fetch('http://localhost:3000/api/chatbot/conversations', {
+    const response = await fetch(`${API_BASE_URL}/api/chatbot/conversations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -4986,7 +4987,7 @@ async function rateChatbotResponse(value) {
 
   try {
     const response = await fetch(
-      `http://localhost:3000/api/chatbot/conversations/${latestConversationId.value}/rating`,
+      `${API_BASE_URL}/api/chatbot/conversations/${latestConversationId.value}/rating`,
       {
         method: 'PATCH',
         headers: {
@@ -5021,7 +5022,7 @@ async function generateDocumentSummary(doc) {
   const fallbackSummary = buildLocalDocumentSummary(doc)
 
   try {
-    const response = await fetch('http://localhost:3000/api/document-summaries', {
+    const response = await fetch(`${API_BASE_URL}/api/document-summaries`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -5071,7 +5072,7 @@ async function generateSearchResultSummary(doc) {
   const fallbackSummary = buildLocalDocumentSummary(doc)
 
   try {
-    const response = await fetch('http://localhost:3000/api/document-summaries', {
+    const response = await fetch(`${API_BASE_URL}/api/document-summaries`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -5126,7 +5127,7 @@ async function submitEscalationRequest() {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/escalation-requests', {
+    const response = await fetch(`${API_BASE_URL}/api/escalation-requests`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -5245,7 +5246,7 @@ async function saveDocument(doc) {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/saved-documents', {
+    const response = await fetch(`${API_BASE_URL}/api/saved-documents`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -5291,7 +5292,7 @@ async function saveSearchResultDocument(doc) {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/saved-documents', {
+    const response = await fetch(`${API_BASE_URL}/api/saved-documents`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -5359,7 +5360,7 @@ async function removeSavedDocument(savedId) {
   persistLocalSavedDocuments()
 
   try {
-    const response = await fetch(`http://localhost:3000/api/saved-documents/${savedId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/saved-documents/${savedId}`, {
       method: 'DELETE'
     })
 
@@ -5402,7 +5403,7 @@ async function savePersonalNote() {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/personal-notes', {
+    const response = await fetch(`${API_BASE_URL}/api/personal-notes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -5442,7 +5443,7 @@ async function deletePersonalNote(item) {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/api/personal-notes/${item.noteId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/personal-notes/${item.noteId}`, {
       method: 'DELETE'
     })
 
@@ -5472,7 +5473,7 @@ function cancelNoteEditor() {
 async function markAllNotificationsRead() {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/notifications/read-all/${currentUserId}`,
+      `${API_BASE_URL}/api/notifications/read-all/${currentUserId}`,
       {
         method: 'PATCH'
       }
@@ -5495,7 +5496,7 @@ async function markAllNotificationsRead() {
 async function markNotificationRead(notificationId) {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/notifications/${notificationId}/read`,
+      `${API_BASE_URL}/api/notifications/${notificationId}/read`,
       {
         method: 'PATCH'
       }
@@ -5530,7 +5531,7 @@ function cycleNotificationFrequency() {
 async function saveNotificationPreferences() {
   try {
     const response = await fetch(
-      `http://localhost:3000/api/notification-preferences/${currentUserId}`,
+      `${API_BASE_URL}/api/notification-preferences/${currentUserId}`,
       {
         method: 'PUT',
         headers: {
@@ -5564,7 +5565,7 @@ async function submitUserFeedback() {
   }
 
   try {
-    const response = await fetch('http://localhost:3000/api/user-feedback', {
+    const response = await fetch(`${API_BASE_URL}/api/user-feedback`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
