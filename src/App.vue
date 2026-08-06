@@ -4582,6 +4582,12 @@ function archiveDocument(doc) {
   showArchiveModal.value = true
 }
 
+function restoreDocument(doc) {
+  doc.status = 'Published'
+  addAuditEntry('restore', doc.title, 'Restored archived document')
+  toast.value = `"${doc.referenceNo}" restored successfully.`
+}
+
 // ─── MODULE 4.5: VERSION MANAGEMENT FUNCTIONS ───
 
 function openNewVersionModal() {
