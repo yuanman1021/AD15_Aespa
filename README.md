@@ -142,8 +142,8 @@ This index table provides a quick reference for locating the frontend implementa
 | Database                | MySQL                                            |
 | Local Storage           | Browser localStorage for selected prototype data |
 | Development Environment | Laragon, VS Code, GitHub                         |
-Laragon is required only for local development. For the deployed version, the system uses an online backend and cloud MySQL database, so users do not need to install Laragon.
 ---
+Laragon is required only for local development. For the deployed version, the system uses an online backend and cloud MySQL database, so users do not need to install Laragon.
 
 ## 4. Project Structure
 
